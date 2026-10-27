@@ -819,8 +819,8 @@ function storyWorldUpdate(inp) {
     if (t.bark) S.bark(t.bark.who, t.bark.s); else if (t.boss) S.startBoss(t.boss); else if (t.arena) { const a = t.arena; S.lock = { x0: clamp(a.x0 ?? a.x - 200, 0, sc.w - W), waves: a.waves, wi: 0, done: a.done }; S.objective = a.obj || 'CLEAR THE AREA'; AU.sfx('confirm'); } else S.run(t.beats); }
   // arena lock: walls until the wave is cleared
   if (S.lock && S.lock.waves) {
-    const alive = S.ents.filter(e => e.isEnemy && !e.dead && !e.boss).length;
-    if (!alive && !S.boss) { if (S.lock.wi < S.lock.waves.length) { const w = S.lock.waves[S.lock.wi++]; w.forEach((k, i) => { const e = S.spawnFoe(k, S.lock.x0 + (i % 2 ? W - 120 - rnd(0, 200) : 120 + rnd(0, 200))); e.st = -i * 14; }); S.popText(pl.x, pl.y - 230, `WAVE ${S.lock.wi}/${S.lock.waves.length}`, '#ff2a3d'); }
+    const alive = S.ents.filter(e => e.isEnemy && !e.dead && !e.boss && e.arena && e.hp > 0).length;
+    if (!alive && !S.boss) { if (S.lock.wi < S.lock.waves.length) { const w = S.lock.waves[S.lock.wi++]; w.forEach((k, i) => { const e = S.spawnFoe(k, S.lock.x0 + (i % 2 ? W - 120 - rnd(0, 200) : 120 + rnd(0, 200))); e.st = -i * 14; e.arena = true; }); S.popText(pl.x, pl.y - 230, `WAVE ${S.lock.wi}/${S.lock.waves.length}`, '#ff2a3d'); }
       else if (!S.lock.boss) { const done = S.lock.done; S.lock = null; S.objective = ''; S.popText(pl.x, pl.y - 230, 'CLEAR!', '#ffcf3f'); AU.sfx('confirm'); if (done) S.run(done); } }
   }
   if (S.after) { if (--S.after.t <= 0) { const f = S.after.fn; S.after = null; f(); } }
@@ -831,7 +831,7 @@ function storyWorldUpdate(inp) {
   let tx = pl.x - W / 2 + look;
   if (S.lock) tx = S.lock.x0; tx = clamp(tx, 0, sc.w - W);
   S.cam = lerp(S.cam, tx, S.lock ? 0.12 : 0.08);
-  if (S.lock) { for (const h of [pl, S.buddy]) if (h) h.x = clamp(h.x, S.lock.x0 + 40, S.lock.x0 + W - 40); }
+  if (S.lock) { for (const h of [pl, S.buddy]) if (h) h.x = clamp(h.x, S.lock.x0 + 40, S.lock.x0 + W - 40); for (const e of S.ents) if (e.arena) e.x = clamp(e.x, S.lock.x0 + 50, S.lock.x0 + W - 50); }
   if (S.comboT > 0 && --S.comboT === 0) S.combo = 0;
   for (const p of S.popups) { p.t++; p.y -= 1.2; } S.popups = S.popups.filter(p => p.t < 50);
   updateFX();
@@ -963,7 +963,7 @@ function drawGuides(sc) {
     ctx.fillStyle = 'rgba(7,5,10,0.82)'; ctx.fillRect(t.x - w / 2, y - 22, w, 44); ctx.strokeStyle = '#ffcf3f'; ctx.lineWidth = 2; ctx.strokeRect(t.x - w / 2, y - 22, w, 44);
     txt(t.s, t.x, y, 20, '#ffcf3f', 'center', FONT_H, '800', 0); ctx.restore(); }
   if (!S.lock && sc.exit !== 'pipe' && S.ents.every(e => !e.boss) && S.cam + W > sc.w - 300) { const x = sc.w - 110, b = Math.sin(S.t * 0.15) * 8; txt('EXIT ▶', x + b, g - 160, 30, '#ffcf3f', 'center', FONT_D, '400', 6); }
-  if (S.lock && !S.boss) { txt('◀ LOCKED ▶', S.lock.x0 + W / 2, 160, 22, '#ff2a3d', 'center', FONT_H, '800', 5); }
+  if (S.lock && !S.boss && S.lock.waves) { const n = S.ents.filter(e => e.arena && !e.dead && e.hp > 0).length; txt(`◀ LOCKED — ${n} LEFT ▶`, S.lock.x0 + W / 2, 160, 22, '#ff2a3d', 'center', FONT_H, '800', 5); }
 }
 function drawSuperOverlay() {
   const h = S.superBy, k = 80 - S.superT, P = h.P;

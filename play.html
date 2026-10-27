@@ -20,7 +20,7 @@
     background: var(--void); color: var(--ink); font-family: var(--hud);
     padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
     padding-block: 8px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
-    overflow: hidden; touch-action: manipulation; user-select: none; -webkit-user-select: none;
+    overflow: hidden; overscroll-behavior: none; touch-action: manipulation; user-select: none; -webkit-user-select: none;
   }
   #stage { position: relative; width: min(100%, calc((100dvh - 64px) * 16 / 9)); aspect-ratio: 16 / 9; max-width: 100%; background: var(--void); box-shadow: 0 0 0 2px var(--panel), 0 20px 80px rgba(160, 123, 255, 0.12); }
   #stage:fullscreen { width: 100%; height: 100%; box-shadow: none; }
@@ -44,7 +44,7 @@
   body.embed .bar { display: none; }
   body.embed #stage { width: min(100%, calc((100dvh - 16px) * 16 / 9)); }
   /* portrait phone: screen on top, controller underneath (no thumbs over the fight) */
-  body.touch.portrait { justify-content: flex-start; padding: 8px 8px 0; }
+  body.touch.portrait { justify-content: center; padding: 8px 8px calc(46vw + 20px); }
   body.touch.portrait #stage { width: 100%; }
   body.touch.portrait #touch { inset: auto 0 auto 0; top: calc(100% + 12px); height: 46vw; }
   body.touch.portrait #touch .dpad { left: 0; top: 0; bottom: auto; grid-template-columns: repeat(3, 12vw); grid-template-rows: repeat(3, 12vw); }
@@ -53,6 +53,7 @@
   body.touch.portrait #touch .su { background: rgba(255, 122, 26, 0.55); }
   body.touch.portrait #pause-btn { top: auto; bottom: 0; transform: translateX(-50%); font-size: 13px !important; padding: 6px 14px; }
   body.touch.portrait .bar { display: none; }
+  body.touch #game { touch-action: none; }
 </style>
 </head>
 <body>

@@ -9,6 +9,12 @@
 <meta property="og:description" content="8 fighters. 4 stages. Play free in your browser.">
 <meta property="og:image" content="assets/portraits/title.webp">
 <meta name="theme-color" content="#07050a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="TR Underground">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="assets/icon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik+Dirt&family=Barlow+Condensed:wght@500;600;700;800&display=swap">
@@ -169,6 +175,21 @@
     .touch .stagebar { display: none; }
     .touch .side { border-left: 0; }
   }
+  /* ── game mode (phones): game pinned to the whole screen, page scroll locked */
+  .playcover, .gmx { display: none; }
+  .touch .playcover { display: grid; place-items: center; position: absolute; inset: 0; z-index: 5; background: rgba(7,5,10,.45); border: 0; padding: 0; cursor: pointer; }
+  .playcover span { font: 400 44px var(--display); color: var(--ink); background: var(--blood); padding: 10px 26px 6px; box-shadow: 0 8px 40px rgba(255,42,61,.5); }
+  .playcover small { display: block; font: 700 14px var(--ui); letter-spacing: .14em; text-transform: uppercase; color: var(--ink); margin-top: 10px; text-align: center; }
+  html.gm, html.gm body { overflow: hidden; overscroll-behavior: none; height: 100%; }
+  html.gm body { position: fixed; inset: 0; width: 100%; touch-action: none; }
+  html.gm .stage { position: fixed; inset: 0; z-index: 40; height: 100dvh !important; width: 100vw;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); background: #000; }
+  html.gm .stage iframe { flex: 1 !important; height: auto !important; }
+  @media (orientation: portrait) { html.gm .stage { padding-top: max(56px, env(safe-area-inset-top)); } }
+  .touch #full { display: none; }
+  html.gm .stagebar, html.gm .playcover { display: none !important; }
+  html.gm .gmx { display: grid; place-items: center; position: fixed; z-index: 41; top: max(8px, env(safe-area-inset-top)); right: max(8px, env(safe-area-inset-right));
+    width: 40px; height: 40px; border-radius: 50%; border: 1px solid rgba(255,244,230,.35); background: rgba(19,13,26,.7); color: var(--ink); font: 700 20px var(--ui); cursor: pointer; }
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 </head>
@@ -177,6 +198,8 @@
 <div class="app">
   <main class="stage">
     <iframe id="game" src="play.html?embed=1" title="Tribal Roots: Underground game" allow="fullscreen; gamepad; autoplay" allowfullscreen></iframe>
+    <button class="playcover" id="playcover" type="button" aria-label="Play the game"><div><span>TAP TO PLAY</span><small>Locks the screen · ✕ to exit</small></div></button>
+    <button class="gmx" id="gmx" type="button" aria-label="Exit game mode">✕</button>
     <div class="stagebar">
       <span class="thint">Turn sideways for the big screen</span>
       <span class="hint">Click the game, press Enter · P1 WASD · J U K I · L O H · Space · P2 arrows + numpad · M mute</span>
@@ -259,6 +282,24 @@
   // keep keyboard focus in the game
   game.addEventListener('load', () => { try { game.contentWindow.focus(); } catch (e) {} });
   if (!(document.fullscreenEnabled || document.webkitFullscreenEnabled)) $('full').hidden = true;
+  // game mode: pin the game over everything, lock scrolling; Android also goes true fullscreen
+  let gmY = 0, gmFS = false;
+  function enterGM() {
+    gmY = scrollY; document.documentElement.classList.add('gm'); document.body.style.top = -gmY + 'px';
+    const de = document.documentElement, rq = de.requestFullscreen || de.webkitRequestFullscreen;
+    if (rq) { try { const r = rq.call(de, { navigationUI: 'hide' }); gmFS = true; if (r && r.catch) r.catch(() => { gmFS = false; }); } catch (e) { gmFS = false; } }
+    setTimeout(() => { try { game.focus(); game.contentWindow.focus(); } catch (e) {} }, 50);
+    track('game_mode');
+  }
+  function exitGM() {
+    if (!document.documentElement.classList.contains('gm')) return;
+    document.documentElement.classList.remove('gm'); document.body.style.top = ''; scrollTo(0, gmY);
+    if (document.fullscreenElement || document.webkitFullscreenElement) (document.exitFullscreen || document.webkitExitFullscreen).call(document).catch?.(() => {});
+    gmFS = false;
+  }
+  $('playcover').onclick = () => { enterGM(); startMusic && startMusic(); };
+  $('gmx').onclick = exitGM;
+  ['fullscreenchange', 'webkitfullscreenchange'].forEach(ev => document.addEventListener(ev, () => { if (gmFS && !(document.fullscreenElement || document.webkitFullscreenElement)) exitGM(); }));
   $('full').onclick = () => { const el = game; (el.requestFullscreen || el.webkitRequestFullscreen || (() => {})).call(el); };
 
   // ── featured show

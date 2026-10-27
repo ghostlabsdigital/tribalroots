@@ -299,11 +299,12 @@
 
   // ── shows
   const today = new Date(); today.setHours(0, 0, 0, 0);
-  const shows = (C.shows || []).filter(s => s.date && new Date(s.date + 'T23:59') >= today).sort((a, b) => a.date.localeCompare(b.date));
+  // undated shows stay listed (shown as TBA, after dated ones)
+  const shows = (C.shows || []).filter(s => !s.date || new Date(s.date + 'T23:59') >= today).sort((a, b) => (a.date || '9999').localeCompare(b.date || '9999'));
   const M = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
   if (shows.length) {
-    $('shows').innerHTML = shows.map(s => { const d = new Date(s.date + 'T12:00');
-      return `<li class="show"><div class="date"><div class="m">${M[d.getMonth()]}</div><div class="d">${d.getDate()}</div></div>
+    $('shows').innerHTML = shows.map(s => { const d = s.date ? new Date(s.date + 'T12:00') : null;
+      return `<li class="show"><div class="date">${d ? `<div class="m">${M[d.getMonth()]}</div><div class="d">${d.getDate()}</div>` : '<div class="m">DATE</div><div class="d" style="font-size:15px">TBA</div>'}</div>
         <div class="t"><b>${esc(s.title)}</b><small>${esc([s.venue, s.city].filter(Boolean).join(' · '))}</small></div>
         ${s.url ? `<a class="btn hot" href="${esc(s.url)}" target="_blank" rel="noopener">Tickets</a>` : ''}</li>`; }).join('');
   } else {

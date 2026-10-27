@@ -99,6 +99,8 @@ const AU = {
   say(text) {
     if (this.muted) return;
     try {
+      // phonetic fixes for names the TTS voice mangles
+      text = String(text).replace(/lotus\s*flow/gi, 'Lotus Flow').replace(/ghostlabs/gi, 'Ghost Labs');
       const u = new SpeechSynthesisUtterance(text); u.pitch = 0.4; u.rate = 0.85; u.volume = 0.9;
       speechSynthesis.cancel(); speechSynthesis.speak(u);
     } catch (e) {}

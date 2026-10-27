@@ -7,7 +7,7 @@ const MIRROR = 'hue-rotate(160deg) saturate(1.15)';
 const FONT_D = '"Rubik Dirt", "Impact", sans-serif';
 const FONT_H = '"Barlow Condensed", "Arial Narrow", sans-serif';
 const cv = document.getElementById('game');
-const ctx = cv.getContext('2d');
+const ctx = cv.getContext('2d', { alpha: false, desynchronized: true }) || cv.getContext('2d');
 const rnd = (a, b) => a + Math.random() * (b - a);
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const lerp = (a, b, t) => a + (b - a) * t;
@@ -16,17 +16,12 @@ const overlap = (a, b) => a && b && a.x < b.x + b.w && b.x < a.x + a.w && a.y < 
 // ─────────────────────────────── assets
 const IMG = {};
 function loadImage(src) {
-  // decode up front so first appearance on screen doesn't hitch
-  return new Promise(res => { const i = new Image(); i.onload = () => (i.decode ? i.decode().catch(() => {}) : Promise.resolve()).then(() => res(i)); i.onerror = () => res(null); i.src = src; });
+  return new Promise(res => { const i = new Image(); i.onload = () => res(i); i.onerror = () => res(null); i.src = src; });
 }
 async function loadAssets(onProgress) {
   const jobs = [];
-  for (const id of Object.keys(FIGHTERS)) {
-    IMG[id] = {};
-    // one pack per fighter (name -> data URI) keeps the build to a handful of files
-    jobs.push(fetch(`assets/packs/${id}.json`).then(r => r.json()).then(pack =>
-      Promise.all(Object.entries(pack).map(([n, uri]) => loadImage(uri).then(i => (IMG[id][n] = i))))).catch(() => {}));
-  }
+  // fighter sprite packs load on demand (ensureFighters) — all 14 at once was ~800MB of decoded art
+  for (const id of Object.keys(FIGHTERS)) IMG[id] = {};
   IMG.portrait = {};
   for (const r of ROSTER) jobs.push(loadImage(`assets/portraits/${r.id}.webp`).then(i => (IMG.portrait[r.id] = i)));
   IMG.poster = {}; for (const r of ROSTER) jobs.push(loadImage(`assets/posters/${r.id}.webp`).then(i => (IMG.poster[r.id] = i)));
@@ -42,6 +37,12 @@ async function loadAssets(onProgress) {
   await Promise.all(jobs);
   try { await Promise.all([document.fonts.load(`40px "Rubik Dirt"`), document.fonts.load(`800 40px "Barlow Condensed"`)]); } catch (e) {}
 }
+const PACKS = {};
+function ensureFighters(ids) {
+  return Promise.all([...new Set(ids)].filter(id => FIGHTERS[id]).map(id => PACKS[id] || (PACKS[id] = fetch(`assets/packs/${id}.json`).then(r => r.json())
+    .then(pack => Promise.all(Object.entries(pack).map(([n, uri]) => loadImage(uri).then(i => (IMG[id][n] = i))))).catch(() => { delete PACKS[id]; }))));
+}
+function fighterReady(id) { return !!(IMG[id] && IMG[id].idle); }
 const tintCache = new Map();
 function tinted(img, color) {
   // cache on the image itself (keying by img.src hashed the whole data URI every call = stutter on hits)
@@ -1337,6 +1338,7 @@ const G = {
 function tell(ev, data) { try { if (parent !== window) parent.postMessage({ tru: ev, ...data }, '*'); } catch (e) {} }
 function startMatch() {
   G.runScore = 0; G.matchT0 = performance.now();
+  ensureFighters([ROSTER[G.sel[0]].id, ROSTER[G.sel[1]].id]);
   G.f = [new Fighter(ROSTER[G.sel[0]].id, 0, G), new Fighter(ROSTER[G.sel[1]].id, 1, G)];
   G.f[1].mirror = G.sel[0] === G.sel[1];
   G.cpu = [null, G.mode === 'cpu' ? new CPU(0.6) : null];
@@ -1649,7 +1651,7 @@ function drawSelect(m) {
   txt(G.mode === 'vs' ? 'P1: A/D + J   ·   P2: arrows + Enter' : G.chooser === 0 ? 'Pick your fighter' : 'Pick your opponent', W / 2, 708, 20, '#bfb2c8', 'center', FONT_H, '600', 0);
 }
 function confirmPick(p) {
-  G.selDone[p] = true; AU.sfx('confirm');
+  G.selDone[p] = true; AU.sfx('confirm'); ensureFighters([ROSTER[G.sel[p]].id]);
   if (G.mode === 'story') { STORY.begin(ROSTER[G.sel[0]].id); return; }
   if (G.mode !== 'vs' && p === 0) { G.chooser = 1; }
   if (G.selDone[0] && G.selDone[1]) { G.scene = 'stage'; G.t = 0; G.stageI = G.stageI || 0; return; }
@@ -1693,7 +1695,7 @@ function drawVS() {
     ctx.clip(); ctx.fillStyle = d.color; ctx.globalAlpha = 0.14; ctx.fillRect(0, 0, W, H); ctx.globalAlpha = 1;
     // diagonal split line
     ctx.strokeStyle = d.color; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(W / 2 + 60, 0); ctx.lineTo(W / 2 - 60, H); ctx.stroke();
-    const pose = d.anim.entrance[0], info = MANIFESTS[id][pose], img = IMG[id][pose];
+    const pose = d.anim.entrance[0], info = MANIFESTS[id][pose], img = IMG[id][pose] || IMG.poster[id];
     const vs = Math.min(1.1, 520 / info.w, 560 / info.h);
     if (!left && mirror) ctx.filter = MIRROR;
     ctx.translate(left ? lerp(-200, 320, k) : lerp(W + 200, W - 320, k), H - 40); ctx.scale((left ? 1 : -1) * vs, vs); ctx.drawImage(img, -info.ax, -info.h);
@@ -1703,7 +1705,9 @@ function drawVS() {
   });
   ctx.save(); ctx.translate(W / 2, H / 2); const s = G.t < 20 ? 3 - 2 * (G.t / 20) : 1 + 0.03 * Math.sin(G.t * 0.3); ctx.scale(s, s);
   txt('VS', 0, 0, 170, '#ffcf3f', 'center', FONT_D, '400', 14); ctx.restore();
-  if (G.t > 150) startMatch();
+  if (G.t > 150 && G.f0ready) startMatch();
+  if (G.t === 1) { G.f0ready = false; ensureFighters([ROSTER[G.sel[0]].id, ROSTER[G.sel[1]].id]).then(() => (G.f0ready = true)); }
+  if (G.t > 150 && !G.f0ready) txt('LOADING…', W / 2, H - 40, 22, '#bfb2c8', 'center', FONT_H, '800', 4);
 }
 function drawResults(m) {
   drawStage(G.t);
@@ -1831,8 +1835,10 @@ function step() {
 }
 function frame(now) {
   acc += Math.min(100, now - last); last = now;
-  let n = 0;
-  while (acc >= 1000 / 60 && n < 4) { acc -= 1000 / 60; n++; if (G.scene !== 'loading') step(); }
+  // run the sim at 60Hz, but in story mode only DRAW once per screen refresh (catch-up steps are update-only)
+  const steps = Math.min(4, Math.floor(acc / (1000 / 60)));
+  for (let n = 0; n < steps; n++) { acc -= 1000 / 60; G.drawFrame = n === steps - 1; if (G.scene !== 'loading') step(); }
+  if (acc > 1000 / 60 * 4) acc = 0;
   requestAnimationFrame(frame);
 }
 

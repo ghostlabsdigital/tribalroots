@@ -19,6 +19,9 @@ async function storyLoadCore(onP) {
 }
 async function storyLoadLevel(L) {
   const jobs = [];
+  const crew = new Set([S.pick, L.buddy, L.buddyAlt]); JSON.stringify(L, (k, v) => { if (Array.isArray(v) && typeof v[0] === 'string' && FIGHTERS[v[0]]) crew.add(v[0]); if (k === 'k' && FIGHTERS[v]) crew.add(v); if (k === 'who' && FIGHTERS[v]) crew.add(v); return v; });
+  for (const id in IMG) if (FIGHTERS[id] && !crew.has(id) && PACKS[id]) { IMG[id] = {}; delete PACKS[id]; }  // free unused fighters
+  jobs.push(ensureFighters([...crew]));
   for (const s of L.scenes) if (!SA.bg[s.bg]) jobs.push(loadImage(`assets/story/bg/${s.bg}.webp`).then(i => (SA.bg[s.bg] = i)));
   const cuts = new Set(); const scan = b => (b || []).forEach(x => x.cut && cuts.add(x.cut));
   scan(L.intro); scan(L.outro); scan(L.ending); if (L.ending) jobs.push(loadImage('assets/story/bg/l5d.webp').then(i => (SA.bg.l5d = i))); const deep = b => (b || []).forEach(x => { if (x.cut) cuts.add(x.cut); }); L.scenes.forEach(s => { scan(s.enter); (s.items || []).forEach(it => { scan(it.beats); }); scan(s.win); });
@@ -39,11 +42,19 @@ function frameOf(ref) {
   const m = SA.man.spr[ref], img = SA.img[ref]; if (!img || !m) return null;
   return { img, w: m[0], h: m[1], ax: m[2], foot: 0 };
 }
+// cached down-scaled copy: big source art resampled once, not every frame
+function scaled(img, s) {
+  if (s >= 0.95) return img; const k = Math.round(s * 50) / 50, m = img._sc || (img._sc = {});
+  if (m[k]) return m[k]; const c = document.createElement('canvas'); c.width = Math.max(1, Math.round(img.width * k)); c.height = Math.max(1, Math.round(img.height * k));
+  const x = c.getContext('2d'); x.imageSmoothingQuality = 'high'; x.drawImage(img, 0, 0, c.width, c.height); c._k = k; return (m[k] = c);
+}
 function drawFrame(ref, x, y, face, sc = PS, alpha = 1, flash = 0, shade = 0) {
   const f = frameOf(ref); if (!f) return null;
-  ctx.save(); ctx.globalAlpha = alpha; ctx.translate(x, y + f.foot * sc); ctx.scale(face * sc, sc);
-  ctx.drawImage(shade ? shaded(f.img, shade, '12,6,26') : f.img, -f.ax, -f.h);
-  if (flash > 0) { ctx.globalAlpha = alpha * flash; ctx.drawImage(tinted(f.img, '#ffffff'), -f.ax, -f.h); }
+  if (x < S.cam - f.w * sc - 60 || x > S.cam + W + f.w * sc + 60) return f;
+  const src = scaled(shade ? shaded(f.img, shade, '12,6,26') : f.img, sc), k = src._k || 1;
+  ctx.save(); ctx.globalAlpha = alpha; ctx.translate(x, y + f.foot * sc); ctx.scale(face * sc / k, sc / k);
+  ctx.drawImage(src, -f.ax * k, -f.h * k);
+  if (flash > 0) { ctx.globalAlpha = alpha * flash; ctx.drawImage(tinted(src, '#ffffff'), -f.ax * k, -f.h * k); }
   ctx.restore(); return f;
 }
 
@@ -144,6 +155,7 @@ class Hero extends Body {
     this.hp -= dmg; this.flash = 1; this.inv = 40; S.shake = Math.max(S.shake, kd ? 12 : 6); AU.sfx(kd ? 'heavy' : 'light');
     spark(this.x, this.y - 100, '#ff2a3d', 10, 8); this.vx = dir * (kd ? 9 : 5); this.vy = kd ? -9 : -3; this.atk = null; this.climbLad = null;
     S.combo = 0;
+    if (this.hp < 35 && this.hp > 0 && !S.lowBark) { S.lowBark = true; S.barkPool('low'); }
     if (this.hp <= 0) { this.hp = 0; this.set('dead'); this.vy = -12; AU.sfx('boom'); S.hitstop = 10; }
     else this.set(kd ? 'down' : 'hurt');
     return true;
@@ -294,8 +306,8 @@ class Shot {
   draw() {
     if (this.imgs.length) { const im = this.imgs[(this.t >> 2) % this.imgs.length]; fxDraw(im, this.x, this.y, this.scale, Math.sign(this.vx) || 1, 1, 0.4); return; }
     ctx.save(); ctx.globalCompositeOperation = 'lighter';
-    const g = ctx.createRadialGradient(this.x, this.y, 2, this.x, this.y, this.r * 1.6); g.addColorStop(0, '#ffffff'); g.addColorStop(0.35, this.color); g.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(this.x, this.y, this.r * 1.6, 0, 7); ctx.fill();
+    glow(this.color, this.x, this.y, this.r * 1.8); glow('#ffffff', this.x, this.y, this.r * 0.7);
+    
     if (this.beam) { ctx.strokeStyle = this.color; ctx.lineWidth = 10; ctx.globalAlpha = 0.6; ctx.beginPath(); ctx.moveTo(this.x, this.y); ctx.lineTo(this.x - this.vx * 6, this.y); ctx.stroke(); }
     ctx.restore();
   }
@@ -327,13 +339,13 @@ class Foe extends Body {
     if (this.armor && this.state !== 'hit') dmg *= this.armor;
     if (this.blocking && Math.sign(by.x - this.x) === this.face) { dmg *= 0.2; spark(this.x + this.face * 30, this.y - 110, '#dfe7ff', 8, 6, 'block'); AU.sfx('block'); return; }
     this.hp -= dmg; this.flash = 1; S.hitstop = heavy ? 6 : 3; S.shake = Math.max(S.shake, heavy ? 7 : 3);
-    S.combo++; S.comboT = 90; S.stats.dmg += dmg;
+    S.combo++; S.comboT = 90; if (S.combo === 10 || S.combo === 25) S.barkPool('combo'); S.stats.dmg += dmg;
     S.popText(this.x + rnd(-14, 14), this.y - this.rect().h - 20, String(Math.round(dmg)), heavy ? '#ffcf3f' : '#fff4e6');
     if (by && by.meter !== undefined && !by.buddy) by.meter = Math.min(100, by.meter + (heavy ? 6 : 3.5));
     spark(this.x, this.y - 100 * this.sc, heavy ? '#ffcf3f' : '#fff4e6', heavy ? 16 : 9, heavy ? 12 : 8);
     if (this.boss) { this.vx = dir * 1.5; if (this.hp <= 0) this.onDefeat(); return; }
     this.vx = dir * (heavy ? 8 : 4); if (heavy && !this.D.float) this.vy = -5;
-    if (this.hp <= 0) { this.set('down'); this.vy = -7; AU.sfx('heavy'); S.stats.kills++; return; }
+    if (this.hp <= 0) { this.set('down'); this.vy = -7; AU.sfx('heavy'); S.stats.kills++; if (S.stats.kills % 4 === 1) S.barkPool('kill', Math.random() < 0.5 ? 'buddy' : 'player', 0.7); return; }
     if (this.D.slip && !this.slipped && this.hp < this.maxHp * 0.55) { this.slipped = true; this.set('slip'); S.popText(this.x, this.y - 210, 'MASK SLIP!', '#7dff6b'); return; }
     this.set('hit');
   }
@@ -394,7 +406,7 @@ class Foe extends Body {
   }
   draw() {
     const g = groundAt(this.x); if (g !== null) { ctx.fillStyle = 'rgba(0,0,0,0.38)'; ctx.beginPath(); ctx.ellipse(this.x, this.y + 3, 38 * this.sc, 7 * this.sc, 0, 0, 7); ctx.fill(); }
-    if (this.state === 'wind' && this.st % 6 < 3) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = 0.5; const r = this.rect(); const gr = ctx.createRadialGradient(this.x, r.y + r.h / 2, 5, this.x, r.y + r.h / 2, 110 * this.sc); gr.addColorStop(0, this.D.glow); gr.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = gr; ctx.fillRect(this.x - 120, r.y - 40, 240, r.h + 80); ctx.restore(); }
+    if (this.state === 'wind' && this.st % 6 < 3) { const r = this.rect(); glow(this.D.glow, this.x, r.y + r.h / 2, 120 * this.sc, 0.5); }
     drawFrame(this.ref(this.pose()), this.x, this.y - (this.hover || 0), this.face, PS * this.sc, this.alpha, Math.max(0, this.flash), this.D.tint === 'MIB' ? null : null);
     if (!this.boss && this.hp > 0 && this.hp < this.maxHp) { const r = this.rect(); ctx.fillStyle = 'rgba(7,5,10,0.8)'; ctx.fillRect(this.x - 30, r.y - 14, 60, 6); ctx.fillStyle = '#ff2a3d'; ctx.fillRect(this.x - 30, r.y - 14, 60 * this.hp / this.maxHp, 6); }
   }
@@ -419,7 +431,7 @@ class Boss extends Foe {
   pose() { return this.poses[this.state] ? (Array.isArray(this.poses[this.state]) ? this.poses[this.state][(this.st >> 3) % this.poses[this.state].length] : this.poses[this.state]) : this.poses.idle; }
   draw() {
     const g = groundAt(this.x); if (g !== null) { ctx.fillStyle = 'rgba(0,0,0,0.42)'; ctx.beginPath(); ctx.ellipse(this.x, this.y + 4, 70 * this.sc, 12 * this.sc, 0, 0, 7); ctx.fill(); }
-    if (this.aura) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = 0.25 + 0.12 * Math.sin(S.t * 0.1); const r = this.rect(); const gr = ctx.createRadialGradient(this.x, r.y + r.h / 2, 10, this.x, r.y + r.h / 2, r.h); gr.addColorStop(0, this.aura); gr.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = gr; ctx.fillRect(this.x - r.h, r.y - 60, r.h * 2, r.h + 120); ctx.restore(); }
+    if (this.aura) { const r = this.rect(); glow(this.aura, this.x, r.y + r.h / 2, r.h, 0.25 + 0.12 * Math.sin(S.t * 0.1)); }
     drawFrame(this.set_ + '__' + this.pose(), this.x, this.y - (this.hover || 0), this.face, PS * this.sc, this.alpha, Math.max(0, this.flash));
   }
 }
@@ -544,9 +556,9 @@ const PICK = { glow: { imgs: ['glow_g', 'glow_m', 'glow_a'], s: 0.22 }, vinyl: {
 class Pick { constructor(k, x, y, o = {}) { Object.assign(this, { k, x, y, t: rnd(0, 60) | 0, dead: false, vy: 0, im: PICK[k].imgs[(Math.random() * PICK[k].imgs.length) | 0] }, o); }
   update() { this.t++; if (this.fall) { this.vy += 0.6; this.y += this.vy; const g = groundAt(this.x); const top = (g ?? H) - 40; if (this.y > top) { this.y = top; this.vy *= -0.4; if (Math.abs(this.vy) < 1) this.fall = false; } }
     for (const h of [S.player]) if (Math.abs(h.x - this.x) < 46 && h.y - 170 < this.y + 30 && h.y + 10 > this.y - 30) { this.dead = true; S.collect(this); } }
-  draw() { const im = P_(this.im); if (!im) return; const s = PICK[this.k].s * (this.k === 'vinyl' ? 1 : 1), bob = Math.sin(this.t * 0.08) * 6;
+  draw() { const im0 = P_(this.im); if (!im0 || this.x < S.cam - 80 || this.x > S.cam + W + 80) return; const s0 = PICK[this.k].s, im = scaled(im0, s0), s = s0 / (im._k || 1), bob = Math.sin(this.t * 0.08) * 6;
     ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = 0.35 + 0.15 * Math.sin(this.t * 0.1); const col = this.k === 'vinyl' ? '#c77bff' : this.k === 'pendant' ? '#ffcf3f' : this.im === 'glow_g' ? '#7dff6b' : this.im === 'glow_m' ? '#ff4fd8' : '#ffb347';
-    const gr = ctx.createRadialGradient(this.x, this.y + bob, 2, this.x, this.y + bob, 60); gr.addColorStop(0, col); gr.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = gr; ctx.fillRect(this.x - 60, this.y + bob - 60, 120, 120); ctx.restore();
+    ctx.restore(); glow(col, this.x, this.y + bob, 60, 0.35 + 0.15 * Math.sin(this.t * 0.1));
     ctx.save(); ctx.translate(this.x, this.y + bob); if (this.k === 'vinyl') ctx.rotate(this.t * 0.05); else ctx.rotate(Math.sin(this.t * 0.05) * 0.2); ctx.drawImage(im, -im.width * s / 2, -im.height * s / 2, im.width * s, im.height * s); ctx.restore(); } }
 
 // ─────────────────────────────── world helpers
@@ -573,7 +585,8 @@ S.collect = p => {
   if (p.k === 'vinyl') {
     S.stats.vinyl++; AU.sfx('super'); const lore = LORE[S.level][p.n] || '';
     const v = S.save.vinyls[S.level] || []; if (!v.includes(p.n)) v.push(p.n); S.save.vinyls[S.level] = v; writeSave();
-    S.run([{ say: ['vinyl', `VINYL ${S.stats.vinyl}/3 — “${lore}”`] }]);
+    const tr = S.level * 3 + p.n + 1, L = LORE[S.level][p.n] || {};
+    S.run([{ say: ['vinyl', L.text || ''], name: `TRACK ${tr} / 15 — ${L.title || ''}` }, { fn: () => S.barkPool('vinyl', 'buddy', 0.6) }]);
   }
   if (p.k === 'ticket' && p.onGet) p.onGet();
   spark(p.x, p.y, '#fff4e6', 10, 6);
@@ -591,11 +604,39 @@ S.fellInPit = h => { h.hp -= 15; h.inv = 90; AU.sfx('heavy'); if (h.hp <= 0) { h
 S.bossDown = b => { S.boss = null; S.after = { t: 90, fn: () => { S.lock = null; S.objective = ''; S.run(S.scene.win || []); } }; };
 S.bossPhase = b => {
   S.run([{ fn: () => { b.set('beaten'); } }, { wait: 40 },
-    { say: ['exec', 'You think you can just walk into MY dome and turn the music back on?'] },
-    { say: ['exec', 'Fifty years I have been feeding. Let me show you what a crowd turns you into.'] },
+    { say: ['exec', 'You think you can walk into MY dome and turn the music back on? I own the music.'] },
+    { say: ['exec', 'Fifty years I’ve been feeding off rooms like this. Let me show you what that does to a man.'] },
     { fn: () => { b.phase = 2; b.set_ = 'exec_lizard'; b.setPoses(); b.hp = b.maxHp = 900; b.sc = 1.05; b.set('roar'); b.roarT = 80; b.aura = '#7dff6b'; S.flashT = 20; S.shake = 26; AU.sfx('super'); S.bossName = 'THE EXECUTIVE — TRUE FORM'; } }]);
 };
 S.say = () => {};
+// non-blocking chatter bubbles
+S.bark = (who, txt, dur = 210) => {
+  const ent = who === 'player' ? S.player : who === 'buddy' ? S.buddy : S.npcs.find(n => n.k === who || n.k === who + '_dj');
+  if (!ent) return; S.barks = (S.barks || []).filter(b => b.ent !== ent); S.barks.push({ ent, txt, t: 0, dur, col: (ent.P && ent.P.color) || NPC_COL[who] || '#fff4e6' });
+};
+const BARK_POOL = {
+  kill: ['Next!', 'Sit DOWN.', 'That’s a scale I won’t miss.', 'Mask off, huh?', 'Stay frozen.', 'Tribal Roots security, baby.'],
+  low: ['You’re hurting — grab a pendant!', 'Breathe! Find a checkpoint!', 'Don’t go out like this, bro!'],
+  combo: ['THAT’S a combo!', 'Somebody clip that!', 'Okay, show-off.'],
+  vinyl: ['Another G record. Who IS this?', 'G knows way too much.', 'Keep collecting. G’s telling us something.'],
+  cp: ['Speaker’s live. We can regroup here.', 'Checkpoint. Catch your breath.'],
+};
+S.barkPool = (k, who = 'buddy', chance = 1) => { if (Math.random() > chance || !S.buddy) return; const p = BARK_POOL[k]; S.bark(who, p[(Math.random() * p.length) | 0], 160); };
+function drawBarks() {
+  for (const b of S.barks || []) {
+    b.t++; const e = b.ent; if (!e) continue; const a = clamp(Math.min(b.t / 6, (b.dur - b.t) / 12), 0, 1); if (a <= 0) continue;
+    const x = e.x, y = (e.y ?? S.scene.ground) - 230 - (e.k ? 40 : 0);
+    ctx.save(); ctx.globalAlpha = a; ctx.font = `700 19px ${FONT_H}`;
+    const lines = []; let cur = ''; for (const w of b.txt.split(' ')) { const t = cur ? cur + ' ' + w : w; if (ctx.measureText(t).width > 260 && cur) { lines.push(cur); cur = w; } else cur = t; } lines.push(cur);
+    const bw = Math.max(...lines.map(l => ctx.measureText(l).width)) + 24, bh = lines.length * 22 + 14, bx = clamp(x - bw / 2, S.cam + 8, S.cam + W - bw - 8), by = y - bh;
+    ctx.fillStyle = 'rgba(255,248,236,0.96)'; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(bx, by, bw, bh, 10) : ctx.rect(bx, by, bw, bh); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(clamp(x, bx + 14, bx + bw - 14) - 8, by + bh); ctx.lineTo(clamp(x, bx + 14, bx + bw - 14), by + bh + 12); ctx.lineTo(clamp(x, bx + 14, bx + bw - 14) + 8, by + bh); ctx.fill();
+    ctx.fillStyle = b.col; ctx.fillRect(bx, by, 5, bh);
+    lines.forEach((l, i) => txt(l, bx + 14, by + 18 + i * 22, 19, '#1a1220', 'left', FONT_H, '700', 0));
+    ctx.restore();
+  }
+  S.barks = (S.barks || []).filter(b => b.t < b.dur);
+}
 S.fadeTo = fn => { S.fadeDir = 1; S.onFade = fn; };
 S.run = beats => { S.queue.push(...beats.map(b => Object.assign({}, b))); };
 
@@ -615,9 +656,9 @@ function sceneMat(sc) { return sc.mat || LEVELS[S.level].mat; }
 function buildScene(i) {
   const L = LEVELS[S.level], sc = L.scenes[i]; S.sceneI = i; S.scene = sc;
   sc.groundSeg = sc.gaps ? (() => { const seg = []; let x = 0; for (const [a, b] of sc.gaps) { seg.push([x, a]); x = b; } seg.push([x, sc.w]); return seg; })() : [[0, sc.w]];
-  S.tips = []; S.ents = []; S.solids = []; S.ladders = []; S.pipes = []; S.picks = []; S.hazards = []; S.props = []; S.npcs = []; S.crowd = []; S.triggers = []; S.lock = null; S.boss = null; S.after = null;
+  S.tips = []; S.barks = []; S.lowBark = false; S.ents = []; S.solids = []; S.ladders = []; S.pipes = []; S.picks = []; S.hazards = []; S.props = []; S.npcs = []; S.crowd = []; S.triggers = []; S.lock = null; S.boss = null; S.after = null;
   FX.length = 0; S.popups = [];
-  const mat = sceneMat(sc); let vn = 0;
+  const mat = sceneMat(sc); let vn = L.scenes.slice(0, i).reduce((a, q) => a + (q.items || []).filter(x => x.t === 'pick' && x.k === 'vinyl').length, 0);
   for (const it of sc.items || []) {
     const t = it.t;
     if (t === 'plat') { const im = P_(mat + '_' + (it.m || 'long')); const s = it.s || (it.m === 'ledge' ? 0.42 : it.m === 'short' ? 0.4 : 0.36); const w = it.w || (im ? im.width * s : 300);
@@ -627,6 +668,7 @@ function buildScene(i) {
       S.solids.push({ x: it.x - w / 2 + 10, y: y - im.height * s + 14, w: w - 20, h: 20, bounce: it.v || 27, boing: 0 }); }
     else if (t === 'arena') S.triggers.push({ x: it.x, arena: it });
     else if (t === 'tip') S.tips = (S.tips || []).concat([it]);
+    else if (t === 'bark') S.triggers.push({ x: it.x, bark: it });
     else if (t === 'lift' || t === 'conv') S.hazards.push({ ...it, k: t, t: 0 });
     else if (t === 'ladder') S.ladders.push({ x: it.x, y0: it.y0, y1: it.y1 ?? sc.ground });
     else if (t === 'prop') { const im = P_(it.k), s = it.s || 0.5, y = it.y ?? sc.ground; S.props.push({ ...it, im, s, y }); if (it.solid && im) S.solids.push({ x: it.x - im.width * s / 2 + 8, y: y - im.height * s + (it.inset || 10) * s * 2, w: im.width * s - 16, h: 20, prop: true }); }
@@ -658,6 +700,7 @@ function speakerInfo(k) {
   if (k === 'player') k = S.player.id;
   if (k === 'buddy') k = S.buddy ? S.buddy.id : 'lotusflow';
   if (FIGHTERS[k]) return { name: FIGHTERS[k].short || FIGHTERS[k].name, col: FIGHTERS[k].color, port: IMG.portrait[k], id: k };
+  if (k === 'vinyl') return { name: 'VINYL', col: NPC_COL.vinyl, img: P_('vinyl'), id: k };
   return { name: NPC_NAME[k] ?? k.toUpperCase(), col: NPC_COL[k] || '#fff4e6', spr: NPC_PORT[k], id: k };
 }
 function nextBeat() {
@@ -696,6 +739,7 @@ function drawPortrait(info, x, y, sz) {
   ctx.save(); ctx.beginPath(); ctx.rect(x, y, sz, sz); ctx.clip();
   ctx.fillStyle = '#1a1220'; ctx.fillRect(x, y, sz, sz);
   if (info.port) ctx.drawImage(info.port, x, y, sz, sz);
+  else if (info.img) { ctx.save(); ctx.translate(x + sz / 2, y + sz / 2); ctx.rotate(S.t * 0.04); ctx.drawImage(info.img, -sz * 0.42, -sz * 0.42, sz * 0.84, sz * 0.84); ctx.restore(); }
   else if (info.spr) { const f = frameOf(info.spr); if (f) { const s = sz * 2.1 / f.h * (info.id === 'elfking' ? 1.4 : 1); ctx.drawImage(f.img, x + sz / 2 - f.ax * s, y + sz * 0.06, f.w * s, f.h * s); } }
   ctx.restore(); ctx.strokeStyle = info.col; ctx.lineWidth = 4; ctx.strokeRect(x, y, sz, sz);
 }
@@ -711,8 +755,9 @@ function drawDialogue(b, onPanel) {
   ctx.save(); ctx.globalAlpha = slide; ctx.translate(0, (1 - slide) * 30);
   ctx.fillStyle = 'rgba(10,6,14,0.9)'; ctx.beginPath(); ctx.moveTo(bx + 18, by); ctx.lineTo(bx + bw, by); ctx.lineTo(bx + bw - 18, by + bh); ctx.lineTo(bx, by + bh); ctx.fill();
   ctx.strokeStyle = info.col; ctx.lineWidth = 3; ctx.stroke();
-  const hasP = info.port || info.spr; let tx = bx + 40;
+  const hasP = info.port || info.spr || info.img; let tx = bx + 40;
   if (hasP) { drawPortrait(info, bx + 26, by - 34, 150); tx = bx + 200; }
+  if (b.name) info.name = b.name;
   if (info.name) { ctx.font = `800 24px ${FONT_H}`; const nw = ctx.measureText(info.name).width + 30; ctx.fillStyle = info.col; ctx.fillRect(tx - 8, by - 18, nw, 34); txt(info.name, tx + nw / 2 - 8, by - 1, 24, '#07050a', 'center', FONT_H, '800', 0); }
   const lines = wrapText(full, bx + bw - tx - 40, 27); let rem = shown.length;
   lines.forEach((ln, i) => { const part = ln.slice(0, Math.max(0, rem)); rem -= ln.length + 1; txt(part, tx, by + 46 + i * 32, 27, spk === 'narrator' ? '#ffcf3f' : '#fff4e6', 'left', FONT_H, '600', 0); });
@@ -768,10 +813,10 @@ function storyWorldUpdate(inp) {
   for (const p of S.picks) p.update(); S.picks = S.picks.filter(p => !p.dead);
   for (const n of S.npcs) n.st++;
   // checkpoints
-  for (const p of S.props) if (p.cp && !p.on && Math.abs(pl.x - p.x) < 60) { p.on = true; S.checkpoint = { x: p.x, y: sc.ground }; AU.sfx('confirm'); S.popText(p.x, sc.ground - 200, 'CHECKPOINT', '#2ef0b0'); ring(p.x, sc.ground - 80, '#2ef0b0', 30, 8, 20); pl.hp = Math.min(pl.maxHp, pl.hp + 25); }
+  for (const p of S.props) if (p.cp && !p.on && Math.abs(pl.x - p.x) < 60) { p.on = true; S.checkpoint = { x: p.x, y: sc.ground }; AU.sfx('confirm'); S.popText(p.x, sc.ground - 200, 'CHECKPOINT', '#2ef0b0'); S.barkPool('cp', 'buddy', 0.5); ring(p.x, sc.ground - 80, '#2ef0b0', 30, 8, 20); pl.hp = Math.min(pl.maxHp, pl.hp + 25); }
   // story triggers
   for (const t of S.triggers) if (!t.done && pl.x >= t.x) { t.done = true;
-    if (t.boss) S.startBoss(t.boss); else if (t.arena) { const a = t.arena; S.lock = { x0: clamp(a.x0 ?? a.x - 200, 0, sc.w - W), waves: a.waves, wi: 0, done: a.done }; S.objective = a.obj || 'CLEAR THE AREA'; AU.sfx('confirm'); } else S.run(t.beats); }
+    if (t.bark) S.bark(t.bark.who, t.bark.s); else if (t.boss) S.startBoss(t.boss); else if (t.arena) { const a = t.arena; S.lock = { x0: clamp(a.x0 ?? a.x - 200, 0, sc.w - W), waves: a.waves, wi: 0, done: a.done }; S.objective = a.obj || 'CLEAR THE AREA'; AU.sfx('confirm'); } else S.run(t.beats); }
   // arena lock: walls until the wave is cleared
   if (S.lock && S.lock.waves) {
     const alive = S.ents.filter(e => e.isEnemy && !e.dead && !e.boss).length;
@@ -800,7 +845,24 @@ S.startBoss = it => {
 };
 
 // ─────────────────────────────── render
+const OVL = {};
+function overlay(key, make) { if (OVL[key]) return OVL[key]; const c = document.createElement('canvas'); c.width = W; c.height = H; make(c.getContext('2d')); return (OVL[key] = c); }
+function glow(col, x, y, r, a = 1) { if (a <= 0 || x < S.cam - r || x > S.cam + W + r) return; const g = glowSprite(col, 64); const p = ctx.globalAlpha, q = ctx.globalCompositeOperation; ctx.globalAlpha = a; ctx.globalCompositeOperation = 'lighter'; ctx.drawImage(g, x - r, y - r, r * 2, r * 2); ctx.globalAlpha = p; ctx.globalCompositeOperation = q; }
+function glowSprite(col, r) { const k = 'g' + col + r; if (OVL[k]) return OVL[k]; const c = document.createElement('canvas'); c.width = c.height = r * 2; const x = c.getContext('2d'); const g = x.createRadialGradient(r, r, 2, r, r, r); g.addColorStop(0, col); g.addColorStop(1, 'rgba(0,0,0,0)'); x.fillStyle = g; x.fillRect(0, 0, r * 2, r * 2); return (OVL[k] = c); }
+// background pre-scaled once per scene to its on-screen height (no per-frame resampling)
+function bgScaled(sc) {
+  const im = SA.bg[sc.bg]; if (!im) return null; if (sc._bg && sc._bg.src === im) return sc._bg;
+  const s = 780 / im.height, bw = im.width * s, zoom = bw < W * 1.15 ? (W * 1.15) / bw : 1, w2 = Math.round(bw * zoom), h2 = Math.round(780 * zoom);
+  const c = document.createElement('canvas'); c.width = w2; c.height = H; const x = c.getContext('2d', { alpha: false }); x.imageSmoothingQuality = 'high';
+  x.drawImage(im, 0, -40 - (h2 - 780) * 0.6, w2, h2); return (sc._bg = { c, w2, src: im });
+}
 function drawBG(sc) {
+  const B = bgScaled(sc);
+  if (B) { const k = sc.w > W ? clamp(S.cam / (sc.w - W), 0, 1) : 0.5; ctx.drawImage(B.c, -Math.round((B.w2 - W) * k), 0); }
+  else { ctx.fillStyle = '#07050a'; ctx.fillRect(0, 0, W, H); }
+  if (sc.storm && (S.t % 400 < 6 || (S.t % 400 > 14 && S.t % 400 < 18))) { ctx.fillStyle = 'rgba(200,220,255,0.35)'; ctx.fillRect(0, 0, W, H); }
+}
+function drawBG_old(sc) {
   const im = SA.bg[sc.bg]; ctx.fillStyle = '#07050a'; ctx.fillRect(0, 0, W, H);
   if (im) { const s = 780 / im.height, bw = im.width * s, k = sc.w > W ? clamp(S.cam / (sc.w - W), 0, 1) : 0.5; const zoom = bw < W * 1.15 ? (W * 1.15) / bw : 1;
     const w2 = bw * zoom, h2 = 780 * zoom, off = (w2 - W) * k; ctx.drawImage(im, -off, -40 - (h2 - 780) * 0.6, w2, h2); }
@@ -809,7 +871,7 @@ function drawBG(sc) {
 function drawLights(sc) {
   const beat = (S.t % BEAT_F) / BEAT_F, pulse = Math.pow(1 - beat, 3);
   ctx.save(); ctx.globalCompositeOperation = 'lighter';
-  for (const [x, y, c, r] of sc.lights || []) { const sx = x - S.cam * 0.6; const g = ctx.createRadialGradient(sx, y, 4, sx, y, r * (1 + pulse * 0.25)); g.addColorStop(0, c); g.addColorStop(1, 'rgba(0,0,0,0)'); ctx.globalAlpha = 0.18 + pulse * 0.16; ctx.fillStyle = g; ctx.fillRect(sx - r * 1.3, y - r * 1.3, r * 2.6, r * 2.6); }
+  for (const [x, y, c, r] of sc.lights || []) { const sx = x - S.cam * 0.6, rr = r * (1 + pulse * 0.25); if (sx < -rr || sx > W + rr) continue; ctx.globalAlpha = 0.18 + pulse * 0.16; ctx.drawImage(glowSprite(c, r), sx - rr, y - rr, rr * 2, rr * 2); }
   ctx.restore();
 }
 function drawGround(sc) {
@@ -823,15 +885,15 @@ function drawGround(sc) {
 function drawProp(p) {
   if (p.bouncer) { const so = S.solids.find(s => s.bounce && Math.abs(s.x + s.w / 2 - p.x) < 20); const k = so && so.boing ? 1 - so.boing / 30 : 1; const im = p.im, s = p.s; ctx.drawImage(im, p.x - im.width * s / 2, p.y - im.height * s * k, im.width * s, im.height * s * k); if (S.t % 50 < 30) txt('▲ BOUNCE', p.x, p.y - im.height * s - 18, 15, '#ff4fd8', 'center', FONT_H, '800', 4); return; }
   if (p.cp) { const im = P_(p.on ? 'cp_on' : 'cp_off'); if (im) { const s = p.s * (p.on ? 1 + 0.03 * Math.sin(S.t * 0.4) : 1); ctx.drawImage(im, p.x - im.width * s / 2, p.y - im.height * s, im.width * s, im.height * s); } return; }
-  const im = p.im || P_(p.k); if (!im) return; const s = p.s || 0.5;
+  const im0 = p.im || P_(p.k); if (!im0) return; const s0 = p.s || 0.5; if (p.x + im0.width * s0 < S.cam - 40 || p.x - im0.width * s0 > S.cam + W + 40) return; const im = scaled(im0, s0), s = s0 / (im._k || 1);
   ctx.save();
   if (p.spin) { ctx.translate(p.x, p.y - im.height * s / 2); ctx.rotate(S.t * 0.08); ctx.drawImage(im, -im.width * s / 2, -im.height * s / 2, im.width * s, im.height * s); }
   else { if (p.flip) { ctx.translate(p.x, 0); ctx.scale(-1, 1); ctx.translate(-p.x, 0); } ctx.drawImage(p.dim ? shaded(im, 1 - p.dim) : im, p.x - im.width * s / 2, p.y - im.height * s, im.width * s, im.height * s); }
   ctx.restore();
-  if (p.glow) { const beat = Math.pow(1 - (S.t % BEAT_F) / BEAT_F, 3); ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = 0.25 + beat * 0.3; const cy = p.y - im.height * s * 0.5, r = Math.max(im.width, im.height) * s * 0.8; const gr = ctx.createRadialGradient(p.x, cy, 4, p.x, cy, r); gr.addColorStop(0, p.glow); gr.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = gr; ctx.fillRect(p.x - r, cy - r, r * 2, r * 2); ctx.restore(); }
+  if (p.glow) { const beat = Math.pow(1 - (S.t % BEAT_F) / BEAT_F, 3); glow(p.glow, p.x, p.y - im.height * s * 0.5, Math.max(im.width, im.height) * s * 0.8, 0.25 + beat * 0.3); }
 }
 function drawSolids() {
-  for (const s of S.solids) { if (!s.im || s.gone) continue; const sh = s.crT > 0 ? rnd(-2, 2) : 0;
+  for (const s of S.solids) { if (!s.im || s.gone || s.x > S.cam + W || s.x + s.w < S.cam) continue; const sh = s.crT > 0 ? rnd(-2, 2) : 0;
     if (s.crumble) { ctx.save(); ctx.globalAlpha = s.crT ? 0.7 : 1; }
     ctx.drawImage(s.im, s.x + sh, s.y - s.top + Math.abs(sh), s.w, s.im.height * s.s);
     if (s.crumble) { ctx.strokeStyle = 'rgba(255,207,63,0.5)'; ctx.setLineDash([6, 6]); ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(s.x + 8, s.y + 4); ctx.lineTo(s.x + s.w - 8, s.y + 4); ctx.stroke(); ctx.setLineDash([]); ctx.restore(); } }
@@ -862,7 +924,7 @@ function drawNPC(n) {
   else if (n.k === 'greyleader') ref = n.talk ? ((n.st / 16 | 0) % 2 ? 'grey_leader__talk_a' : 'grey_leader__talk_b') : 'grey_leader__idle';
   else if (n.k === 'exec_old') ref = n.look ? 'exec_old__look' : 'exec_old__kneel';
   else if (FIGHTERS[n.k]) { const P = poseTable(n.k); ref = n.talk ? P.talk[(n.st / 14 | 0) % 2] : P.idle[0]; }
-  if (n.k === 'goaty_dj' && !n.freed) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = 0.3 + 0.15 * Math.sin(S.t * 0.12); const gr = ctx.createRadialGradient(n.x, n.y - 170, 10, n.x, n.y - 170, 200); gr.addColorStop(0, '#9b5cff'); gr.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = gr; ctx.fillRect(n.x - 220, n.y - 380, 440, 420); ctx.restore(); }
+  if (n.k === 'goaty_dj' && !n.freed) { glow('#9b5cff', n.x, n.y - 170, 210, 0.3 + 0.15 * Math.sin(S.t * 0.12)); }
   drawFrame(ref, n.x, n.y ?? S.scene.ground, n.face || 1, PS * (n.s || 1));
 }
 function storyRenderWorld() {
@@ -881,13 +943,14 @@ function storyRenderWorld() {
   drawFX();
   for (const p of S.props) if (p.front) drawProp(p);
   for (const p of S.popups) txt(p.s, p.x, p.y, 22, p.col, 'center', FONT_H, '800', 5);
-  drawGuides(sc);
+  drawGuides(sc); drawBarks();
   ctx.restore();
   if (sc.dark) { const pl = S.player, px = pl.x - S.cam, py = pl.y - 100, lit = S.buddy && S.buddy.id === 'sunshine' ? 1.6 : 1;
-    const gr = ctx.createRadialGradient(px, py, 60 * lit, px, py, 330 * lit); gr.addColorStop(0, 'rgba(4,2,8,0)'); gr.addColorStop(1, `rgba(4,2,8,${sc.dark})`); ctx.fillStyle = gr; ctx.fillRect(0, 0, W, H); }
+    const D = overlay('dark' + sc.dark + lit, x => { const c = x.canvas; c.width = W * 2; c.height = H * 2; const g = x.createRadialGradient(W, H, 60 * lit, W, H, 330 * lit); g.addColorStop(0, 'rgba(4,2,8,0)'); g.addColorStop(1, `rgba(4,2,8,${sc.dark})`); x.fillStyle = g; x.fillRect(0, 0, W * 2, H * 2); });
+    ctx.drawImage(D, px - W, py - H); }
   if (S.lock && !S.boss && S.lock.waves) { ctx.fillStyle = `rgba(255,42,61,${0.25 + 0.15 * Math.sin(S.t * 0.2)})`; ctx.fillRect(0, 0, 8, H); ctx.fillRect(W - 8, 0, 8, H); }
   // vignette + haze
-  const v = ctx.createRadialGradient(W / 2, H / 2, H * 0.35, W / 2, H / 2, H * 0.95); v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(1, 'rgba(7,5,10,0.6)'); ctx.fillStyle = v; ctx.fillRect(0, 0, W, H);
+  if (!S.noVig) ctx.drawImage(overlay('vig', x => { const v = x.createRadialGradient(W / 2, H / 2, H * 0.35, W / 2, H / 2, H * 0.95); v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(1, 'rgba(7,5,10,0.6)'); x.fillStyle = v; x.fillRect(0, 0, W, H); }), 0, 0);
   if (sc.tint) { ctx.fillStyle = sc.tint; ctx.fillRect(0, 0, W, H); }
 }
 function drawGuides(sc) {
@@ -964,10 +1027,10 @@ function drawDrop() {
 function finale() {
   const ex = S.ents.find(e => e.boss); if (ex) { ex.set('beaten'); }
   S.run([{ wait: 40 }, { fn: () => { if (ex) ex.dead = true; S.boss = null; S.npcs.push({ k: 'exec_old', x: ex ? ex.x : S.cam + 900, face: -1, st: 0 }); S.flashT = 30; S.crowdFreed = true; } },
-    { say: ['narrator', 'The scales fall away. Behind the curtain is just a tired old man in a suit.'] },
+    { say: ['narrator', 'The scales flake off like old paint. Behind the curtain: a tired old man in a suit two sizes too big.'] },
     { fn: () => { const o = S.npcs.find(n => n.k === 'exec_old'); if (o) o.look = true; } },
-    { say: ['exec', 'Fifty years... and it never once felt like that.'] },
-    { say: ['player', 'That\'s because you were never in the crowd.'] },
+    { say: ['exec', 'Fifty years of sold-out rooms... and I never once felt what they felt.'] },
+    { say: ['player', 'That’s ’cause you never once stood in the crowd.'] },
     ...LEVELS[4].ending]);
 }
 
@@ -1010,6 +1073,7 @@ const STORY = {
     else if (S.slowmo > 0 && S.slowmo-- % 2) {}
     else storyWorldUpdate(inp);
     if (S.shake > 0) S.shake *= 0.86;
+    if (G.drawFrame === false) return;
     storyRenderWorld();
     if (S.debugMap) drawDebugMap();
     if (S.flashT > 0) { ctx.fillStyle = `rgba(255,255,255,${S.flashT / 30})`; ctx.fillRect(0, 0, W, H); S.flashT--; }
@@ -1085,26 +1149,47 @@ function drawCredits(m) {
 // ─────────────────────────────── story data
 S.flags = {};
 const say = (who, s) => ({ say: [who, s] });
+// 15 vinyls, one story: field recordings pressed by someone who signs them "—G".
 const LORE = [
-  ['The Hum started three weeks ago. Same frequency every night, just under the kick drum.', 'Nobody remembers who handed out the free tickets. Everybody remembers the smile.', 'It isn’t listening to the music. It’s listening to the crowd.'],
-  ['Old Town was built on the rails. The Hum rides the old lines from venue to venue.', 'Men in Black don’t blink. Watch them. They never blink.', 'The transmitter told Goaty the crowd loved it. Nobody in that crowd could feel a thing.'],
-  ['A storm nobody forgot. Something came down east of town that night.', 'A few years later, a prairie town is building planes for the whole world. Where’d the know-how come from?', 'The Greys don’t want the planes. They want the engines. Their ship still needs parts.'],
-  ['The elves have a word for real music: “root-water.”', 'Every warehouse show sends a pulse down the roots. The elves feel it from here.', 'Every tunnel down here leads to one place. The elves call it the Sleeping Dome.'],
-  ['1969. A round hall goes up downtown in record time. No windows in that roof. Funny shape for a convention center.', 'A song about a lineman who hears a voice in the wires and can’t stop listening. He wasn’t being poetic.', 'A tornado, a girl from Kansas, and a man behind a curtain running a whole city. Somebody knew.'],
+  [
+    { title: 'STATIC', text: 'If you can hear this, the Hum didn’t get you. Good. There’s a second sound under every kick drum in this city. Too low to hear. You feel it in your teeth.' },
+    { title: 'GOLD FOIL', text: 'The free tickets started three weeks ago. Same gold foil, same smile on the guy handing them out. Everybody who takes one comes back a little emptier.' },
+    { title: 'KEEP DIGGING', text: 'I can’t say this out loud. They listen to everything except vinyl. Find all fifteen records and you’ll know what I know. —G' },
+  ],
+  [
+    { title: 'THE RAILS', text: 'Old Town was built on the rails. The transmitters ride the old lines from venue to venue. Wherever the tracks go, the Hum goes.' },
+    { title: 'NO REFLECTION', text: 'The suits don’t eat. Don’t sleep. Don’t blink. Check a puddle when one walks past. Whatever’s wearing that suit doesn’t reflect right.' },
+    { title: 'THEY TAKE DJS FIRST', text: 'Wire a transmitter into the decks and the whole crowd feeds at once. That’s why they went after Goaty. One DJ is worth a thousand tickets.' },
+  ],
+  [
+    { title: 'THE STORM', text: 'Wichita, a storm nobody forgot. Farmers east of town swore a light came down out of the clouds and never went back up.' },
+    { title: 'AIR CAPITAL', text: 'A few years later a prairie town is building planes for the whole planet. Ask yourself where a cowtown learned to build like that.' },
+    { title: 'SPARE PARTS', text: 'The Greys don’t want Drew’s planes. They want the engines. Something old and broken under this city still needs parts to fly.' },
+  ],
+  [
+    { title: 'ROOT-WATER', text: 'The elves have a word for real music: root-water. It soaks down through the floor of every honest show and feeds something older than the city.' },
+    { title: 'THE SLEEPING DOME', text: 'Every tunnel down here bends toward one place. The elves won’t say its name. They just point straight up and whisper: the Sleeping Dome.' },
+    { title: 'WHY THEY HATE YOU', text: 'Since the warehouse shows started, the roots have been glowing again. That’s why they came for Tribal Roots. You’re feeding the wrong thing.' },
+  ],
+  [
+    { title: '1969', text: 'A round hall goes up downtown in record time. No windows in the roof. Strange shape for a convention center. Perfect shape for a hull.' },
+    { title: 'THE LINEMAN', text: 'Someone wrote a song about a lineman who hears a voice in the wires and can’t stop listening. He wasn’t being poetic. He was taking notes.' },
+    { title: '—G', text: 'I pressed these records so someone like you would hear. We never wanted your city. We only wanted to go home. —G, the one in the robe.' },
+  ],
 ];
 const wake = [
   { fn: () => { const p = S.player; p.set('script'); p.scriptPose = p.P.down; if (S.buddy) { S.buddy.x = p.x + 110; S.buddy.face = -1; } } }, { wait: 30 },
-  say('buddy', 'Yo. YO. Get up. You good?'),
+  say('buddy', 'Yo. YO. Get up — don’t look at the lights, look at me. You good?'),
   { fn: () => { const p = S.player; p.scriptPose = p.P.getup; } }, { wait: 22 },
   { fn: () => { const p = S.player; p.set('idle'); p.face = 1; } },
-  say('player', 'What... what happened? Why is everybody just standing there?'),
-  say('buddy', 'No idea. The bass dropped and the whole room checked out. Except us.'),
-  say('buddy', 'There’s a hum under the kick. Feel it? It’s coming from up in the vents.'),
-  say('buddy', 'And watch the ones in the back. Something’s wrong with their faces.'),
+  say('player', 'My head’s ringing... why is everybody just standing there?'),
+  say('buddy', 'The drop hit and the whole room flatlined. Six hundred people. Except you and me.'),
+  say('buddy', 'Hear that? Under the kick. A hum. It’s coming out of the vents, and it’s not ours.'),
+  say('buddy', 'And don’t trust the ones still moving. Something’s wrong with their faces.'),
 ];
 const L1 = {
   name: 'THE WAREHOUSE', sub: 'Something is wrong with the crowd.', mat: 'wh', buddy: 'lotusflow', buddyAlt: 'shea',
-  intro: [{ cut: 'l1_freeze', lines: [['narrator', 'Saturday night. Tribal Roots Warehouse. The drop hits... and the whole room stops.'], ['narrator', 'Hundreds of people frozen mid-dance. Eyes glowing purple. Swaying to a beat nobody is playing.']] }, ...wake],
+  intro: [{ cut: 'l1_freeze', lines: [['narrator', 'Saturday night. Tribal Roots Warehouse. Sold out. The drop hits... and six hundred people stop at once.'], ['narrator', 'Frozen mid-jump. Eyes glowing purple. Swaying to a beat nobody on stage is playing.']] }, ...wake],
   scenes: [
     { bg: 'l1a', w: 3800, ground: 652, objective: 'CLIMB TO THE VENT', hint: 'Climb the speaker stacks. Find the vent.', exit: 'pipe',
       lights: [[400, 220, '#ff2a4d', 260], [1200, 200, '#2ef0d8', 300], [2100, 220, '#9b5cff', 300], [3000, 200, '#ff2a4d', 260]],
@@ -1122,10 +1207,10 @@ const L1 = {
         { t: 'glows', x: 860, y: 340, n: 6, dx: 55, arc: 20 }, { t: 'glows', x: 1200, y: 600, n: 5 }, { t: 'glows', x: 2050, y: 340, n: 6, dx: 55 }, { t: 'glows', x: 2900, y: 590, n: 5 },
         { t: 'foe', k: 'vamp_raver', x: 1000 }, { t: 'foe', k: 'vamp_raver', x: 1500 }, { t: 'foe', k: 'vamp_vip', x: 2050 }, { t: 'foe', k: 'vamp_bouncer', x: 2500 },
         { t: 'foe', k: 'vamp_raver', x: 3150 }, { t: 'foe', k: 'vamp_vip', x: 3400 },
-        { t: 'talk', x: 900, beats: [say('buddy', 'Those aren’t ravers. Look at their necks — scales.'), say('player', 'Then we hit ’em.')] },
+        { t: 'talk', x: 900, beats: [say('buddy', 'Those aren’t ravers. Check the necks. That’s scales, bro. Actual scales.'), say('player', 'Cool. Cool cool cool. Then we hit ’em.')] },
       ] },
     { bg: 'l1b', w: 3000, ground: 640, gaps: [[1450, 1700]], hint: 'Watch the fans.', tint: 'rgba(30,10,40,0.12)',
-      enter: [say('buddy', 'Tight in here. That hum is way louder. Keep moving.')],
+      enter: [say('buddy', 'It’s louder in here. Like we’re crawling down its throat. Keep moving.')],
       items: [
         { t: 'hazard', k: 'fan', x: 600, w: 320 }, { t: 'hazard', k: 'fan', x: 2100, w: 320 },
         { t: 'plat', m: 'move', x: 1462, y: 590, s: 0.25, mv: { dy: 40, per: 160 } }, { t: 'pick', k: 'vinyl', x: 1575, y: 470 },
@@ -1136,18 +1221,18 @@ const L1 = {
     { bg: 'l1c', w: 1700, ground: 650, lights: [[1350, 380, '#c77bff', 360]],
       items: [
         { t: 'plat', m: 'short', x: 300, y: 480 }, { t: 'pick', k: 'vinyl', x: 450, y: 420 },
-        { t: 'boss', k: 'transmitter', x: 1380, at: 520, lock: 420, obj: 'DESTROY THE TRANSMITTER', beats: [say('buddy', 'That’s it. That thing is wired into the whole building.'), say('player', 'Then let’s unplug it.')] },
+        { t: 'boss', k: 'transmitter', x: 1380, at: 520, lock: 420, obj: 'DESTROY THE TRANSMITTER', beats: [say('buddy', 'There it is. It’s wired into every speaker in the building. It’s been playing UNDER us all night.'), say('player', 'Then let’s pull the plug on it.')] },
       ],
-      win: [{ fn: () => { const x = 1300; S.picks.push(new Pick('ticket', x, 590, { onGet: () => S.levelComplete() })); S.objective = 'GRAB THE TICKET'; } }, say('buddy', 'Wait — what’s that on the floor?')] },
+      win: [{ fn: () => { const x = 1300; S.picks.push(new Pick('ticket', x, 590, { onGet: () => S.levelComplete() })); S.objective = 'GRAB THE TICKET'; } }, say('buddy', 'Wait... something fell out of it. Is that a ticket?')] },
   ],
   outro: [
-    { cut: 'l1_ticket', lines: [['narrator', 'A golden ticket. “FREE TICKET.” Still warm. Still humming.']] },
-    { cut: 'l1_shea', lines: [['shea', 'Where’d you get this?'], ['buddy', 'Wired into the transmitter. Under the kick drum.'], ['shea', 'Then it’s worse than I thought. I’ve been hearing it for weeks. I call it the Hum.'], ['shea', 'These tickets are all over town. People take one, go to a show, and come back... different.'], ['shea', 'Same dead-eyed crowds all over Old Town tonight. Start there.']] },
+    { cut: 'l1_ticket', lines: [['narrator', 'Gold foil. “FREE TICKET — ALL SHOWS.” Still warm. Still humming in your hand.']] },
+    { cut: 'l1_shea', lines: [['shea', '...Put that down. Slowly. Where did you get this?'], ['buddy', 'Pulled it out of a machine in the vents. It was feeding off the whole room.'], ['shea', 'Three weeks I’ve been hearing it. Under every set, every venue. I call it the Hum. Thought I was losing it.'], ['shea', 'These tickets are everywhere. People take one, go to a show, and come home... quieter. Emptier. Like something drank them.'], ['shea', 'Old Town’s full of dead-eyed crowds tonight. And Goaty’s playing down there. Go. Now.']] },
   ],
 };
 const L2 = {
   name: 'OLD TOWN', sub: 'Goaty is DJing like he’s asleep.', mat: 'ot', buddy: 'lotusflow', buddyAlt: 'shea',
-  intro: [{ cut: 'l2_point', lines: [['buddy', 'Listen. That’s Goaty’s set coming off the festival stage.'], ['buddy', 'But that’s not how Goaty plays. He sounds asleep.'], ['player', 'Same dead crowd. There’s a transmitter close.']] }],
+  intro: [{ cut: 'l2_point', lines: [['buddy', 'That’s Goaty’s set coming off the festival stage.'], ['buddy', 'But listen to it. No drops. No chaos. Goaty doesn’t play like that. He sounds asleep.'], ['player', 'Same frozen crowd, same hum. There’s a transmitter on that stage.']] }],
   scenes: [
     { bg: 'l2a', w: 3600, ground: 650, hint: 'Men in Black. Don’t let them stop you.', lights: [[400, 260, '#ffb347', 200], [1700, 260, '#ffb347', 200], [2900, 260, '#ffb347', 200]],
       items: [
@@ -1159,7 +1244,7 @@ const L2 = {
         { t: 'prop', k: 'bin', x: 2650, s: 0.5, solid: true }, { t: 'cp', x: 1800 }, { t: 'pick', k: 'pendant', x: 2700, y: 470 },
         { t: 'glows', x: 1600, y: 300, n: 6, dx: 55 }, { t: 'glows', x: 600, y: 600, n: 5 }, { t: 'glows', x: 3000, y: 600, n: 5 },
         { t: 'foe', k: 'mib', x: 950 }, { t: 'foe', k: 'vamp_raver', x: 1400 }, { t: 'foe', k: 'mib', x: 2000 }, { t: 'foe', k: 'vamp_bouncer', x: 2600 }, { t: 'foe', k: 'mib', x: 3100 }, { t: 'foe', k: 'mib', x: 3300 },
-        { t: 'talk', x: 600, beats: [say('buddy', 'Suits. In Old Town. At 2am. Yeah, those aren’t cops.')] },
+        { t: 'talk', x: 600, beats: [say('buddy', 'Black suits. Sunglasses. In Old Town. At 2am. Yeah — those aren’t cops.')] },
       ] },
     { bg: 'l2b', w: 4200, ground: 650, gaps: [[900, 1120], [1900, 2160], [3000, 3240]], storm: true, hint: 'Rooftops. Mind the gaps.',
       items: [
@@ -1171,7 +1256,7 @@ const L2 = {
         { t: 'foe', k: 'mib', x: 700 }, { t: 'foe', k: 'vamp_raver', x: 1500 }, { t: 'foe', k: 'mib', x: 1700 }, { t: 'foe', k: 'vamp_vip', x: 2600 }, { t: 'foe', k: 'mib', x: 2800 }, { t: 'foe', k: 'vamp_bouncer', x: 3600 }, { t: 'foe', k: 'mib', x: 3900 },
       ] },
     { bg: 'l2c', w: 1800, ground: 650, lights: [[1450, 300, '#9b5cff', 340]],
-      enter: [{ cut: 'l2_hypno', lines: [['narrator', 'Goaty on the decks, eyes glowing. Behind him: a man in a suit with scales on his neck, guarded by the Men in Black.'], ['buddy', 'That’s the one feeding off him. Take him down and Goaty wakes up.']] }],
+      enter: [{ cut: 'l2_hypno', lines: [['narrator', 'Goaty on the decks, eyes glowing purple. Behind him, a promoter in a suit — scales up his neck — drinking in the whole crowd.'], ['buddy', 'That’s the leech. Knock him off that stage and Goaty comes back.']] }],
       items: [
         { t: 'crowd', x0: 200, x1: 1700, n: 14 },
         { t: 'plat', m: 'short', x: 330, y: 480 }, { t: 'pick', k: 'vinyl', x: 480, y: 420 },
@@ -1180,13 +1265,13 @@ const L2 = {
       ],
       win: [{ fn: () => { const g = S.npcs.find(n => n.k === 'goaty_dj'); if (g) g.snap = true; S.crowdFreed = true; const tb = S.props.find(p => p.k === 'txbox'); if (tb) { tb.k = 'tx_dead'; tb.im = P_('tx_dead'); tb.glow = null; S.blast({ x: tb.x, y: 560, r: 120, dmg: 0, color: '#9b5cff', fx: true }); } } }, { wait: 50 },
         { fn: () => { const g = S.npcs.find(n => n.k === 'goaty_dj'); if (g) g.freed = true; } },
-        say('goaty', '...Bro. How long was I up there?'), { fn: () => S.levelComplete() }] },
+        say('goaty', '...Bro. Why am I sweating. How long was I up there?'), { fn: () => S.levelComplete() }] },
   ],
-  outro: [{ cut: 'l2_freed', lines: [['goaty', 'I could hear it the whole time. Under every track. Like somebody else was mixing.'], ['ghostlabs', 'Vito sniffed out where the signal’s coming from. Same frequency’s been lighting up the airfield all week.'], ['goaty', 'Air Capital Property Maintenance. Drew’s shop. He’s been seeing lights over the hangars.'], ['buddy', 'Then that’s where we go.']] }],
+  outro: [{ cut: 'l2_freed', lines: [['goaty', 'I could hear it the whole time. Under every track. Like somebody else had their hands on my mixer.'], ['ghostlabs', 'Vito’s been growling at the sky all week. Same frequency’s lighting up out by the airfield.'], ['goaty', 'Air Capital Property Maintenance. Drew’s shop. He called me Tuesday saying there were lights over his hangars. I laughed at him.'], ['buddy', 'Nobody’s laughing now. Let’s go.']] }],
 };
 const L3 = {
   name: 'AIR CAPITAL', sub: 'Air Capital Property Maintenance. Lights over the hangars.', mat: 'ac', buddy: 'goaty', buddyAlt: 'ghostlabs',
-  intro: [say('buddy', 'Drew’s hangar is at the far end. Stay low. Something’s circling.')],
+  intro: [say('buddy', 'Drew’s hangar is at the far end of the field. Stay low. Something up there is circling.')],
   scenes: [
     { bg: 'l3a', w: 4000, ground: 655, storm: true, hint: 'Greys. Real ones.',
       items: [
@@ -1199,28 +1284,28 @@ const L3 = {
         { t: 'foe', k: 'grey', x: 1150 }, { t: 'foe', k: 'grey', x: 1700 }, { t: 'foe', k: 'grey', x: 2250 }, { t: 'foe', k: 'grey', x: 2750 }, { t: 'foe', k: 'grey', x: 3300 }, { t: 'foe', k: 'grey', x: 3700 },
       ] },
     { bg: 'l3b', w: 1900, ground: 655,
-      enter: [{ cut: 'l3_fight', lines: [['narrator', 'Inside the hangar: Drew, a wrench and a possum, holding off a pack of Greys.'], ['drew', 'LITTLE HELP?!']] }],
+      enter: [{ cut: 'l3_fight', lines: [['narrator', 'Inside the hangar: one man, one wrench, one very angry possum — holding off a pack of Greys.'], ['drew', 'COULD USE A HAND HERE, Y’ALL!']] }],
       items: [
         { t: 'plat', m: 'short', x: 280, y: 470 }, { t: 'pick', k: 'vinyl', x: 430, y: 410 },
         { t: 'npc', k: 'drew', x: 1560, face: -1 }, { t: 'pipe', k: 'hatch', x: 1700, s: 0.42, need: () => S.flags.hatch },
-        { t: 'talk', x: 640, beats: [{ fn: () => { S.objective = 'SAVE DREW'; S.lock = { x0: 620, waves: [['grey', 'grey'], ['grey', 'grey', 'grey']], wi: 0, done: [say('buddy', 'Here comes the big one.'), { fn: () => S.startBoss({ k: 'commander', x: 1400, lock: 620, obj: 'DEFEAT THE GREY COMMANDER' }) }] }; } }] },
+        { t: 'talk', x: 640, beats: [{ fn: () => { S.objective = 'SAVE DREW'; S.lock = { x0: 620, waves: [['grey', 'grey'], ['grey', 'grey', 'grey']], wi: 0, done: [say('buddy', 'Okay, that one’s got a cape. That’s the boss.'), { fn: () => S.startBoss({ k: 'commander', x: 1400, lock: 620, obj: 'DEFEAT THE GREY COMMANDER' }) }] }; } }] },
       ],
       win: [{ fn: () => { const d = S.npcs.find(n => n.k === 'drew'); if (d) d.talk = true; } },
-        { cut: 'l3_hatch', lines: [['drew', 'They want my planes. Don’t ask me why. They’ve been sniffing around since summer.'], ['drew', 'We gotta get out of here. There’s more of ’em coming. Old maintenance tunnel runs under the whole city.'], ['drew', 'One thing. Down there you’re gonna meet the Machine Elves. They don’t let just anybody through.'], ['drew', 'You’ll have to earn their respect.']] },
+        { cut: 'l3_hatch', lines: [['drew', 'They keep coming for the engines. Not the planes — the ENGINES. Since summer.'], ['drew', 'More of ’em are coming. There’s an old maintenance tunnel under this shop. Runs under the whole city.'], ['drew', 'Fair warning. Down there you’re gonna meet the Machine Elves. Little guys. Grinning. Sharp.'], ['drew', 'They don’t let just anybody through. You’ll have to earn it.']] },
         { fn: () => { S.flags.hatch = true; S.objective = 'DROP DOWN THE HATCH'; const d = S.npcs.find(n => n.k === 'drew'); if (d) d.talk = false, d.calm = true; } }] },
     { bg: 'l3c', w: 2800, ground: 650, hint: 'Into the tunnels.',
       items: [
         { t: 'plat', m: 'long', x: 700, y: 480 }, { t: 'plat', m: 'short', x: 1400, y: 380 }, { t: 'pick', k: 'vinyl', x: 1550, y: 320 },
         { t: 'cp', x: 1300 }, { t: 'glows', x: 740, y: 420, n: 6, dx: 55 }, { t: 'glows', x: 2100, y: 600, n: 6 },
         { t: 'foe', k: 'grey', x: 900 }, { t: 'foe', k: 'grey', x: 1700 }, { t: 'foe', k: 'elf_spear', x: 2200 }, { t: 'foe', k: 'elf_spear', x: 2450 },
-        { t: 'talk', x: 1900, beats: [say('buddy', 'Was that... a little guy with a spear?'), say('drew', 'Told you. Elves.')] },
+        { t: 'talk', x: 1900, beats: [say('buddy', 'Was that... a tiny guy with a glowing spear?'), say('drew', 'Told you. Elves. Don’t make eye contact. Actually, do. They respect that.')] },
       ] },
   ],
-  outro: [say('drew', 'Watch your step. From here on it’s their kingdom.')],
+  outro: [say('drew', 'Watch your step. From here on, it’s their kingdom. We’re the guests.')],
 };
 const L4 = {
   name: 'THE SEWERS', sub: 'The kingdom of the Machine Elves.', mat: 'sw', buddy: 'drew', buddyAlt: 'goaty',
-  intro: [say('buddy', 'Stay out of the deep water. And if you see a little guy in a pointy hat, he’s not friendly yet.')],
+  intro: [say('buddy', 'Stay out of the deep water. And anything in a pointy hat? Not friendly yet.')],
   scenes: [
     { bg: 'l4a', w: 4200, ground: 655, gaps: [[1500, 1720]], hint: 'Deep water slows you down.',
       items: [
@@ -1238,12 +1323,12 @@ const L4 = {
         { t: 'plat', m: 'long', x: 1050, y: 470 }, { t: 'plat', m: 'short', x: 1600, y: 360 }, { t: 'pick', k: 'vinyl', x: 1740, y: 300 },
         { t: 'cp', x: 1450 }, { t: 'pick', k: 'pendant', x: 2200, y: 600 }, { t: 'glows', x: 1080, y: 410, n: 7, dx: 55 },
         { t: 'foe', k: 'elf_spear', x: 800 }, { t: 'foe', k: 'elf_sling', x: 1200 }, { t: 'foe', k: 'elf_bomber', x: 1900 }, { t: 'foe', k: 'elf_spear', x: 2100 }, { t: 'foe', k: 'elf_sling', x: 2300 },
-        { t: 'boss', k: 'elfking', x: 3250, at: 2560, lock: 2320, obj: 'EARN THE KING’S RESPECT', beats: [say('elfking', 'Hum-carriers! In MY tunnels! Elves, to the throne!'), say('buddy', 'He thinks we’re with the Hum. Show him we’re not.')] },
+        { t: 'boss', k: 'elfking', x: 3250, at: 2560, lock: 2320, obj: 'EARN THE KING’S RESPECT', beats: [say('elfking', 'HUM-CARRIERS! Stinking of the dome! In MY tunnels! Elves — to the throne!'), say('buddy', 'He thinks we’re with them. Only one way to argue with a king.')] },
         { t: 'pipe', k: 'elbow', x: 3460, s: 0.4, need: () => S.flags.kingDone },
       ],
       win: [
-        { cut: 'l4_king', lines: [['elfking', '...Hah! HAH! No Hum-carrier fights like that. You carry the beat, not the Hum.'], ['elfking', 'Forgive us. For a hundred and fifty years we have guarded the roots beneath this city.'], ['elfking', 'The Tree of Life’s roots run under all of Wichita. Every real show feeds them. And the Hum is poisoning them.']] },
-        { cut: 'l4_sun', lines: [['elfking', 'We kept one safe for you. We thought he was a sun spirit. He lights up the dark.'], ['sunshine', 'Took y’all long enough.'], ['elfking', 'The Hum comes from one place. Deep beneath the great dome. Century II.'], ['elfking', 'Take the root tunnel. But beware: the vampires are thick down there.']] },
+        { cut: 'l4_king', lines: [['elfking', '...Hah! HAH! No Hum-carrier fights like that. You carry the BEAT, not the Hum!'], ['elfking', 'Forgive us. For a hundred and fifty years we have guarded what grows beneath this city.'], ['elfking', 'The Tree of Life’s roots run under all of Wichita. Every honest show feeds them. The Hum is poisoning them, one ticket at a time.']] },
+        { cut: 'l4_sun', lines: [['elfking', 'We sheltered one of yours. We believed he was a sun spirit. He lights the dark.'], ['sunshine', 'Took y’all long enough. These little dudes made me DJ for three days straight.'], ['elfking', 'The Hum comes from one place. Beneath the great dome you call... Century II.'], ['elfking', 'Take the root tunnel. But the dome’s servants crawl thick down there. Go loud.']] },
         { fn: () => { S.flags.kingDone = true; S.objective = 'TAKE THE ROOT TUNNEL'; } }] },
     { bg: 'l4c', w: 3600, ground: 655, hint: 'Don’t touch the green.',
       items: [
@@ -1252,14 +1337,14 @@ const L4 = {
         { t: 'prop', k: 'roots', x: 600, s: 0.6 }, { t: 'prop', k: 'roots', x: 1900, s: 0.6 }, { t: 'prop', k: 'root_spk', x: 3300, s: 0.55, glow: '#9b5cff' },
         { t: 'cp', x: 1700 }, { t: 'glows', x: 2740, y: 320, n: 7, dx: 55 },
         { t: 'foe', k: 'vamp_raver', x: 700 }, { t: 'foe', k: 'vamp_vip', x: 1300 }, { t: 'foe', k: 'vamp_bouncer', x: 1900 }, { t: 'foe', k: 'vamp_raver', x: 2500 }, { t: 'foe', k: 'vamp_vip', x: 3000 }, { t: 'foe', k: 'vamp_raver', x: 3300 },
-        { t: 'talk', x: 400, beats: [say('sunshine', 'I got the light. Y’all got the hands. Let’s go.')] },
+        { t: 'talk', x: 400, beats: [say('sunshine', 'I got the light. Y’all got the hands. Don’t step in the green stuff.')] },
       ] },
   ],
-  outro: [say('sunshine', 'Feel that? We’re right under it. The whole dome is humming.')],
+  outro: [say('sunshine', 'Feel that in your chest? We’re right under it. The whole dome is humming.')],
 };
 const L5 = {
   name: 'CENTURY II', sub: 'The dome was never a building.', mat: 'c2', buddy: 'sunshine', buddyAlt: 'lotusflow',
-  intro: [{ cut: 'l5_reveal', lines: [['narrator', 'They come up beneath the dome. And the dome... isn’t a building.'], ['sunshine', 'That’s a ship. Century II is a crashed spaceship.'], ['player', 'They built the whole convention center around it to hide it.'], ['sunshine', 'Every crowd that ever cheered in here... feeding it.']] }],
+  intro: [{ cut: 'l5_reveal', lines: [['narrator', 'They climb up beneath Century II. And the dome... was never a building.'], ['sunshine', 'That’s a SHIP. They built a convention center around a crashed spaceship.'], ['player', 'Every graduation. Every concert. Every crowd that ever cheered in here...'], ['sunshine', '...was feeding it. Fifty years of Wichita, feeding it.']] }],
   scenes: [
     { bg: 'l5a', w: 4000, ground: 650, hint: 'Follow the cables.', lights: [[700, 300, '#2ef0d8', 300], [1900, 260, '#9b5cff', 320], [3100, 300, '#2ef0d8', 300]],
       items: [
@@ -1276,30 +1361,30 @@ const L5 = {
         { t: 'npc', k: 'greyleader', x: 1780, face: -1 },
         { t: 'talk', x: 1380, beats: [
           { fn: () => { const g = S.npcs.find(n => n.k === 'greyleader'); if (g) g.talk = true; } },
-          say('greyleader', 'Lower your hands. We are not your enemy.'),
-          say('greyleader', 'We crashed here a long time ago. A storm, and then the ground.'),
-          say('greyleader', 'Our ship runs on one thing: what a crowd gives off when the music hits and everyone is together.'),
-          say('greyleader', 'We only wanted to go home. Then a man came to us with a deal.'),
+          say('greyleader', 'Lower your hands. If I wanted you harmed, the Hum would already have you.'),
+          say('greyleader', 'We fell here long ago. A storm over the prairie, and then... the ground.'),
+          say('greyleader', 'Our ship runs on one thing: what a crowd gives off when the music hits and everyone becomes one.'),
+          say('greyleader', 'We only wanted to go home. Then a man in a very nice suit came to us with a deal.'),
           { cut: 'l5_deal', lines: [['greyleader', 'He would build the dome around us. Keep the crowds coming. Keep the transmitters running.'], ['greyleader', 'In return, he would feed too. He was the first energy vampire.'], ['greyleader', 'He has kept us stranded on purpose. The day our ship is full, it leaves, and his supply leaves with it.']] },
-          say('player', 'The Executive.'),
-          say('greyleader', 'When Tribal Roots began, the energy stopped coming to the dome. It went into the ground. Into the roots.'),
-          say('greyleader', 'Every show you throw, another transmitter dies. He is panicking. Turning more people. Planting more Hum.'),
-          say('greyleader', 'He is out back, by the river. Stop him, and throw the realest show this city has ever heard.'),
-          { fn: () => { const g = S.npcs.find(n => n.k === 'greyleader'); if (g) g.talk = false; S.objective = 'SURVIVE THE AMBUSH'; S.lock = { x0: 1100, waves: [['mib', 'mib'], ['vamp_vip', 'mib', 'vamp_bouncer']], wi: 0, done: [say('sunshine', 'Out back. By the river. Let’s finish this.')] }; } },
+          say('player', 'Let me guess. Nice watch. No soul.'),
+          say('greyleader', 'Then your warehouse opened. The energy stopped rising to the dome. It sank into the ground. Into the roots.'),
+          say('greyleader', 'Every show you throw, another transmitter dies. He is panicking. Turning more people. Selling more tickets.'),
+          say('greyleader', 'He is by the river, out back. Stop him. Then throw the realest show this city has ever heard. It may be enough to send us home.'),
+          { fn: () => { const g = S.npcs.find(n => n.k === 'greyleader'); if (g) g.talk = false; S.objective = 'SURVIVE THE AMBUSH'; S.lock = { x0: 1100, waves: [['mib', 'mib'], ['vamp_vip', 'mib', 'vamp_bouncer']], wi: 0, done: [say('sunshine', 'River. Now. Somebody text the crew — we’re throwing a show.')] }; } },
         ] },
       ] },
     { bg: 'l5c', w: 1800, ground: 650, lights: [[900, 260, '#2ef0b0', 380]],
       items: [
         { t: 'crowd', x0: 150, x1: 1750, n: 18 },
         { t: 'plat', m: 'short', x: 280, y: 480 }, { t: 'pick', k: 'vinyl', x: 430, y: 420 },
-        { t: 'boss', k: 'executive', x: 1320, at: 560, lock: 520, obj: 'STOP THE EXECUTIVE', beats: [say('exec', 'So. The warehouse kids.'), say('exec', 'Do you know what a crowd is worth? I do. I’ve been collecting since 1969.'), say('player', 'Shows aren’t yours to sell.'), say('exec', 'Everything is mine to sell.')] },
+        { t: 'boss', k: 'executive', x: 1320, at: 560, lock: 520, obj: 'STOP THE EXECUTIVE', beats: [say('exec', 'So. The warehouse kids. I’ve been watching your little shows bleed me dry.'), say('exec', 'Do you know what a crowd is worth? I do. I’ve been collecting since 1969.'), say('player', 'A crowd’s not a product, man.'), say('exec', 'Everything is a product. Even you. ESPECIALLY you.')] },
       ],
-      win: [say('sunshine', 'He’s down, but the whole city’s still under! We gotta drop the realest track this town has ever heard!'), say('sunshine', 'EVERYBODY, ON THE BEAT!'), { fn: () => startDrop() }] },
+      win: [say('sunshine', 'He’s down, but the whole city’s still under! We need the realest drop this town has ever heard!'), say('sunshine', 'EVERYBODY — ON THE BEAT!'), { fn: () => startDrop() }] },
   ],
   ending: [
     { cut: 'l5_wake', lines: [['narrator', 'On the drop, the whole riverbank wakes up. The purple drains out of their eyes. The roots light up under their feet.'], ['narrator', 'One real show. More energy than the dome ever stole.']] },
-    { cut: 'l5_ship', lines: [['greyleader', 'It is full. After all this time... it is full.'], ['greyleader', 'Thank you, Tribal Roots. Every transmitter in this city dies with us when we leave.'], ['narrator', 'The ship tears free of the dome and rises into the night.']] },
-    { cut: 'l5_dawn', lines: [['narrator', 'Dawn over downtown. Where Century II stood, there’s just an empty lot.'], ['buddy', '...So who’s telling the city council?'], ['player', 'Not it.']] },
+    { cut: 'l5_ship', lines: [['greyleader', 'It is full. After all this time... it is full.'], ['greyleader', 'Thank you, Tribal Roots. When we leave, every transmitter in this city dies with us. Keep throwing real shows.'], ['narrator', 'The ship tears free of the dome and rises into the night.']] },
+    { cut: 'l5_dawn', lines: [['narrator', 'Dawn over downtown. Where Century II stood, there’s just an empty lot.'], ['buddy', '...So. Who’s telling the city council?'], ['player', 'Not it. Somebody get me a breakfast burrito.']] },
     { fn: () => S.levelComplete() },
   ],
 };
@@ -1327,7 +1412,7 @@ L1.scenes[0] = { bg: 'l1a', w: 3800, ground: 652, objective: 'GET TO THE VENT', 
     { t: 'foe', k: 'vamp_raver', x: 1080 }, { t: 'foe', k: 'vamp_raver', x: 1520 },
     { t: 'prop', k: 'bar', x: 1620, s: 0.55, solid: true, glow: '#ff4fd8' }, ...row(1540, 440, 4),
     { t: 'cp', x: 1880 },
-    { t: 'talk', x: 1000, beats: [say('buddy', 'Those aren’t ravers. Look at their necks — scales.'), say('player', 'Then we hit ’em.')] },
+    { t: 'talk', x: 1000, beats: [say('buddy', 'Those aren’t ravers. Check the necks. That’s scales, bro. Actual scales.'), say('player', 'Cool. Cool cool cool. Then we hit ’em.')] },
     PL(2040, 330), { t: 'ladder', x: 2200, y0: 330 }, { t: 'tip', x: 2200, y: 230, s: 'LADDERS: STAND ON ONE, HOLD W' },
     ...row(2060, 280, 6),
     PL(2420, 190, 'short'), { t: 'pick', k: 'vinyl', x: 2530, y: 140 },
@@ -1337,10 +1422,10 @@ L1.scenes[0] = { bg: 'l1a', w: 3800, ground: 652, objective: 'GET TO THE VENT', 
     { t: 'prop', k: 'spk_tower', x: 3060, s: 0.6, solid: true, glow: '#9b5cff' },
     PL(3180, 330), ...row(3200, 280, 4),
     { t: 'pipe', k: 'vent', x: 3420, y: 330, s: 0.42, need: () => S.flags.vent },
-    { t: 'arena', x: 2900, x0: 2520, obj: 'CLEAR THE FLOOR', waves: [['vamp_raver', 'vamp_vip'], ['vamp_bouncer', 'vamp_raver']], done: [{ fn: () => { S.flags.vent = true; S.objective = 'UP THE TOWER TO THE VENT'; } }, say('buddy', 'Clear! Up the speaker tower — into the vent.')] },
+    { t: 'arena', x: 2900, x0: 2520, obj: 'CLEAR THE FLOOR', waves: [['vamp_raver', 'vamp_vip'], ['vamp_bouncer', 'vamp_raver']], done: [{ fn: () => { S.flags.vent = true; S.objective = 'UP THE TOWER TO THE VENT'; } }, say('buddy', 'Clear! Climb the speaker tower — the vent’s up top.')] },
   ] };
 L1.scenes[1] = { bg: 'l1b', w: 3000, ground: 640, gaps: [[1380, 1620]], tint: 'rgba(30,10,40,0.12)',
-  enter: [say('buddy', 'Tight in here. That hum is way louder. Keep moving.')],
+  enter: [say('buddy', 'It’s louder in here. Like we’re crawling down its throat. Keep moving.')],
   items: [
     { t: 'hazard', k: 'fan', x: 480, w: 300 }, { t: 'tip', x: 600, y: 230, s: 'FANS PUSH YOU BACK — KEEP MOVING' },
     PL(860, 480, 'long', { crumble: true }), { t: 'tip', x: 1000, y: 260, s: 'CRACKED GRATES DROP — DON’T STAND STILL' }, ...row(880, 430, 5),
@@ -1353,13 +1438,13 @@ L1.scenes[1] = { bg: 'l1b', w: 3000, ground: 640, gaps: [[1380, 1620]], tint: 'r
     { t: 'foe', k: 'vamp_vip', x: 2300 }, { t: 'foe', k: 'vamp_raver', x: 2650 }, ...row(2500, 600, 6),
   ] };
 L1.scenes[2].items = [PL(220, 480, 'short'), PL(470, 320, 'short'), { t: 'pick', k: 'vinyl', x: 570, y: 265 }, ...arc(260, 430, 560, 270, 4, 40),
-  { t: 'boss', k: 'transmitter', x: 1380, at: 640, lock: 420, obj: 'DESTROY THE TRANSMITTER', beats: [say('buddy', 'That’s it. That thing is wired into the whole building.'), say('player', 'Then let’s unplug it.')] }];
+  { t: 'boss', k: 'transmitter', x: 1380, at: 640, lock: 420, obj: 'DESTROY THE TRANSMITTER', beats: [say('buddy', 'There it is. It’s wired into every speaker in the building. It’s been playing UNDER us all night.'), say('player', 'Then let’s pull the plug on it.')] }];
 
 L2.scenes[0] = { bg: 'l2a', w: 3600, ground: 650, lights: L2.scenes[0].lights,
   items: [
     { t: 'prop', k: 'lights', x: 900, y: 210, s: 0.7 }, { t: 'prop', k: 'lights', x: 2300, y: 210, s: 0.7 },
     { t: 'prop', k: 'lamp', x: 400, s: 0.6 }, { t: 'prop', k: 'lamp', x: 1750, s: 0.6 }, { t: 'prop', k: 'lamp', x: 3000, s: 0.6 },
-    { t: 'talk', x: 500, beats: [say('buddy', 'Suits. In Old Town. At 2am. Yeah, those aren’t cops.')] },
+    { t: 'talk', x: 500, beats: [say('buddy', 'Black suits. Sunglasses. In Old Town. At 2am. Yeah — those aren’t cops.')] },
     { t: 'prop', k: 'crates', x: 760, s: 0.55, solid: true }, ...row(710, 450, 3),
     PL(900, 470, 'long'), ...row(920, 420, 6),
     { t: 'foe', k: 'mib', x: 1050 }, { t: 'foe', k: 'vamp_raver', x: 1380 },
@@ -1367,7 +1452,7 @@ L2.scenes[0] = { bg: 'l2a', w: 3600, ground: 650, lights: L2.scenes[0].lights,
     PL(1240, 320, 'long'), { t: 'ladder', x: 1400, y0: 320 }, ...row(1260, 270, 6),
     PL(1600, 190, 'short'), { t: 'pick', k: 'vinyl', x: 1700, y: 140 },
     { t: 'cp', x: 1900 },
-    { t: 'arena', x: 2350, x0: 1980, obj: 'MEN IN BLACK — TAKE THEM OUT', waves: [['mib', 'mib'], ['mib', 'vamp_vip', 'mib']], done: [say('buddy', 'They’re guarding something. The stage is close.')] },
+    { t: 'arena', x: 2350, x0: 1980, obj: 'MEN IN BLACK — TAKE THEM OUT', waves: [['mib', 'mib'], ['mib', 'vamp_vip', 'mib']], done: [say('buddy', 'Suits don’t bleed, they leak. Gross. The stage is close.')] },
     PL(2200, 470, 'short', { crumble: true }), PL(2460, 330, 'short', { crumble: true }), ...arc(2220, 420, 2560, 280, 5, 30),
     { t: 'bounce', x: 2950, k: 'spk_c' }, ...arc(2950, 380, 3150, 220, 4, 60), PL(3080, 240, 'short'), { t: 'pick', k: 'pendant', x: 3180, y: 185 },
     { t: 'foe', k: 'vamp_bouncer', x: 3250 }, ...row(3300, 600, 5),
@@ -1405,14 +1490,14 @@ L3.scenes[0] = { bg: 'l3a', w: 4000, ground: 655, storm: true,
   ] };
 L3.scenes[1].items = [ PL(240, 480, 'short'), PL(480, 330, 'short'), { t: 'pick', k: 'vinyl', x: 580, y: 275 }, ...arc(260, 430, 570, 280, 4, 40),
   { t: 'npc', k: 'drew', x: 1560, face: -1 }, { t: 'pipe', k: 'hatch', x: 1700, s: 0.42, need: () => S.flags.hatch },
-  { t: 'talk', x: 700, beats: [{ fn: () => { S.objective = 'SAVE DREW'; S.lock = { x0: 620, waves: [['grey', 'grey'], ['grey', 'grey', 'grey']], wi: 0, done: [say('buddy', 'Here comes the big one.'), { fn: () => S.startBoss({ k: 'commander', x: 1400, lock: 620, obj: 'DEFEAT THE GREY COMMANDER' }) }] }; } }] } ];
+  { t: 'talk', x: 700, beats: [{ fn: () => { S.objective = 'SAVE DREW'; S.lock = { x0: 620, waves: [['grey', 'grey'], ['grey', 'grey', 'grey']], wi: 0, done: [say('buddy', 'Okay, that one’s got a cape. That’s the boss.'), { fn: () => S.startBoss({ k: 'commander', x: 1400, lock: 620, obj: 'DEFEAT THE GREY COMMANDER' }) }] }; } }] } ];
 L3.scenes[2] = { bg: 'l3c', w: 2800, ground: 650,
   items: [
     { t: 'conv', x: 400, w: 600, dir: 1 }, ...row(420, 600, 8),
     { t: 'foe', k: 'grey', x: 800 }, PL(900, 470, 'short', { crumble: true }), PL(1120, 340, 'short', { crumble: true }), ...arc(920, 420, 1220, 290, 5, 30),
     { t: 'cp', x: 1350 },
     { t: 'lift', x: 1560, w: 140, top: 230, col: '#5fd0ff' }, PL(1700, 260, 'short'), { t: 'pick', k: 'vinyl', x: 1800, y: 205 }, ...row(1580, 300, 3),
-    { t: 'talk', x: 1950, beats: [say('buddy', 'Was that... a little guy with a spear?'), say('drew', 'Told you. Elves.')] },
+    { t: 'talk', x: 1950, beats: [say('buddy', 'Was that... a tiny guy with a glowing spear?'), say('drew', 'Told you. Elves. Don’t make eye contact. Actually, do. They respect that.')] },
     { t: 'foe', k: 'elf_spear', x: 2200 }, { t: 'foe', k: 'elf_spear', x: 2450 }, { t: 'foe', k: 'grey', x: 1900 },
     PL(2250, 470, 'long'), { t: 'pick', k: 'pendant', x: 2400, y: 415 },
   ] };
@@ -1437,12 +1522,12 @@ L4.scenes[1] = { bg: 'l4b', w: 3600, ground: 655, lights: L4.scenes[1].lights, w
     { t: 'bounce', x: 1500, k: 'mush_pink', s: 0.4, v: 28 }, ...arc(1500, 380, 1700, 220, 4, 50), PL(1640, 230, 'short'), { t: 'pick', k: 'vinyl', x: 1740, y: 175 },
     { t: 'foe', k: 'elf_spear', x: 800 }, { t: 'foe', k: 'elf_sling', x: 1250 }, { t: 'foe', k: 'elf_bomber', x: 1950 }, { t: 'foe', k: 'elf_spear', x: 2100 },
     { t: 'cp', x: 1880 }, { t: 'pick', k: 'pendant', x: 2250, y: 590 },
-    { t: 'boss', k: 'elfking', x: 3250, at: 2600, lock: 2320, obj: 'EARN THE KING’S RESPECT', beats: [say('elfking', 'Hum-carriers! In MY tunnels! Elves, to the throne!'), say('buddy', 'He thinks we’re with the Hum. Show him we’re not.')] },
+    { t: 'boss', k: 'elfking', x: 3250, at: 2600, lock: 2320, obj: 'EARN THE KING’S RESPECT', beats: [say('elfking', 'HUM-CARRIERS! Stinking of the dome! In MY tunnels! Elves — to the throne!'), say('buddy', 'He thinks we’re with them. Only one way to argue with a king.')] },
     { t: 'pipe', k: 'elbow', x: 3460, s: 0.4, need: () => S.flags.kingDone },
   ] };
 L4.scenes[2] = { bg: 'l4c', w: 3600, ground: 655, dark: 0.82,
   items: [
-    { t: 'talk', x: 300, beats: [say('sunshine', 'I got the light. Y’all got the hands. Let’s go.')] },
+    { t: 'talk', x: 300, beats: [say('sunshine', 'I got the light. Y’all got the hands. Don’t step in the green stuff.')] },
     { t: 'tip', x: 600, y: 230, s: 'GREEN ACID BURNS — STAY ON THE ROOTS' },
     { t: 'hazard', k: 'acid', x: 880, w: 380 }, PL(900, 500, 'short', { crumble: true }), PL(1130, 500, 'short', { crumble: true }), ...row(920, 450, 7),
     { t: 'foe', k: 'vamp_raver', x: 700 }, { t: 'foe', k: 'vamp_vip', x: 1450 },
@@ -1461,7 +1546,7 @@ L5.scenes[0] = { bg: 'l5a', w: 4000, ground: 650, lights: L5.scenes[0].lights,
     { t: 'prop', k: 'console', x: 1500, s: 0.5, solid: true }, PL(1620, 460, 'long'), PL(1900, 320, 'short', { crumble: true }), ...row(1640, 410, 6),
     { t: 'lift', x: 2150, w: 140, top: 190, col: '#c77bff' }, PL(2290, 210, 'short'), { t: 'pick', k: 'vinyl', x: 2390, y: 155 }, ...row(2170, 260, 3),
     { t: 'cp', x: 2200 },
-    { t: 'arena', x: 2700, x0: 2350, obj: 'THEY’RE ALL HERE', waves: [['grey', 'vamp_vip'], ['mib', 'vamp_bouncer', 'grey']], done: [say('sunshine', 'Follow the cables. Someone’s waiting up ahead.')] },
+    { t: 'arena', x: 2700, x0: 2350, obj: 'THEY’RE ALL HERE', waves: [['grey', 'vamp_vip'], ['mib', 'vamp_bouncer', 'grey']], done: [say('sunshine', 'All these cables run one direction. Something up ahead wants us to find it.')] },
     { t: 'bounce', x: 3300, k: 'spk_d', s: 0.4 }, ...arc(3300, 380, 3520, 230, 4, 50), PL(3460, 240, 'short'), { t: 'pick', k: 'pendant', x: 3560, y: 185 },
     PL(3000, 530, 'move', { s: 0.24, mv: { dx: 140, per: 200 } }), ...row(3700, 600, 5),
     { t: 'prop', k: 'curtain', x: 3800, s: 0.7 },
@@ -1473,6 +1558,21 @@ L5.scenes[2].items = [ { t: 'crowd', x0: 150, x1: 1750, n: 14 }, PL(200, 480, 's
 L5.scenes[2].items.find(i => i.t === 'boss').at = 640;
 L2.scenes[2].items.find(i => i.t === 'boss').at = 640;
 L1.scenes.forEach((sc, i) => { if (!sc.lights && i === 0) sc.lights = [[400, 220, '#ff2a4d', 260]]; });
+
+// ── scripted chatter (non-blocking bubbles)
+const BK = (x, who, s) => ({ t: 'bark', x, who, s });
+L1.scenes[0].items.push(BK(560, 'player', 'My ears are still ringing.'), BK(1450, 'buddy', 'Three weeks of free tickets. I KNEW something was off.'), BK(2300, 'player', 'Since when do bouncers have tails?'), BK(3000, 'buddy', 'Vent’s up top. Climb the tower.'));
+L1.scenes[1].items.push(BK(300, 'player', 'It smells like burnt bass in here.'), BK(1300, 'buddy', 'Grates are rotten. Don’t stop on ’em!'), BK(2200, 'buddy', 'It’s getting louder. We’re close.'));
+L2.scenes[0].items.push(BK(1250, 'player', 'Old Town’s never this quiet on a Saturday.'), BK(2900, 'buddy', 'Hit that speaker — it’ll launch you!'));
+L2.scenes[1].items.push(BK(300, 'buddy', 'Rooftops. Don’t look down. Actually, DO look down.'), BK(1700, 'player', 'Who leaves a record on a roof?'), BK(3300, 'buddy', 'I can hear Goaty’s set. It’s... so boring. Something’s wrong.'));
+L3.scenes[0].items.push(BK(500, 'buddy', 'Is that thing in the clouds... watching us?'), BK(1450, 'player', 'Those are Greys. Like, REAL Greys.'), BK(1700, 'buddy', 'Step in the beam. Trust me.'), BK(3100, 'player', 'Drew better have coffee.'));
+L3.scenes[2].items.push(BK(300, 'drew', 'Tunnel’s older than the shop. Older than the city, maybe.'), BK(1500, 'buddy', 'Why is the floor moving?!'), BK(2100, 'drew', 'Elf territory. Mind your manners.'));
+L4.scenes[0].items.push(BK(400, 'buddy', 'Water’s cold. Stay on the stones.'), BK(2200, 'player', 'Are those... mushrooms glowing in time with the beat?'), BK(3200, 'buddy', 'Bounce off the big mushroom. I saw an elf do it.'));
+L4.scenes[1].items.push(BK(300, 'player', 'There’s a whole TOWN down here.'), BK(1200, 'buddy', 'They’re grinning while they stab us. Respect, honestly.'));
+L4.scenes[2].items.push(BK(1200, 'sunshine', 'Stay in my light. Things move in the dark down here.'), BK(2700, 'player', 'The roots are glowing brighter the closer we get.'));
+L5.scenes[0].items.push(BK(400, 'player', 'These curtains are from the OPERA. We’re inside Century II.'), BK(1600, 'buddy', 'The walls are... breathing.'), BK(3100, 'player', 'If this is a ship, where’s the cockpit?'));
+L5.scenes[1].items.push(BK(250, 'player', 'Who made this conspiracy wall?'), BK(900, 'buddy', 'Somebody’s been tracking this for DECADES.'));
+L5.scenes[2].items.push(BK(250, 'buddy', 'Whole city’s on this riverbank. All of ’em under.'));
 const LEVELS = [L1, L2, L3, L4, L5];
 
 // ─────────────────────────────── debug layout overlay (S.debugMap = true)

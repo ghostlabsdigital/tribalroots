@@ -24,8 +24,8 @@ window.TRU = {
     kicker: 'Next up',
     title: 'AHEE',
     sub: 'Live at Tribal Roots',
-    when: '',            // e.g. 'Sat · Nov 21 · Doors 9PM'
-    where: '',           // e.g. 'Tribal Roots Warehouse · Wichita'
+    when: 'Sat · Nov 7 · 7PM–2AM · 21+',
+    where: 'Tribal Roots · Wichita, KS',
     img: '',             // optional flyer image
     button: 'Get tickets',
     url: 'https://theticketing.co/e/aheeattribalroots',
@@ -35,7 +35,7 @@ window.TRU = {
   // date: YYYY-MM-DD. Past dates hide automatically. Leave date '' to show "TBA".
   shows: [
     { date: '2026-10-31', title: 'Dark Circus: Tales From The Underground', venue: 'Halloween Bash · 7PM–2AM · 21+', city: 'Tribal Roots, Wichita', url: 'https://theticketing.co/e/bighalloweenbashtribalroots' },
-    { date: '', title: 'AHEE', venue: 'Tribal Roots', city: '', url: 'https://theticketing.co/e/aheeattribalroots' },
+    { date: '2026-11-07', title: 'Tribal Roots presents AHEE', venue: '7PM–2AM · 21+', city: 'Tribal Roots, Wichita', url: 'https://theticketing.co/e/aheeattribalroots' },
     // { date: '2026-11-21', title: 'Tribal Roots: Underground', venue: 'The Warehouse', city: 'Wichita, KS', url: 'https://tickets…' },
   ],
 

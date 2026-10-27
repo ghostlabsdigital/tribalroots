@@ -105,6 +105,9 @@
   .feat .w { color: var(--dim); margin-top: 6px; }
   .feat .btn { margin-top: 12px; width: 100%; justify-content: center; font-size: 18px; padding: 11px; }
   .mhint { font-size: 14px; color: var(--dim); margin-top: 8px; }
+  .touch .mhint { font-size: 16px; color: var(--gold); font-weight: 700; }
+  #music-sec.nudge .player { outline: 2px solid var(--gold); animation: nudge 1.2s ease-in-out infinite; }
+  @keyframes nudge { 50% { outline-color: transparent; } }
 
   /* leaderboard */
   .lb { list-style: none; margin: 0; padding: 0; counter-reset: r; }
@@ -144,14 +147,38 @@
     .side { border-left: 0; border-top: 1px solid var(--line); padding-left: env(safe-area-inset-left); }
   }
   @media (max-width: 700px) { .stagebar .hint { display: none; } }
+  /* ── phones / tablets (html.touch set by script) */
+  .thint { display: none; color: var(--dim); font-size: 15px; letter-spacing: .05em; text-transform: uppercase; }
+  .touch .stagebar .hint { display: none; }
+  .touch .stagebar .thint { display: inline; }
+  .touch #music-sec { order: -1; }       /* player right under the game */
+  .touch .brand { order: -2; }
+  .touch .side { overflow: visible; }
+  /* portrait: 16:9 screen + controller panel under it */
+  @media (orientation: portrait) {
+    .touch .app { grid-template-columns: 1fr; height: auto; }
+    .touch .stage { height: auto; }
+    .touch .stage iframe { flex: none; height: calc(100vw * 9 / 16 + 46vw + 36px); }
+    .touch .stagebar { padding: 6px 12px; }
+    .touch .side { border-left: 0; border-top: 1px solid var(--line); }
+  }
+  /* landscape phone: game takes the whole screen, scroll down for the rest */
+  @media (orientation: landscape) and (max-height: 600px) {
+    .touch .app { grid-template-columns: 1fr; height: auto; }
+    .touch .stage { height: 100dvh; }
+    .touch .stagebar { display: none; }
+    .touch .side { border-left: 0; }
+  }
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 </head>
 <body>
+<script>if (matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window) document.documentElement.classList.add('touch');</script>
 <div class="app">
   <main class="stage">
     <iframe id="game" src="play.html?embed=1" title="Tribal Roots: Underground game" allow="fullscreen; gamepad; autoplay" allowfullscreen></iframe>
     <div class="stagebar">
+      <span class="thint">Turn sideways for the big screen</span>
       <span class="hint">Click the game, press Enter · P1 WASD · J U K I · L O H · Space · P2 arrows + numpad · M mute</span>
       <button class="btn hot" id="full" type="button">Fullscreen</button>
     </div>
@@ -231,6 +258,7 @@
 
   // keep keyboard focus in the game
   game.addEventListener('load', () => { try { game.contentWindow.focus(); } catch (e) {} });
+  if (!(document.fullscreenEnabled || document.webkitFullscreenEnabled)) $('full').hidden = true;
   $('full').onclick = () => { const el = game; (el.requestFullscreen || el.webkitRequestFullscreen || (() => {})).call(el); };
 
   // ── featured show
@@ -268,6 +296,7 @@
         if (cur !== i) return;
         api.createController($('pl-slot'), { uri: p.uri, width: '100%', height: p.type === 'track' ? 152 : 380, theme: 'dark' }, c => {
           ctrl = { play: () => c.play(), kind: 'sp' };
+          c.addListener('playback_update', e => { if (e.data && !e.data.isPaused) playing(); });
           if (wantPlay) setTimeout(() => ctrl && ctrl.play(), 300);
         });
       });
@@ -277,18 +306,23 @@
       player.innerHTML = `<iframe id="sc" title="${esc(t.dj)} music" src="${src}" height="${set ? 400 : 300}" allow="autoplay" ></iframe>`;
       loadScript('https://w.soundcloud.com/player/api.js').then(() => {
         if (cur !== i || !window.SC) return;
-        const w = SC.Widget($('sc')); w.bind(SC.Widget.Events.READY, () => { ctrl = { play: () => w.play(), kind: 'sc' }; if (wantPlay) ctrl.play(); });
+        const w = SC.Widget($('sc')); w.bind(SC.Widget.Events.PLAY, playing); w.bind(SC.Widget.Events.READY, () => { ctrl = { play: () => w.play(), kind: 'sc' }; if (wantPlay) ctrl.play(); });
       });
     }
   }
+  const TOUCH = document.documentElement.classList.contains('touch');
+  // phones block sites from starting embedded players, so the hint stays up until music is really playing
+  function playing() { $('mhint').style.visibility = 'hidden'; $('music-sec').classList.remove('nudge'); }
   function startMusic() {
-    if (started || !music.length) return; started = true; wantPlay = true; $('mhint').style.visibility = 'hidden'; track('music_play', { dj: music[cur] && music[cur].dj });
+    if (started || !music.length) return; started = true; wantPlay = true;
+    if (TOUCH) $('music-sec').classList.add('nudge'); else $('mhint').style.visibility = 'hidden'; track('music_play', { dj: music[cur] && music[cur].dj });
     if (ctrl) ctrl.play();
   }
   if (music.length) {
     music.forEach((t, i) => { const b = document.createElement('button'); b.className = 'chip'; b.type = 'button'; b.textContent = t.dj;
-      b.onclick = () => { wantPlay = true; started = true; $('mhint').style.visibility = 'hidden'; mount(i); }; chips.appendChild(b); });
+      b.onclick = () => { wantPlay = true; started = true; if (!TOUCH) $('mhint').style.visibility = 'hidden'; mount(i); }; chips.appendChild(b); });
     if (music.length === 1) chips.hidden = true;
+    if (TOUCH) $('mhint').textContent = '▶ Tap play on the player to start the music. Phones won\'t let sites start it for you.';
     $('mhint').hidden = false;
     mount(0);
     // first key / tap anywhere (page or game) starts the music

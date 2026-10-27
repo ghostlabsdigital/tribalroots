@@ -54,14 +54,23 @@ function tinted(img, color) {
 const AU = {
   ctx: null, muted: false, bpm: 126, started: false,
   init() {
-    if (this.ctx) { if (this.ctx.state === 'suspended') this.ctx.resume(); return; }
+    if (this.ctx) {
+      if (this.ctx.state !== 'running') this.ctx.resume().catch(() => {});
+      if (!this.unlocked) { // iOS: play one silent buffer inside a real tap to unlock output
+        try { const s = this.ctx.createBufferSource(); s.buffer = this.ctx.createBuffer(1, 1, 22050); s.connect(this.ctx.destination); s.start(0); this.unlocked = true; } catch (e) {}
+      }
+      return;
+    }
     try {
+      // iOS 17+: play game sound even when the ring/silent switch is on
+      try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}
       const AC = window.AudioContext || window.webkitAudioContext; this.ctx = new AC();
       this.master = this.ctx.createGain(); this.master.gain.value = 0.8; this.master.connect(this.ctx.destination);
       this.music = this.ctx.createGain(); this.music.gain.value = 0.32; this.music.connect(this.master);
       this.fx = this.ctx.createGain(); this.fx.gain.value = 0.9; this.fx.connect(this.master);
       const len = this.ctx.sampleRate; this.noiseBuf = this.ctx.createBuffer(1, len, len);
       const d = this.noiseBuf.getChannelData(0); for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+      this.init(); // resume + unlock now, while we're still inside the tap
     } catch (e) { this.ctx = null; }
   },
   setMuted(m) { this.muted = m; if (this.master) this.master.gain.value = m ? 0 : 0.8; },
@@ -1737,7 +1746,11 @@ function setupTouch() {
   const pad = document.getElementById('touch'); if (!pad) return;
   const coarse = matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window;
   if (!coarse) return;
-  pad.hidden = false;
+  pad.hidden = false; document.body.classList.add('touch');
+  // iOS only counts touchend/click as a gesture that can start audio
+  ['touchend', 'click'].forEach(ev => addEventListener(ev, () => AU.init(), { capture: true, passive: true }));
+  const orient = () => document.body.classList.toggle('portrait', innerHeight > innerWidth * 0.9); // room for a pad under the 16:9 screen
+  orient(); addEventListener('resize', orient);
   pad.querySelectorAll('[data-k]').forEach(b => {
     const k = b.dataset.k;
     const down = e => { e.preventDefault(); AU.init(); b.classList.add('on'); CTRL[0].virt.add(k); CTRL[0].virtPressed.add(k); if (k === 'lp') PRESSED.add('KeyJ'); if (k === 'u') PRESSED.add('ArrowUp'); if (k === 'd') PRESSED.add('ArrowDown'); if (k === 'l') PRESSED.add('ArrowLeft'); if (k === 'r') PRESSED.add('ArrowRight'); };

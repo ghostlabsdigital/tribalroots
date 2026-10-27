@@ -90,6 +90,19 @@
   .mail { display: flex; gap: 6px; align-items: center; margin-top: 10px; font-size: 15px; color: var(--dim); }
   .mail span { user-select: all; color: var(--ink); overflow-wrap: anywhere; }
 
+
+  /* featured show */
+  .feat { padding: 0; border-bottom: 1px solid var(--line); position: relative; overflow: hidden; background: radial-gradient(120% 90% at 100% 0%, rgba(255,42,61,.35), transparent 60%), radial-gradient(90% 80% at 0% 100%, rgba(255,207,63,.18), transparent 60%), var(--void); }
+  .feat img { display: block; width: 100%; height: auto; }
+  .feat .in { padding: 16px 18px 18px; }
+  .feat .k { font: 800 13px var(--ui); letter-spacing: .2em; text-transform: uppercase; color: var(--gold); display: flex; align-items: center; gap: 8px; }
+  .feat .k::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--blood); box-shadow: 0 0 0 0 rgba(255,42,61,.7); animation: pulse 1.6s infinite; }
+  @keyframes pulse { 70% { box-shadow: 0 0 0 10px rgba(255,42,61,0); } 100% { box-shadow: 0 0 0 0 rgba(255,42,61,0); } }
+  .feat h3 { margin: 6px 0 0; font: 400 54px/0.9 var(--display); letter-spacing: .02em; }
+  .feat .s { font: 700 19px var(--ui); letter-spacing: .06em; text-transform: uppercase; color: var(--blood); margin-top: 4px; }
+  .feat .w { color: var(--dim); margin-top: 6px; }
+  .feat .btn { margin-top: 12px; width: 100%; justify-content: center; font-size: 18px; padding: 11px; }
+  .mhint { font-size: 14px; color: var(--dim); margin-top: 8px; }
   /* narrow screens: game on top, sidebar below */
   @media (max-width: 960px) {
     .app { grid-template-columns: 1fr; height: auto; }
@@ -113,10 +126,13 @@
   <aside class="side">
     <a class="brand" href="./" aria-label="Tribal Roots: Underground home"><b>TRIBAL ROOTS</b><span>UNDERGROUND</span></a>
 
+    <section class="feat" id="feat" hidden></section>
+
     <section id="music-sec">
       <h2>Now spinning</h2>
       <div class="chips" id="chips" role="group" aria-label="Pick a DJ"></div>
       <div class="player" id="player"></div>
+      <div class="mhint" id="mhint" hidden>Music kicks in when you hit Start.</div>
     </section>
 
     <section id="shows-sec">
@@ -154,28 +170,66 @@
   game.addEventListener('load', () => { try { game.contentWindow.focus(); } catch (e) {} });
   $('full').onclick = () => { const el = game; (el.requestFullscreen || el.webkitRequestFullscreen || (() => {})).call(el); };
 
-  // ── music: SoundCloud or Spotify embeds
-  function embed(url) {
-    if (!url) return null;
-    if (/soundcloud\.com/.test(url)) {
-      const set = /\/sets\//.test(url) || !/soundcloud\.com\/[^/]+\/[^/?]+/.test(url);
-      return { src: 'https://w.soundcloud.com/player/?url=' + encodeURIComponent(url) + '&color=%23ff2a3d&auto_play=false&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=false&visual=true', h: set ? 400 : 300 };
-    }
-    const m = url.match(/open\.spotify\.com\/(?:intl-[a-z]+\/)?(playlist|album|artist|track|episode|show)\/([A-Za-z0-9]+)/);
-    if (m) return { src: `https://open.spotify.com/embed/${m[1]}/${m[2]}?theme=0`, h: m[1] === 'track' ? 152 : 380 };
-    return null;
+  // ── featured show
+  const F = C.featured;
+  if (F && (F.title || F.url)) {
+    const el = $('feat'); el.hidden = false;
+    el.innerHTML = `${F.img ? `<img src="${esc(F.img)}" alt="">` : ''}<div class="in">
+      <div class="k">${esc(F.kicker || 'Next up')}</div><h3>${esc(F.title)}</h3>
+      ${F.sub ? `<div class="s">${esc(F.sub)}</div>` : ''}${F.when || F.where ? `<div class="w">${esc([F.when, F.where].filter(Boolean).join(' · '))}</div>` : ''}
+      ${F.url ? `<a class="btn hot" href="${esc(F.url)}" target="_blank" rel="noopener">${esc(F.button || 'Get tickets')}</a>` : ''}</div>`;
   }
-  const music = (C.music || []).filter(t => embed(t.url));
+
+  // ── music: Spotify / SoundCloud players that start on the first key or tap
+  const parse = url => {
+    if (!url) return null;
+    if (/soundcloud\.com/.test(url)) return { kind: 'sc', url };
+    const m = url.match(/open\.spotify\.com\/(?:intl-[a-z]+\/)?(playlist|album|artist|track|episode|show)\/([A-Za-z0-9]+)/);
+    return m ? { kind: 'sp', type: m[1], id: m[2], uri: `spotify:${m[1]}:${m[2]}` } : null;
+  };
+  const music = (C.music || []).map(t => Object.assign({}, t, { p: parse(t.url) })).filter(t => t.p);
   const chips = $('chips'), player = $('player');
-  function play(i) {
-    const e = embed(music[i].url);
-    player.innerHTML = `<iframe title="${esc(music[i].dj)} music" src="${e.src}" height="${e.h}" allow="autoplay; encrypted-media; clipboard-write; fullscreen" loading="lazy"></iframe>`;
+  let cur = -1, ctrl = null, wantPlay = false, started = false, spApi = null, spWaiters = [];
+  const loadScript = src => new Promise(r => { const s = document.createElement('script'); s.src = src; s.onload = r; s.onerror = r; document.head.appendChild(s); });
+  window.onSpotifyIframeApiReady = api => { spApi = api; spWaiters.splice(0).forEach(f => f(api)); };
+  const spotify = () => spApi ? Promise.resolve(spApi) : new Promise(r => { spWaiters.push(r); if (spWaiters.length === 1) loadScript('https://open.spotify.com/embed/iframe-api/v1'); });
+
+  function mount(i) {
+    cur = i; const t = music[i], p = t.p;
     [...chips.children].forEach((c, k) => c.setAttribute('aria-pressed', k === i));
+    player.innerHTML = '<div id="pl-slot"></div>'; ctrl = null;
+    if (p.kind === 'sp') {
+      spotify().then(api => {
+        if (cur !== i) return;
+        api.createController($('pl-slot'), { uri: p.uri, width: '100%', height: p.type === 'track' ? 152 : 380, theme: 'dark' }, c => {
+          ctrl = { play: () => c.play(), kind: 'sp' };
+          if (wantPlay) setTimeout(() => ctrl && ctrl.play(), 300);
+        });
+      });
+    } else {
+      const set = /\/sets\//.test(p.url) || !/soundcloud\.com\/[^/]+\/[^/?]+/.test(p.url);
+      const src = 'https://w.soundcloud.com/player/?url=' + encodeURIComponent(p.url) + '&color=%23ff2a3d&auto_play=' + (wantPlay ? 'true' : 'false') + '&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=false&visual=true';
+      player.innerHTML = `<iframe id="sc" title="${esc(t.dj)} music" src="${src}" height="${set ? 400 : 300}" allow="autoplay" ></iframe>`;
+      loadScript('https://w.soundcloud.com/player/api.js').then(() => {
+        if (cur !== i || !window.SC) return;
+        const w = SC.Widget($('sc')); w.bind(SC.Widget.Events.READY, () => { ctrl = { play: () => w.play(), kind: 'sc' }; if (wantPlay) ctrl.play(); });
+      });
+    }
+  }
+  function startMusic() {
+    if (started || !music.length) return; started = true; wantPlay = true; $('mhint').hidden = true;
+    if (ctrl) ctrl.play();
   }
   if (music.length) {
-    music.forEach((t, i) => { const b = document.createElement('button'); b.className = 'chip'; b.type = 'button'; b.textContent = t.dj; b.onclick = () => play(i); chips.appendChild(b); });
+    music.forEach((t, i) => { const b = document.createElement('button'); b.className = 'chip'; b.type = 'button'; b.textContent = t.dj;
+      b.onclick = () => { wantPlay = true; started = true; $('mhint').hidden = true; mount(i); }; chips.appendChild(b); });
     if (music.length === 1) chips.hidden = true;
-    play(0);
+    $('mhint').hidden = false;
+    mount(0);
+    // first key / tap anywhere (page or game) starts the music
+    addEventListener('message', e => { if (e.data && e.data.tru === 'start') startMusic(); });
+    addEventListener('pointerdown', startMusic, { once: true });
+    addEventListener('keydown', startMusic, { once: true });
   } else {
     player.innerHTML = '<div class="empty">Add SoundCloud or Spotify links in <code>config.js</code> → <code>music</code> and the DJ player shows up here.</div>';
   }

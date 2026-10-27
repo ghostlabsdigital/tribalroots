@@ -18,6 +18,19 @@ window.TRU = {
     { dj: 'Tribal Roots', url: '' }, // e.g. https://open.spotify.com/playlist/xxxx
   ],
 
+  // ── FEATURED SHOW ────────────────────────────────────────
+  // Big promo block at the top of the sidebar. Set to null to hide.
+  featured: {
+    kicker: 'Next up',
+    title: 'AHEE',
+    sub: 'Live at Tribal Roots',
+    when: '',            // e.g. 'Sat · Nov 21 · Doors 9PM'
+    where: '',           // e.g. 'Tribal Roots Warehouse · Wichita'
+    img: '',             // optional flyer image
+    button: 'Get tickets',
+    url: 'https://theticketing.co/e/aheeattribalroots',
+  },
+
   // ── SHOWS / TICKETS ──────────────────────────────────────
   // date: YYYY-MM-DD. Past dates hide automatically.
   shows: [

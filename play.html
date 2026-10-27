@@ -49,6 +49,12 @@
 
 
 <script>if (/[?&]embed\b/.test(location.search)) document.body.classList.add("embed");</script>
+<script>
+  (function () { // first key/tap inside the game -> ask the site to start the music
+    let sent = false; const go = () => { if (sent) return; sent = true; try { parent.postMessage({ tru: 'start' }, '*'); } catch (e) {} };
+    addEventListener('keydown', go, true); addEventListener('pointerdown', go, true);
+  })();
+</script>
 <div id="stage">
   <canvas id="game" width="1280" height="720" aria-label="Tribal Roots: Underground game screen"></canvas>
   <div id="touch" hidden>

@@ -6,7 +6,7 @@
 <title>Tribal Roots: Underground</title>
 <meta name="description" content="Tribal Roots: Underground — a browser fighting game starring the Tribal Roots crew. Play free, listen to the DJs, catch the next show.">
 <meta property="og:title" content="Tribal Roots: Underground">
-<meta property="og:description" content="13 fighters. 4 stages. Play free in your browser.">
+<meta property="og:description" content="14 fighters. 4 stages. Play free in your browser.">
 <meta property="og:image" content="assets/portraits/title.webp">
 <meta name="theme-color" content="#07050a">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -419,7 +419,7 @@
   });
   const api = (path, opt) => fetch(path, opt).then(async r => ({ ok: r.ok, status: r.status, j: await r.json().catch(() => ({})) }));
   const ago = t => { const s = (Date.now() - t) / 1000; return s < 60 ? 'now' : s < 3600 ? Math.floor(s / 60) + 'm' : s < 86400 ? Math.floor(s / 3600) + 'h' : Math.floor(s / 86400) + 'd'; };
-  const FN = { lotusflow: 'lotusflow', ghostlabs: 'GhostLabs', goaty: 'Goaty', sunshine: 'Sunshine', rochelle: 'Rochelle', shea: 'Shea', djmoo: 'DJ Moo', sara: 'Sara', pixie: 'Pixie', starlena: 'Star Lena', tommy: 'Just Tommy', bearflame: 'Bearflame', brenda: 'Brenda' };
+  const FN = { lotusflow: 'lotusflow', ghostlabs: 'GhostLabs', goaty: 'Goaty', sunshine: 'Sunshine', rochelle: 'Rochelle', shea: 'Shea', djmoo: 'DJ Moo', sara: 'Sara', pixie: 'Pixie', starlena: 'Star Lena', tommy: 'Just Tommy', bearflame: 'Bearflame', brenda: 'Brenda', drew: 'Drew' };
 
   // ── leaderboard
   let backend = true;

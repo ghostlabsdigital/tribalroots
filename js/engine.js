@@ -1554,7 +1554,7 @@ function drawTitle(m) {
   txt('GhostLabs Digital Solutions', W / 2, 702, 16, '#bfb2c8', 'center', FONT_H, '600', 4);
   if (m.ok || CLICK) { AU.init(); AU.startMusic(); AU.sfx('confirm'); G.scene = 'mode'; G.menuI = 0; }
 }
-const MODES = [['1P VS CPU', 'cpu'], ['2P VERSUS', 'vs'], ['TRAINING', 'training'], ['HOW TO PLAY', 'help']];
+const MODES = [['STORY MODE', 'story'], ['1P VS CPU', 'cpu'], ['2P VERSUS', 'vs'], ['TRAINING', 'training'], ['HOW TO PLAY', 'help']];
 function menuList(items, y0, m, onPick, size = 52, gap = 76, cx = W / 2) {
   if (m.up) { G.menuI = (G.menuI + items.length - 1) % items.length; AU.sfx('select'); }
   if (m.down) { G.menuI = (G.menuI + 1) % items.length; AU.sfx('select'); }
@@ -1640,6 +1640,7 @@ function drawSelect(m) {
 }
 function confirmPick(p) {
   G.selDone[p] = true; AU.sfx('confirm');
+  if (G.mode === 'story') { STORY.begin(ROSTER[G.sel[0]].id); return; }
   if (G.mode !== 'vs' && p === 0) { G.chooser = 1; }
   if (G.selDone[0] && G.selDone[1]) { G.scene = 'stage'; G.t = 0; G.stageI = G.stageI || 0; return; }
   if (false) { AU.say(`${FIGHTERS[ROSTER[G.sel[0]].id].name} versus ${FIGHTERS[ROSTER[G.sel[1]].id].name}`); }
@@ -1806,6 +1807,7 @@ function step() {
     case 'vs': drawVS(); break;
     case 'stage': drawStageSelect(m); break;
     case 'results': updateFX(); drawResults(m); break;
+    case 'story': try { STORY.step(m); } catch (err) { console.error(err); if (!G.storyErr) G.storyErr = err; } break;
     case 'fight': {
       const pausePressed = m.pause || CTRL.some(c => false);
       if (pausePressed && !G.ko) { G.paused = !G.paused; G.menuI = 0; G.showMoves = false; if (G.paused) { PRESSED.clear(); renderFight(); drawPause(menuInput()); break; } }

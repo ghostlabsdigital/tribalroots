@@ -18,6 +18,7 @@ const ROSTER = [
   { id: 'tommy', playable: true },
   { id: 'bearflame', playable: true },
   { id: 'brenda', playable: true },
+  { id: 'drew', playable: true },
 ];
 
 const STAGES = [
@@ -31,6 +32,30 @@ const STAGES = [
 ];
 
 const FIGHTERS = {
+  drew: {
+    name: 'DREW', tag: 'Air Capital Property Maintenance. The possum stays.', color: '#ff9a3c', color2: '#7fd6ff',
+    hp: 1060, walk: 4.3, back: 3.3, jump: 18.5, jumpX: 5, dash: 12.5,
+    anim: {
+      idle: ['idle', 'ready'], walk_f: ['walk_f', 'run_a', 'walk_f2', 'run_b'], walk_b: ['walk_f2', 'walk_f'], dash: ['run_a', 'run_b'], backdash: ['dodge'],
+      jump: ['jump'], fall: ['fall'], land: ['land'], crouch: ['crouch'],
+      block: ['block'], c_block: ['c_block'], hit_l: ['hit_l'], hit_h: ['hit_h'], launch: ['hit_air'],
+      ground: ['ground'], getup: ['getup'], stun: ['stun', 'stun_2'],
+      entrance: ['entrance', 'taunt'], victory: ['victory'], defeat: ['defeat'],
+    },
+    moves: {
+      lp: { pose: 'lp', s: 4, a: 3, r: 8, dmg: 40, hs: 14, bs: 9, kb: 6, lvl: 'mid', stop: 6, sfx: 'light' },
+      lk: { pose: 'lk', s: 6, a: 3, r: 11, dmg: 50, hs: 15, bs: 10, kb: 8, lvl: 'mid', stop: 7, sfx: 'light' },
+      hp: { pose: 'hp', s: 9, a: 4, r: 17, dmg: 92, hs: 20, bs: 14, kb: 14, lvl: 'mid', stop: 10, sfx: 'heavy', heavy: true, lunge: 5 },
+      hk: { pose: 'hk', s: 11, a: 4, r: 19, dmg: 102, hs: 21, bs: 15, kb: 16, lvl: 'mid', stop: 11, sfx: 'heavy', heavy: true },
+      c_light: { pose: 'c_atk', s: 5, a: 3, r: 10, dmg: 38, hs: 13, bs: 9, kb: 6, lvl: 'low', stop: 6, sfx: 'light', crouch: true },
+      sweep: { pose: 'c_atk', s: 9, a: 4, r: 22, dmg: 80, hs: 0, bs: 14, kb: 10, lvl: 'low', stop: 10, sfx: 'heavy', kd: true, heavy: true, crouch: true },
+      air: { pose: 'air_atk', s: 5, a: 10, r: 4, dmg: 70, hs: 17, bs: 11, kb: 7, lvl: 'high', stop: 8, sfx: 'heavy', air: true },
+      s1: { name: 'Possum Dash', pose: 'sp1', wind: 'sp_startup', s: 12, a: 2, r: 22, special: 'proj', p: { speed: 11, dmg: 72, y: 150, scale: 0.5 }, sfx: 'cast' },
+      s2: { name: 'Leaf Blast', pose: 'sp_release', wind: 'sp_startup', s: 11, a: 2, r: 26, special: 'fxBurst', p: { at: 'front', reach: 220, fx: 'fx_s1', fxs: 0.75, cy: 220, w: 320, h: 360, hits: 3, every: 6, dur: 18, dmg: 72, chipDmg: 24, kb: 14, kd: true }, sfx: 'cast' },
+      s3: { name: 'Fall Barrage', pose: 'sp2', wind: 'sp_charge', s: 12, a: 2, r: 26, special: 'fxBurst', p: { at: 'opp', fx: 'fx_s2', fxs: 0.8, cy: 200, w: 300, h: 400, delay: 16, hits: 4, every: 6, dur: 26, dmg: 75, chipDmg: 24, kb: 10, kd: true }, sfx: 'cast' },
+      su: { name: 'Gutter Clean', pose: 'su_release', wind: 'su_startup', s: 8, a: 2, r: 50, special: 'ultimate', p: { fx: 'fx_super', fxs: 1.05 }, super: true, sfx: 'super' },
+    },
+  },
   pixie: {
     name: 'PIXIE', tag: 'Fire fans and faerie dust. Smiles while you burn.', color: '#ff5fa2', color2: '#ffb347',
     hp: 940, walk: 4.8, back: 3.8, jump: 19, jumpX: 5.2, dash: 13,
@@ -80,7 +105,7 @@ const FIGHTERS = {
     },
   },
   tommy: {
-    name: 'JUST TOMMY', tag: 'Suns out, guns out. Bucket hats incoming.', color: '#2ef0b0', color2: '#ffcf3f',
+    name: 'JUST TOMMY', tag: 'Suns out, guns out. LED whip in hand.', color: '#2ef0b0', color2: '#ffcf3f',
     hp: 1000, walk: 4.5, back: 3.5, jump: 19, jumpX: 5.2, dash: 13,
     anim: {
       idle: ['idle'], walk_f: ['walk_f', 'walk_f3', 'walk_f2', 'walk_f4'], walk_b: ['walk_f4', 'walk_f2', 'walk_f3', 'walk_f'], dash: ['dash', 'run_c'], backdash: ['dodge'],
@@ -92,15 +117,15 @@ const FIGHTERS = {
     moves: {
       lp: { pose: 'lp', s: 4, a: 3, r: 8, dmg: 40, hs: 14, bs: 9, kb: 6, lvl: 'mid', stop: 6, sfx: 'light' },
       lk: { pose: 'lk', s: 6, a: 3, r: 11, dmg: 50, hs: 15, bs: 10, kb: 8, lvl: 'mid', stop: 7, sfx: 'light' },
-      hp: { pose: 'hp', s: 9, a: 4, r: 17, dmg: 90, hs: 20, bs: 14, kb: 14, lvl: 'mid', stop: 10, sfx: 'heavy', heavy: true, lunge: 5 },
-      hk: { pose: 'hk', s: 11, a: 4, r: 19, dmg: 100, hs: 21, bs: 15, kb: 16, lvl: 'mid', stop: 11, sfx: 'heavy', heavy: true },
+      hp: { pose: 'whip_light', name: 'Light Lash', hh: 120, s: 9, a: 4, r: 17, dmg: 90, hs: 20, bs: 14, kb: 14, lvl: 'mid', stop: 10, sfx: 'heavy', heavy: true, lunge: 5 },
+      hk: { pose: 'whip_over', name: 'Overhead Arc', lunge: 4, s: 11, a: 4, r: 19, dmg: 100, hs: 21, bs: 15, kb: 16, lvl: 'mid', stop: 11, sfx: 'heavy', heavy: true },
       c_light: { pose: 'c_atk', s: 5, a: 3, r: 10, dmg: 35, hs: 13, bs: 9, kb: 6, lvl: 'low', stop: 6, sfx: 'light', crouch: true },
-      sweep: { pose: 'c_atk', s: 9, a: 4, r: 22, dmg: 80, hs: 0, bs: 14, kb: 10, lvl: 'low', stop: 10, sfx: 'heavy', kd: true, heavy: true, crouch: true },
+      sweep: { pose: 'whip_low', name: 'Low Sweep', s: 9, a: 4, r: 22, dmg: 80, hs: 0, bs: 14, kb: 10, lvl: 'low', stop: 10, sfx: 'heavy', kd: true, heavy: true, crouch: true },
       air: { pose: 'air_atk', s: 5, a: 10, r: 4, dmg: 70, hs: 17, bs: 11, kb: 7, lvl: 'high', stop: 8, sfx: 'heavy', air: true },
-      s1: { name: 'Sub Pressure', pose: 'sp_release', wind: 'sp_startup', s: 12, a: 2, r: 22, special: 'proj', p: { speed: 8.5, dmg: 76, y: 200, w: 150, h: 130, scale: 0.6, kb: 13 }, sfx: 'cast' },
-      s2: { name: 'Half-Time', pose: 'sp1', wind: 'sp_charge', s: 11, a: 2, r: 26, special: 'fxBurst', p: { at: 'front', reach: 230, fx: 'fx_s1', fxs: 0.75, cy: 230, w: 300, h: 380, dmg: 60, hs: 48, kb: 4, dur: 10, slowmo: 40 }, sfx: 'cast' },
-      s3: { name: 'Bucket Barrage', pose: 'sp2', wind: 'sp_charge', s: 11, a: 2, r: 26, special: 'fxBurst', p: { at: 'front', reach: 280, fx: 'fx_s2', fxs: 0.75, cy: 220, w: 340, h: 360, hits: 4, every: 5, dur: 22, dmg: 70, chipDmg: 22, kb: 14, kd: true }, sfx: 'cast' },
-      su: { name: 'The Drop', pose: 'su_release', wind: 'su_startup', s: 8, a: 2, r: 50, special: 'ultimate', p: { fx: 'fx_super', fxs: 1.05 }, super: true, sfx: 'super' },
+      s1: { name: 'Pixel Snap', pose: 'whip_heavy', wind: 'whip_ready', s: 11, a: 2, r: 22, special: 'proj', p: { speed: 13, dmg: 66, y: 215, scale: 0.55 }, sfx: 'cast' },
+      s2: { name: 'Neon Snare', pose: 'whip_snare', wind: 'whip_ready', s: 12, a: 2, r: 26, special: 'fxBurst', p: { at: 'opp', fx: 'fxw_snare', fxs: 0.7, cy: 210, w: 260, h: 360, delay: 12, dmg: 60, hs: 46, kb: 4, dur: 10 }, sfx: 'cast' },
+      s3: { name: 'Spiral Guard', pose: 'whip_spiral', wind: 'whip_ready', s: 9, a: 2, r: 24, special: 'fxBurst', p: { at: 'self', reach: 20, fx: 'fxw_spiral', fxs: 0.75, cy: 210, w: 360, h: 420, hits: 3, every: 6, dur: 18, dmg: 78, chipDmg: 26, kb: 16, kd: true, launch: 15, inv: 10 }, sfx: 'cast' },
+      su: { name: 'Ultra Whip', pose: 'whip_ultra', wind: 'whip_ready', s: 8, a: 2, r: 50, special: 'ultimate', p: { fx: 'fxw_ultra', fxs: 1.05 }, super: true, sfx: 'super' },
     },
   },
   bearflame: {

@@ -589,7 +589,7 @@ class Projectile {
   draw() {
     const f = this.fxm;
     if (f && f.img.fxm_travel) {
-      const im = (this.t >> 2) % 2 && f.img.fxm_travel_b ? f.img.fxm_travel_b : f.img.fxm_travel;
+      const fr = [f.img.fxm_travel, f.img.fxm_travel_b, f.img.fxm_travel_c].filter(Boolean), im = fr[(this.t >> 2) % fr.length];
       const sc = (this.fxmScale || 0.5) * Math.min(1, 0.6 + this.t * 0.06), dir = Math.sign(this.vx) || 1;
       ctx.save(); ctx.translate(this.x - dir * 40, GY - this.y); ctx.scale(dir * sc, sc);
       ctx.drawImage(im, -im.width / 2, -im.height / 2);
@@ -1045,6 +1045,89 @@ const SPECIALS = {
       },
     }));
     if (P.inv) f.inv = P.inv;
+  },
+  // ── data-driven specials (fighters whose FX come from a standalone FX sheet)
+  // PROJ: fireball drawn from fxm_travel / _b / _c (wired automatically for s1)
+  proj(f, g) {
+    const P = f.move.p || {}, col = f.def.color;
+    g.ents.push(new Projectile({
+      owner: f, fxmScale: P.scale || 0.55, x: f.x + f.facing * 160, y: P.y || 210, vx: (P.speed || 10) * f.facing, w: P.w || 120, h: P.h || 90,
+      hit: { dmg: P.dmg || 70, hs: 18, bs: 13, kb: P.kb || 10, lvl: 'mid', stop: 8, chip: 8, sfx: 'heavy', special: true, color: col },
+      trail(p) { if (p.t % 3 === 0) FX.push({ kind: 'spark', x: p.x - p.vx * 4, y: GY - p.y + rnd(-25, 25), vx: -p.vx * 0.2, vy: rnd(-1, 1), life: 14, max: 14, color: Math.random() < 0.5 ? col : f.def.color2, size: rnd(2, 5) }); },
+      drawFn() {},
+    }));
+  },
+  // FXBURST: hit zone in front / around / under the opponent, drawn with one FX image
+  fxBurst(f, g) {
+    const P = f.move.p, col = f.def.color, o = f.opp, img = f.img[P.fx], dir = f.facing;
+    const x = P.at === 'opp' ? clamp(o.x, f.x - 760, f.x + 760) : P.at === 'self' ? f.x + dir * (P.reach || 0) : f.x + dir * (P.reach || 180);
+    const delay = P.delay || 0, last = (P.hits || 1) - 1;
+    if (P.inv) f.inv = P.inv;
+    g.ents.push(new HitZone({
+      owner: f, x, w: P.w || 280, h: P.h || 340, delay, dur: P.dur || 10, max: P.hits || 1, every: P.every || 99, linger: 16,
+      hitFn: z => ({ dmg: z.hits === last ? P.dmg : (P.chipDmg || P.dmg), hs: P.hs || 26, bs: 14, kb: z.hits === last ? (P.kb || 14) : 1, lvl: P.lvl || 'mid', stop: z.hits === last ? 12 : 6, chip: 8,
+        kd: P.kd && z.hits === last, launch: P.launch || 13, sfx: 'heavy', special: true, heavy: true, color: col, juggle: true }),
+      onTick(z) {
+        if (z.t === delay) { g.shake = Math.max(g.shake, 9); ring(x, GY - (P.cy || 200), col, 30, 12, 18); spark(x, GY - (P.cy || 200), col, 16, 12); if (delay) AU.sfx('boom'); }
+        if (z.t < delay && z.t % 3 === 0) spark(x + rnd(-70, 70), GY - 6, col, 2, 4);
+      },
+      drawFn(z) {
+        if (!img) return;
+        const life = z.delay + z.dur + 16, k = z.t - z.delay;
+        const a = z.t < z.delay ? 0.25 + 0.5 * (z.t / Math.max(1, z.delay)) : clamp((life - z.t) / 14, 0, 1);
+        const sc = (P.fxs || 0.7) * (z.t < z.delay ? 0.55 : Math.min(1, 0.75 + k * 0.05)) * (1 + Math.max(0, k) * 0.004);
+        fxDraw(img, z.x, GY - (P.cy || 200), sc, dir, a, 0.4);
+      },
+    }));
+  },
+  // ULTIMATE: the super-FX art lands on the opponent and hits six times
+  ultimate(f, g) {
+    const P = f.move.p || {}, col = f.def.color, o = f.opp, img = f.img[P.fx || 'fx_super'], dir = f.facing;
+    g.ents.push(new HitZone({
+      owner: f, x: o.x, w: 320, h: 500, delay: 10, dur: 50, max: 6, every: 8, linger: 30,
+      hitFn: z => ({ dmg: z.hits === 5 ? 125 : 40, hs: 30, bs: 12, kb: z.hits === 5 ? 12 : 1, lvl: 'mid', stop: z.hits === 5 ? 18 : 5, chip: 12, kd: z.hits === 5, launch: 16, sfx: 'heavy', special: true, color: col, juggle: true }),
+      onTick(z) {
+        if (z.hits < 5) z.x = lerp(z.x, o.x, 0.15);
+        if (z.t === z.delay) { g.shake = 18; AU.sfx('boom'); ring(z.x, GY - 220, col, 60, 12, 24); }
+        if (z.t > z.delay && z.t % 3 === 0) FX.push({ kind: 'spark', x: z.x + rnd(-160, 160), y: GY - rnd(0, 420), vx: rnd(-3, 3), vy: rnd(-4, 0), life: 26, max: 26, color: Math.random() < 0.5 ? col : f.def.color2, size: rnd(3, 7) });
+      },
+      drawFn(z) {
+        if (!img || z.t < 2) return;
+        const life = z.delay + z.dur + 30;
+        const a = clamp(Math.min(z.t / 8, (life - z.t) / 20), 0, 1);
+        const drop = P.drop ? Math.max(0, 1 - z.t / (z.delay + 2)) * 420 : 0;
+        const s = (P.fxs || 1) * (0.7 + 0.3 * Math.min(1, z.t / 18)) + 0.03 * Math.sin(z.t * 0.4);
+        fxDraw(img, z.x, GY - 230 - drop, s, dir, a, 0.45);
+      },
+    }));
+  },
+  // PICKLE: Brenda's pickle buddy runs out and headbutts
+  pickle(f, g) {
+    if (g.ents.some(e => e.isPickle && e.owner === f && !e.dead)) return;
+    const col = f.def.color, I = f.img, M = f.man, dir = f.facing;
+    const frame = n => (I[n] && M[n]) ? [I[n], M[n]] : null;
+    g.ents.push({
+      isPickle: true, owner: f, x: f.x + dir * 80, y: 0, dir, t: 0, dead: false, done: false, hitT: 0,
+      hit: { dmg: 90, kd: true, launch: 11, kb: 10, lvl: 'low', stop: 12, chip: 9, bs: 16, sfx: 'heavy', special: true, color: col },
+      rect() { if (this.done || this.t < 8) return null; return { x: this.dir > 0 ? this.x - 30 : this.x - 90, y: GY - 150, w: 120, h: 150 }; },
+      active() { return !this.done && this.t >= 8; },
+      onHit() { this.done = true; this.hitT = 1; AU.sfx('heavy'); spark(this.x + this.dir * 50, GY - 90, col, 14, 10); },
+      update() {
+        this.t++;
+        if (!this.done && this.t >= 8) this.x += 11 * this.dir;
+        if (this.hitT) this.hitT++;
+        if (this.t % 4 === 0 && !this.done && this.t >= 8) FX.push({ kind: 'spark', x: this.x - this.dir * 50, y: GY - rnd(10, 60), vx: -this.dir * 3, vy: rnd(-1, 0), life: 12, max: 12, color: col, size: rnd(2, 4) });
+        if ((this.done && this.hitT > 24) || this.x < -200 || this.x > W + 200 || this.t > 140) this.dead = true;
+      },
+      draw() {
+        const fr = this.hitT ? frame('pk_headbutt') : this.t < 8 ? frame('pk_idle') : frame((this.t >> 2) % 2 ? 'pk_run_a' : 'pk_run_b');
+        if (!fr) return;
+        const [img, info] = fr, a = this.hitT ? clamp(1 - (this.hitT - 14) / 10, 0, 1) : clamp(this.t / 4, 0, 1), sc = SC;
+        ctx.save(); ctx.globalAlpha = a; ctx.translate(this.x, GY + ((this.t >> 2) % 2) * 2); ctx.scale(this.dir * sc, sc);
+        ctx.drawImage(img, -info.ax, -info.h); ctx.restore();
+      },
+    });
+    spark(f.x + dir * 90, GY - 60, col, 12, 8);
   },
   // BURST: a big close-range blast in front of the fighter
   burst(f, g) {
@@ -1509,14 +1592,14 @@ function drawHelp(m, fromPause = false) {
   txt('M mute · F fullscreen · Esc pause', W / 2, Math.min(H - 14, y + 6), 17, '#8d7f99', 'center', FONT_H, '600', 0);
   if (!fromPause && (m.back || m.ok || CLICK)) { G.scene = 'mode'; CLICK = null; }
 }
-function slotRect(i) { const sw = 118, gap = 10, total = ROSTER.length * sw + (ROSTER.length - 1) * gap; return { x: (W - total) / 2 + i * (sw + gap), y: 548, w: sw, h: 128 }; }
+function slotRect(i) { const per = Math.ceil(ROSTER.length / 2), row = i < per ? 0 : 1, n = row ? ROSTER.length - per : per, k = row ? i - per : i, sw = 88, gap = 8, total = n * sw + (n - 1) * gap; return { x: (W - total) / 2 + k * (sw + gap), y: 486 + row * 108, w: sw, h: 98 }; }
 function drawSelect(m) {
   drawBackdropPoster(0.86, true);
   txt('CHOOSE YOUR FIGHTER', W / 2, 60, 52, '#fff4e6', 'center', FONT_D, '400', 10);
   // posters
   [0, 1].forEach(p => {
     const r = ROSTER[G.sel[p]], d = FIGHTERS[r.id], left = p === 0, po = IMG.poster[r.id];
-    const pw = 290, ph = 435, px = left ? 40 : W - 40 - pw, py = 88;
+    const pw = 250, ph = 375, px = left ? 40 : W - 40 - pw, py = 88;
     const col = d ? d.color : r.color, done = G.selDone[p];
     ctx.fillStyle = col; ctx.fillRect(px - 5, py - 5, pw + 10, ph + 10);
     if (po) { ctx.save(); if (!left && G.sel[0] === G.sel[1]) ctx.filter = MIRROR; ctx.drawImage(po, px, py, pw, ph); ctx.restore(); }
@@ -1535,11 +1618,11 @@ function drawSelect(m) {
   ROSTER.forEach((r, i) => {
     const b = slotRect(i), p = IMG.portrait[r.id], col = FIGHTERS[r.id] ? FIGHTERS[r.id].color : r.color;
     ctx.fillStyle = '#07050a'; ctx.fillRect(b.x - 4, b.y - 4, b.w + 8, b.h + 8);
-    const po = IMG.poster[r.id];
-    if (po) { ctx.save(); if (!r.playable) ctx.filter = 'grayscale(1) brightness(0.45)'; const sw = po.width, sh = sw * (b.h - 26) / b.w; ctx.drawImage(po, 0, po.height * 0.17, sw, sh, b.x, b.y, b.w, b.h - 26); ctx.restore(); }
-    else if (p) { ctx.drawImage(p, 0, 0, p.width, p.height * 0.86, b.x, b.y, b.w, b.h - 26); }
+    const ih = b.h - 26;
+    if (p) { const sh = p.width * ih / b.w; ctx.drawImage(p, 0, Math.max(0, (p.height - sh) * 0.3), p.width, sh, b.x, b.y, b.w, ih); }
+    else { const po = IMG.poster[r.id]; if (po) { const sw = po.width, sh = sw * ih / b.w; ctx.drawImage(po, 0, po.height * 0.17, sw, sh, b.x, b.y, b.w, ih); } }
     ctx.fillStyle = col; ctx.fillRect(b.x, b.y + b.h - 26, b.w, 26);
-    txt(r.playable ? (FIGHTERS[r.id].short || FIGHTERS[r.id].name.replace(' THE KID', '')) : 'SOON', b.x + b.w / 2, b.y + b.h - 13, 17, '#07050a', 'center', FONT_H, '800', 0);
+    { const lb = r.playable ? (FIGHTERS[r.id].short || FIGHTERS[r.id].name.replace(' THE KID', '')) : 'SOON'; txt(lb, b.x + b.w / 2, b.y + b.h - 13, lb.length > 8 ? 13 : 16, '#07050a', 'center', FONT_H, '800', 0); }
     [0, 1].forEach(pp => { if (G.sel[pp] === i) { ctx.strokeStyle = pp === 0 ? '#43f3d6' : '#ff2a3d'; ctx.lineWidth = 5; const o = pp ? 9 : 4; ctx.strokeRect(b.x - o, b.y - o, b.w + o * 2, b.h + o * 2); } });
     if (hitBtn(b) && r.playable) { const c = G.selDone[0] ? 1 : 0; G.sel[c] = i; confirmPick(c); CLICK = null; }
   });
@@ -1553,7 +1636,7 @@ function drawSelect(m) {
     const c = G.chooser; if (m.left) move(c, -1); if (m.right) move(c, 1); if (m.ok) confirmPick(c);
   }
   if (m.back) { if (G.selDone[0] && G.mode !== 'vs') { G.selDone[0] = false; G.chooser = 0; } else G.scene = 'mode'; }
-  txt(G.mode === 'vs' ? 'P1: A/D + J   ·   P2: arrows + Enter' : G.chooser === 0 ? 'Pick your fighter' : 'Pick your opponent', W / 2, 700, 22, '#bfb2c8', 'center', FONT_H, '600', 0);
+  txt(G.mode === 'vs' ? 'P1: A/D + J   ·   P2: arrows + Enter' : G.chooser === 0 ? 'Pick your fighter' : 'Pick your opponent', W / 2, 708, 20, '#bfb2c8', 'center', FONT_H, '600', 0);
 }
 function confirmPick(p) {
   G.selDone[p] = true; AU.sfx('confirm');

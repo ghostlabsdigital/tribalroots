@@ -1858,6 +1858,35 @@ function setupTouch() {
     const up = e => { e.preventDefault(); b.classList.remove('on'); CTRL[0].virt.delete(k); };
     b.addEventListener('pointerdown', down); b.addEventListener('pointerup', up); b.addEventListener('pointercancel', up); b.addEventListener('pointerleave', up);
   });
+  // joystick: drag from wherever the thumb lands; push up past the line = jump (diagonals work)
+  const st = document.getElementById('stick');
+  if (st) {
+    const base = st.querySelector('.base'), knob = st.querySelector('.knob'), V = CTRL[0].virt;
+    let id = null, ox = 0, oy = 0, R = 60, held = { l: 0, r: 0, u: 0, d: 0 };
+    const KEY = { u: 'ArrowUp', d: 'ArrowDown', l: 'ArrowLeft', r: 'ArrowRight' };
+    const set = (k, on) => { if (on && !held[k]) { V.add(k); CTRL[0].virtPressed.add(k); PRESSED.add(KEY[k]); if (navigator.vibrate) navigator.vibrate(6); } if (!on && held[k]) V.delete(k); held[k] = on; };
+    const home = () => { base.style.transform = ''; knob.style.transform = ''; base.style.tx = base.style.ty = ''; };
+    st.addEventListener('pointerdown', e => {
+      e.preventDefault(); AU.init(); if (id !== null) return; id = e.pointerId; st.setPointerCapture(id); st.classList.add('on');
+      base.style.transform = ''; knob.style.transform = '';
+      const b = base.getBoundingClientRect(); R = b.width * 0.42;
+      const dx = e.clientX - (b.left + b.width / 2), dy = e.clientY - (b.top + b.height / 2);
+      base.style.transform = knob.style.transform = `translate(${dx}px, ${dy}px)`; base._dx = dx; base._dy = dy;
+      ox = e.clientX; oy = e.clientY;
+    });
+    st.addEventListener('pointermove', e => {
+      if (e.pointerId !== id) return; e.preventDefault();
+      let dx = e.clientX - ox, dy = e.clientY - oy; const m = Math.hypot(dx, dy);
+      if (m > R) { // drag the base along so the stick never "runs out"
+        const k = (m - R) / m; ox += dx * k; oy += dy * k; base._dx += dx * k; base._dy += dy * k; dx -= dx * k; dy -= dy * k;
+        base.style.transform = `translate(${base._dx}px, ${base._dy}px)`; }
+      knob.style.transform = `translate(${base._dx + dx}px, ${base._dy + dy}px)`;
+      const nx = dx / R, ny = dy / R;
+      set('r', nx > 0.32); set('l', nx < -0.32); set('u', ny < -0.55); set('d', ny > 0.6 && Math.abs(nx) < 0.75);
+    });
+    const end = e => { if (e.pointerId !== id) return; id = null; st.classList.remove('on'); for (const k in held) set(k, false); home(); };
+    st.addEventListener('pointerup', end); st.addEventListener('pointercancel', end);
+  }
   const pz = document.getElementById('pause-btn'); if (pz) pz.addEventListener('pointerdown', e => { e.preventDefault(); PRESSED.add('Escape'); });
 }
 

@@ -54,6 +54,23 @@
   body.touch.portrait #pause-btn { top: auto; bottom: 0; transform: translateX(-50%); font-size: 13px !important; padding: 6px 14px; }
   body.touch.portrait .bar { display: none; }
   body.touch #game { touch-action: none; }
+  /* joystick: thumb lands anywhere in the zone, that spot becomes centre */
+  #touch .stick { position: absolute; left: 0; bottom: 0; width: 42%; height: 62%; pointer-events: auto; touch-action: none; }
+  #touch .stick .base { position: absolute; width: 30vmin; height: 30vmin; left: 6vmin; bottom: 8vmin; border-radius: 50%;
+    background: radial-gradient(circle, rgba(19,13,26,0.35) 0 55%, rgba(19,13,26,0.55) 56%); border: 2px solid rgba(255,244,230,0.3); transform: translate(0,0); }
+  #touch .stick .knob { position: absolute; width: 13vmin; height: 13vmin; border-radius: 50%; left: 14.5vmin; bottom: 16.5vmin;
+    background: radial-gradient(circle at 35% 30%, rgba(255,244,230,0.55), rgba(255,42,61,0.45)); border: 2px solid rgba(255,244,230,0.6); box-shadow: 0 4px 14px rgba(0,0,0,0.5); }
+  #touch .stick .ar { position: absolute; color: rgba(255,244,230,0.45); font: 800 3.2vmin var(--hud); }
+  #touch .stick .ar.u { left: 50%; top: 3%; transform: translateX(-50%); } #touch .stick .ar.d { left: 50%; bottom: 3%; transform: translateX(-50%); }
+  #touch .stick .ar.l { left: 4%; top: 50%; transform: translateY(-50%); } #touch .stick .ar.r { right: 4%; top: 50%; transform: translateY(-50%); }
+  #touch .stick.on .ar { color: rgba(255,207,63,0.8); }
+  body.touch.portrait #touch .stick { width: 50%; height: 100%; }
+  body.touch.portrait #touch .stick .base { width: 36vw; height: 36vw; left: 4vw; bottom: auto; top: 3vw; }
+  body.touch.portrait #touch .stick .knob { width: 15vw; height: 15vw; left: 14.5vw; bottom: auto; top: 13.5vw; }
+  body.touch.portrait #touch .stick .ar { font-size: 3.8vw; }
+  /* sideways: controls float over the edges of the screen, see-through */
+  body.touch:not(.portrait) #touch .btns { opacity: 0.85; }
+  body.touch .bar .keys { display: none; }
 </style>
 </head>
 <body>
@@ -69,9 +86,9 @@
 <div id="stage">
   <canvas id="game" width="1280" height="720" aria-label="Tribal Roots: Underground game screen"></canvas>
   <div id="touch" hidden>
-    <div class="dpad">
-      <span></span><button data-k="u" aria-label="Jump">▲</button><span></span>
-      <button data-k="l" aria-label="Left">◀</button><button data-k="d" aria-label="Crouch">▼</button><button data-k="r" aria-label="Right">▶</button>
+    <div class="stick" id="stick" aria-label="Move: slide your thumb. Push up to jump.">
+      <div class="base"><span class="ar u">▲</span><span class="ar l">◀</span><span class="ar r">▶</span><span class="ar d">▼</span></div>
+      <div class="knob"></div>
     </div>
     <div class="btns">
       <button data-k="lp">LP</button><button data-k="hp">HP</button><button data-k="s1">S1</button><button class="su" data-k="su">SUP</button>

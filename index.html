@@ -105,6 +105,38 @@
   .feat .w { color: var(--dim); margin-top: 6px; }
   .feat .btn { margin-top: 12px; width: 100%; justify-content: center; font-size: 18px; padding: 11px; }
   .mhint { font-size: 14px; color: var(--dim); margin-top: 8px; }
+
+  /* leaderboard */
+  .lb { list-style: none; margin: 0; padding: 0; counter-reset: r; }
+  .lb li { display: grid; grid-template-columns: 26px 30px 1fr auto; gap: 8px; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+  .lb li:last-child { border-bottom: 0; }
+  .lb .r { font: 800 16px var(--ui); color: var(--dim); text-align: right; }
+  .lb li:nth-child(1) .r { color: var(--gold); } .lb li:nth-child(2) .r { color: #d9d9e3; } .lb li:nth-child(3) .r { color: #e0915a; }
+  .lb img { width: 30px; height: 30px; object-fit: cover; object-position: center 20%; border: 1px solid var(--line); }
+  .lb .n { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700; }
+  .lb .n small { display: block; color: var(--dim); font-weight: 500; font-size: 13px; }
+  .lb .s { font: 800 18px var(--ui); color: var(--ink); }
+  /* wall */
+  .wall-form { display: grid; gap: 6px; margin-bottom: 12px; }
+  .wall-form input, .wall-form textarea { font: 500 16px var(--ui); color: var(--ink); background: var(--void); border: 1px solid var(--line); padding: 8px 10px; width: 100%; resize: vertical; }
+  .wall-form input:focus, .wall-form textarea:focus { outline: none; border-color: var(--blood); }
+  .wall-form .row { display: flex; gap: 6px; align-items: center; justify-content: space-between; }
+  .wall-form .row small { color: var(--dim); }
+  .note { font-size: 14px; color: var(--gold); min-height: 1em; }
+  .msgs { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; max-height: 420px; overflow-y: auto; }
+  .msg { background: var(--void); border: 1px solid var(--line); padding: 8px 10px; }
+  .msg b { font-weight: 700; } .msg time { color: var(--dim); font-size: 13px; margin-left: 6px; }
+  .msg p { margin: 2px 0 0; overflow-wrap: anywhere; }
+  /* win modal */
+  .modal { position: fixed; inset: 0; background: rgba(7,5,10,.78); display: grid; place-items: center; z-index: 50; padding: 16px; }
+  .modal .box { width: min(420px, 100%); background: var(--panel); border: 2px solid var(--gold); padding: 22px; text-align: center; }
+  .modal h3 { margin: 0; font: 400 46px/1 var(--display); color: var(--gold); }
+  .modal .big { font: 800 40px var(--ui); margin: 8px 0 2px; font-variant-numeric: tabular-nums; }
+  .modal p { color: var(--dim); margin: 0 0 14px; }
+  .modal input { font: 700 22px var(--ui); text-align: center; text-transform: uppercase; letter-spacing: .08em; width: 100%; padding: 10px; background: var(--void); color: var(--ink); border: 1px solid var(--line); margin-bottom: 10px; }
+  .modal .row { display: flex; gap: 8px; justify-content: center; }
+  .foot { padding: 12px 18px 16px; font-size: 13px; color: var(--dim); }
+  .foot a { color: var(--dim); }
   /* narrow screens: game on top, sidebar below */
   @media (max-width: 960px) {
     .app { grid-template-columns: 1fr; height: auto; }
@@ -137,6 +169,11 @@
       <div class="mhint" id="mhint" hidden>Music kicks in when you hit Start.</div>
     </section>
 
+    <section id="lb-sec">
+      <h2>Leaderboard</h2>
+      <ol class="lb" id="lb"><li class="empty" style="display:block">Beat the CPU to get on the board.</li></ol>
+    </section>
+
     <section id="shows-sec">
       <h2>Shows &amp; tickets</h2>
       <ul class="shows" id="shows"></ul>
@@ -144,6 +181,17 @@
 
     <section id="cards-sec" hidden>
       <div id="cards"></div>
+    </section>
+
+    <section id="wall-sec">
+      <h2>The wall</h2>
+      <form class="wall-form" id="wall-form" autocomplete="off">
+        <input id="w-name" maxlength="20" placeholder="Name" aria-label="Your name">
+        <textarea id="w-text" rows="2" maxlength="240" placeholder="Leave a message for the crew…" aria-label="Message" required></textarea>
+        <div class="row"><small id="w-count">0 / 240</small><button class="btn hot" type="submit">Post</button></div>
+        <div class="note" id="w-note" aria-live="polite"></div>
+      </form>
+      <ul class="msgs" id="msgs"></ul>
     </section>
 
     <section id="ads-sec">
@@ -158,10 +206,23 @@
       <a class="btn" id="gl-btn" target="_blank" rel="noopener"></a>
       <div class="mail" id="gl-mail" hidden><span id="gl-email"></span><button class="btn" id="gl-copy" type="button">Copy</button></div>
     </section>
+    <div class="foot">This site counts visits and keeps the IP address of messages and scores to stop spam and abuse. No ads tracking, no data sold.</div>
   </aside>
 </div>
 
+<div class="modal" id="win" hidden role="dialog" aria-modal="true" aria-labelledby="win-h">
+  <form class="box" id="win-form" autocomplete="off">
+    <h3 id="win-h">You won!</h3>
+    <div class="big" id="win-score">0</div>
+    <p id="win-sub">Put your name on the leaderboard</p>
+    <input id="win-name" maxlength="14" placeholder="YOUR NAME" aria-label="Your name" required>
+    <div class="note" id="win-note" aria-live="polite"></div>
+    <div class="row"><button class="btn hot" type="submit">Submit</button><button class="btn" type="button" id="win-skip">Skip</button></div>
+  </form>
+</div>
+
 <script src="config.js"></script>
+<script defer src="/_vercel/insights/script.js"></script>
 <script>
 (() => {
   const C = window.TRU || {}, $ = id => document.getElementById(id);
@@ -219,12 +280,12 @@
     }
   }
   function startMusic() {
-    if (started || !music.length) return; started = true; wantPlay = true; $('mhint').hidden = true;
+    if (started || !music.length) return; started = true; wantPlay = true; $('mhint').style.visibility = 'hidden'; track('music_play', { dj: music[cur] && music[cur].dj });
     if (ctrl) ctrl.play();
   }
   if (music.length) {
     music.forEach((t, i) => { const b = document.createElement('button'); b.className = 'chip'; b.type = 'button'; b.textContent = t.dj;
-      b.onclick = () => { wantPlay = true; started = true; $('mhint').hidden = true; mount(i); }; chips.appendChild(b); });
+      b.onclick = () => { wantPlay = true; started = true; $('mhint').style.visibility = 'hidden'; mount(i); }; chips.appendChild(b); });
     if (music.length === 1) chips.hidden = true;
     $('mhint').hidden = false;
     mount(0);
@@ -263,6 +324,95 @@
   $('ads').innerHTML = ads.length
     ? ads.map(a => `<a href="${esc(a.url || '#')}" target="_blank" rel="noopener sponsored"><img src="${esc(a.img)}" alt="${esc(a.alt || 'Sponsor')}" loading="lazy"></a>`).join('')
     : `<div class="slot"><b>Your ad here</b>Reach the Tribal Roots crowd.${C.ghostlabs?.email ? '<br>' + esc(C.ghostlabs.email) : ''}</div>`;
+
+
+  // ── analytics (first-party, /api/track)
+  const track = (event, data = {}) => {
+    try { const b = JSON.stringify({ event, ref: document.referrer, path: location.pathname, screen: `${screen.width}x${screen.height}`, lang: navigator.language, tz: Intl.DateTimeFormat().resolvedOptions().timeZone, ...data });
+      navigator.sendBeacon ? navigator.sendBeacon('/api/track', new Blob([b], { type: 'application/json' })) : fetch('/api/track', { method: 'POST', body: b, keepalive: true }); } catch (e) {}
+  };
+  track('page_view');
+  document.addEventListener('click', e => {
+    const a = e.target.closest('a'); if (!a) return;
+    if (a.closest('#feat') || a.closest('#shows')) track('ticket_click', { url: a.href });
+    else if (a.closest('#ads')) track('ad_click', { url: a.href });
+    else if (a.closest('#cards')) track('card_click', { url: a.href });
+    else if (a.id === 'gl-btn') track('ghostlabs_click', { url: a.href });
+  });
+  const api = (path, opt) => fetch(path, opt).then(async r => ({ ok: r.ok, status: r.status, j: await r.json().catch(() => ({})) }));
+  const ago = t => { const s = (Date.now() - t) / 1000; return s < 60 ? 'now' : s < 3600 ? Math.floor(s / 60) + 'm' : s < 86400 ? Math.floor(s / 3600) + 'h' : Math.floor(s / 86400) + 'd'; };
+  const FN = { lotusflow: 'lotusflow', ghostlabs: 'GhostLabs', goaty: 'Goaty', sunshine: 'Sunshine', rochelle: 'Rochelle', shea: 'Shea', djmoo: 'DJ Moo', sara: 'Sara' };
+
+  // ── leaderboard
+  let backend = true;
+  function loadLB() {
+    api('/api/scores').then(({ ok, status, j }) => {
+      if (status === 503 || status === 404) { backend = false; $('lb-sec').hidden = true; $('wall-sec').hidden = true; return; }
+      if (!ok || !j.scores || !j.scores.length) return;
+      $('lb').innerHTML = j.scores.slice(0, 10).map((e, i) => `<li><span class="r">${i + 1}</span><img src="assets/posters/${esc(e.fighter)}.webp" alt="">
+        <span class="n">${esc(e.name)}<small>${esc(FN[e.fighter] || e.fighter)} vs ${esc(FN[e.opponent] || 'CPU')}${e.flawless ? ' · flawless' : ''}</small></span><span class="s">${e.score.toLocaleString()}</span></li>`).join('');
+    }).catch(() => {});
+  }
+  loadLB();
+
+  // ── messages wall
+  function loadMsgs() {
+    api('/api/messages').then(({ ok, j }) => {
+      if (!ok || !j.messages) return;
+      $('msgs').innerHTML = j.messages.length ? j.messages.map(m => `<li class="msg"><b>${esc(m.name)}</b><time>${ago(m.t)}${m.city ? ' · ' + esc(m.city) : ''}</time><p>${esc(m.text)}</p></li>`).join('')
+        : '<li class="empty">Be the first to leave a message.</li>';
+    }).catch(() => {});
+  }
+  loadMsgs(); setInterval(() => { if (!document.hidden && backend) loadMsgs(); }, 45000);
+  try { $('w-name').value = localStorage.getItem('tru_name') || ''; } catch (e) {}
+  $('w-text').addEventListener('input', e => { $('w-count').textContent = `${e.target.value.length} / 240`; });
+  // typing in the form must not drive the game
+  ['w-name', 'w-text', 'win-name'].forEach(id => $(id).addEventListener('keydown', e => e.stopPropagation()));
+  $('wall-form').addEventListener('submit', e => {
+    e.preventDefault();
+    const name = $('w-name').value.trim(), text = $('w-text').value.trim(); if (!text) return;
+    try { localStorage.setItem('tru_name', name); } catch (e) {}
+    $('w-note').textContent = 'Posting…';
+    api('/api/messages', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, text }) }).then(({ ok, j }) => {
+      if (!ok) { $('w-note').textContent = j.error || 'Could not post. Try again.'; return; }
+      $('w-text').value = ''; $('w-count').textContent = '0 / 240';
+      $('w-note').textContent = j.held ? 'Thanks! Your message is waiting for review.' : 'Posted.';
+      track('message_post'); loadMsgs();
+    }).catch(() => { $('w-note').textContent = 'Could not post. Try again.'; });
+  });
+
+  // ── events from the game
+  let pending = null;
+  addEventListener('message', e => {
+    const d = e.data || {}; if (!d.tru) return;
+    if (d.tru === 'start') track('game_start');
+    if (d.tru === 'match_start') track('match_start', { p1: d.p1, p2: d.p2, stage: d.stage, mode: d.mode });
+    if (d.tru === 'match_end') {
+      track('match_end', { p1: d.p1, p2: d.p2, winner: d.winner, p1won: d.p1won, secs: d.secs, mode: d.mode, score: d.score });
+      if (backend && d.mode === 'cpu' && d.p1won && d.score > 0) {
+        pending = d;
+        $('win-score').textContent = d.score.toLocaleString() + ' pts';
+        $('win-sub').textContent = `${FN[d.p1]} beat ${FN[d.p2]}${d.flawless ? ' — flawless!' : ''}. Put your name on the board.`;
+        try { $('win-name').value = localStorage.getItem('tru_name') || ''; } catch (e) {}
+        $('win-note').textContent = ''; $('win').hidden = false; setTimeout(() => $('win-name').focus(), 50);
+      }
+    }
+  });
+  const closeWin = () => { $('win').hidden = true; pending = null; try { game.contentWindow.focus(); } catch (e) {} };
+  $('win-skip').onclick = closeWin;
+  $('win-form').addEventListener('submit', e => {
+    e.preventDefault(); if (!pending) return;
+    const name = $('win-name').value.trim(); if (!name) return;
+    try { localStorage.setItem('tru_name', name); } catch (e) {}
+    $('win-note').textContent = 'Submitting…';
+    api('/api/scores', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, fighter: pending.p1, opponent: pending.p2, score: pending.score, secs: pending.secs, flawless: pending.flawless }) })
+      .then(({ ok, j }) => {
+        if (!ok) { $('win-note').textContent = j.error || 'Could not submit.'; return; }
+        $('win-note').textContent = j.rank ? `You're #${j.rank}!` : 'Saved!'; track('score_post', { score: pending.score });
+        loadLB(); setTimeout(closeWin, 1400);
+      }).catch(() => { $('win-note').textContent = 'Could not submit.'; });
+  });
 
   // ── GhostLabs
   const G = C.ghostlabs || {};

@@ -1,0 +1,6 @@
+{
+  "name": "tribalroots",
+  "private": true,
+  "type": "module",
+  "description": "Tribal Roots: Underground — browser fighting game + site. Static files plus /api serverless functions."
+}

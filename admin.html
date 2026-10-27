@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Tribal Roots Admin</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&display=swap">
+<style>
+  /* Control room: summary on top, then traffic, then moderation queues. */
+  :root { --void: #07050a; --panel: #110c17; --line: #241b2e; --ink: #fff4e6; --dim: #9a8ca6; --blood: #ff2a3d; --gold: #ffcf3f; --ok: #3ddc84; --warn: #ffb020; --ui: "Barlow Condensed", "Arial Narrow", sans-serif; color-scheme: dark; }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body { margin: 0; background: var(--void); color: var(--ink); font: 500 16px/1.35 var(--ui); padding: 20px max(16px, env(safe-area-inset-left)) 40px max(16px, env(safe-area-inset-right)); }
+  h1 { margin: 0 0 4px; font-size: 30px; letter-spacing: .04em; } h1 span { color: var(--blood); }
+  h2 { font: 800 14px var(--ui); letter-spacing: .18em; text-transform: uppercase; color: var(--dim); margin: 0 0 10px; }
+  .sub { color: var(--dim); margin-bottom: 18px; }
+  .login { max-width: 360px; display: grid; gap: 8px; margin-top: 30px; }
+  input, select { font: 600 16px var(--ui); background: var(--panel); color: var(--ink); border: 1px solid var(--line); padding: 9px 10px; }
+  button { font: 700 14px var(--ui); letter-spacing: .08em; text-transform: uppercase; background: transparent; color: var(--ink); border: 1px solid var(--line); padding: 6px 10px; cursor: pointer; }
+  button:hover { border-color: var(--blood); } button.hot { background: var(--blood); border-color: var(--blood); }
+  button:focus-visible, input:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+  .grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+  .card { background: var(--panel); border: 1px solid var(--line); padding: 14px; min-width: 0; }
+  .wide { grid-column: 1 / -1; }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 14px; }
+  .kpi { background: var(--panel); border: 1px solid var(--line); padding: 12px 14px; }
+  .kpi b { display: block; font-size: 32px; font-variant-numeric: tabular-nums; } .kpi span { color: var(--dim); font-size: 14px; text-transform: uppercase; letter-spacing: .1em; }
+  .bars { display: grid; gap: 4px; }
+  .bar { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; position: relative; padding: 3px 6px; font-variant-numeric: tabular-nums; }
+  .bar i { position: absolute; inset: 0 auto 0 0; background: rgba(255, 42, 61, .18); z-index: 0; }
+  .bar span, .bar b { position: relative; z-index: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .chart { display: flex; align-items: flex-end; gap: 4px; height: 140px; padding-top: 10px; }
+  .chart div { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; min-width: 0; }
+  .chart .c { width: 100%; background: var(--blood); min-height: 2px; }
+  .chart small { color: var(--dim); font-size: 11px; margin-top: 4px; white-space: nowrap; }
+  .chart em { font-style: normal; font-size: 12px; color: var(--ink); margin-bottom: 2px; }
+  .scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 15px; font-variant-numeric: tabular-nums; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--dim); font-weight: 700; text-transform: uppercase; letter-spacing: .08em; font-size: 13px; position: sticky; top: 0; background: var(--panel); }
+  td.t { overflow-wrap: anywhere; min-width: 200px; }
+  .pill { display: inline-block; padding: 1px 7px; font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+  .pill.ok { background: rgba(61, 220, 132, .15); color: var(--ok); } .pill.held { background: rgba(255, 176, 32, .15); color: var(--warn); } .pill.hidden { background: rgba(255, 42, 61, .15); color: var(--blood); }
+  .acts { display: flex; gap: 4px; flex-wrap: wrap; }
+  .dim { color: var(--dim); } .mono { font-family: ui-monospace, Menlo, monospace; font-size: 13px; }
+  .tall { max-height: 520px; overflow: auto; }
+  .tabs { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
+  .tabs button[aria-pressed="true"] { background: var(--gold); color: var(--void); border-color: var(--gold); }
+  .err { color: var(--blood); }
+</style>
+</head>
+<body>
+<h1>TRIBAL ROOTS <span>ADMIN</span></h1>
+<div class="sub" id="sub">Traffic, players and moderation.</div>
+
+<form class="login" id="login">
+  <label for="key">Admin key</label>
+  <input id="key" type="password" autocomplete="current-password" required>
+  <button class="hot" type="submit">Open dashboard</button>
+  <div class="err" id="lerr"></div>
+</form>
+
+<main id="dash" hidden>
+  <div class="kpis" id="kpis"></div>
+  <div class="grid">
+    <div class="card wide"><h2>Visitors per day (last 14)</h2><div class="chart" id="chart"></div></div>
+    <div class="card"><h2>Countries</h2><div class="bars" id="c-country"></div></div>
+    <div class="card"><h2>Cities</h2><div class="bars" id="c-city"></div></div>
+    <div class="card"><h2>Where they came from</h2><div class="bars" id="c-ref"></div></div>
+    <div class="card"><h2>Devices · browsers · OS</h2><div class="bars" id="c-device"></div><br><div class="bars" id="c-browser"></div><br><div class="bars" id="c-os"></div></div>
+    <div class="card"><h2>Most picked fighters</h2><div class="bars" id="c-pick"></div></div>
+    <div class="card"><h2>Match winners</h2><div class="bars" id="c-win"></div></div>
+    <div class="card"><h2>Stages</h2><div class="bars" id="c-stage"></div></div>
+    <div class="card"><h2>Ticket clicks · music plays</h2><div class="bars" id="c-tickets"></div><br><div class="bars" id="c-dj"></div></div>
+
+    <div class="card wide"><h2>Message wall</h2>
+      <div class="tabs" id="mtabs"><button type="button" data-f="all" aria-pressed="true">All</button><button type="button" data-f="held">Waiting review</button><button type="button" data-f="ok">Live</button><button type="button" data-f="hidden">Hidden</button></div>
+      <div class="scroll tall"><table><thead><tr><th>When</th><th>Name</th><th>Message</th><th>Status</th><th>From</th><th>IP</th><th></th></tr></thead><tbody id="msgs"></tbody></table></div>
+    </div>
+
+    <div class="card wide"><h2>Leaderboard entries</h2>
+      <div class="scroll tall"><table><thead><tr><th>#</th><th>Name</th><th>Score</th><th>Fighter</th><th>Time</th><th>From</th><th>IP</th><th></th></tr></thead><tbody id="scores"></tbody></table></div>
+    </div>
+
+    <div class="card wide"><h2>Recent visitors</h2>
+      <div class="scroll tall"><table><thead><tr><th>Last seen</th><th>Location</th><th>Device</th><th>Views</th><th>Matches</th><th>Messages</th><th>IP</th><th></th></tr></thead><tbody id="visitors"></tbody></table></div>
+    </div>
+
+    <div class="card wide"><h2>Live activity</h2>
+      <div class="scroll tall"><table><thead><tr><th>Time</th><th>Event</th><th>Details</th><th>Location</th><th>Device</th><th>Came from</th></tr></thead><tbody id="events"></tbody></table></div>
+    </div>
+
+    <div class="card wide"><h2>Banned IPs</h2><div id="bans" class="acts"></div>
+      <p class="dim">Banned IPs can still play. Their messages are silently held and their scores rejected.</p></div>
+  </div>
+</main>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const when = t => t ? new Date(+t).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : '';
+  const place = o => [o.city, o.region, o.country].filter(Boolean).join(', ') || '—';
+  let KEY = ''; try { KEY = sessionStorage.getItem('tru_admin') || ''; } catch (e) {}
+  let data = null, mfilter = 'all';
+
+  const call = (method, payload) => fetch('/api/admin', { method, headers: { 'x-admin-key': KEY, 'Content-Type': 'application/json' }, body: payload ? JSON.stringify(payload) : undefined })
+    .then(async r => ({ ok: r.ok, status: r.status, j: await r.json().catch(() => ({})) }));
+
+  async function load() {
+    const { ok, status, j } = await call('GET');
+    if (!ok) {
+      $('dash').hidden = true; $('login').hidden = false;
+      $('lerr').textContent = status === 401 ? 'Wrong key.' : j.setup ? 'Setup needed: ' + j.setup : 'Could not load (' + status + ').';
+      return;
+    }
+    try { sessionStorage.setItem('tru_admin', KEY); } catch (e) {}
+    $('login').hidden = true; $('dash').hidden = false; data = j; render();
+  }
+
+  function bars(id, obj, n = 10) {
+    const rows = Object.entries(obj || {}).sort((a, b) => b[1] - a[1]).slice(0, n), max = Math.max(1, ...rows.map(r => r[1]));
+    $(id).innerHTML = rows.length ? rows.map(([k, v]) => `<div class="bar"><i style="width:${(v / max) * 100}%"></i><span>${esc(k)}</span><b>${v}</b></div>`).join('') : '<span class="dim">No data yet</span>';
+  }
+
+  function render() {
+    const d = data, last = d.daily[d.daily.length - 1] || { uv: 0, ev: {} };
+    const tot = k => d.daily.reduce((a, x) => a + (+x.ev[k] || 0), 0);
+    const kp = [['Visitors today', last.uv], ['Visitors (14 days)', d.daily.reduce((a, x) => a + x.uv, 0)], ['Page views (14 days)', tot('page_view')],
+      ['Matches played', tot('match_start')], ['Ticket clicks', tot('ticket_click')], ['Messages', tot('message_post')], ['Waiting review', d.messages.filter(m => m.status === 'held').length]];
+    $('kpis').innerHTML = kp.map(([l, v]) => `<div class="kpi"><b>${(+v).toLocaleString()}</b><span>${l}</span></div>`).join('');
+    const max = Math.max(1, ...d.daily.map(x => x.uv));
+    $('chart').innerHTML = d.daily.map(x => `<div title="${x.d}: ${x.uv} visitors"><em>${x.uv || ''}</em><span class="c" style="height:${(x.uv / max) * 100}%"></span><small>${x.d.slice(5)}</small></div>`).join('');
+    for (const k of ['country', 'city', 'ref', 'device', 'browser', 'os', 'pick', 'win', 'stage', 'tickets', 'dj']) bars('c-' + k, d.counts[k]);
+    renderMsgs();
+    $('scores').innerHTML = d.scores.map((s, i) => `<tr><td>${i + 1}</td><td>${esc(s.name)}</td><td><b>${s.score}</b></td><td>${esc(s.fighter)} vs ${esc(s.opponent)}${s.flawless ? ' ★' : ''}</td><td>${s.secs}s · ${when(s.t)}</td><td>${esc(place(s))}</td><td class="mono">${esc(s.ip)}</td>
+      <td><div class="acts"><button data-act="delete_score" data-id="${esc(s.id)}">Delete</button>${banBtn(s.ip)}</div></td></tr>`).join('') || '<tr><td colspan="8" class="dim">No scores yet</td></tr>';
+    $('visitors').innerHTML = d.visitors.map(v => `<tr><td>${when(v.last)}</td><td>${esc(place(v))}</td><td>${esc([v.device, v.browser, v.os].filter(Boolean).join(' · '))}</td>
+      <td>${v.page_view || 0}</td><td>${v.match_start || 0}</td><td>${v.message_post || 0}</td><td class="mono">${esc(v.ip)}</td><td>${banBtn(v.ip)}</td></tr>`).join('') || '<tr><td colspan="8" class="dim">No visitors yet</td></tr>';
+    const det = e => ({ match_start: `${e.p1} vs ${e.p2} · ${e.stage || ''}`, match_end: `${e.winner} won · ${e.secs}s${e.score ? ' · ' + e.score + ' pts' : ''}`, music_play: e.dj, ticket_click: e.url, ad_click: e.url, page_view: e.screen ? e.screen + ' · ' + (e.tz || '') : '' }[e.ev] || '');
+    $('events').innerHTML = d.events.map(e => `<tr><td>${when(e.t)}</td><td>${esc(e.ev.replace('_', ' '))}</td><td class="t">${esc(det(e))}</td><td>${esc(place(e))}</td><td>${esc([e.device, e.browser].join(' · '))}</td><td>${esc(e.ref || 'direct')}</td></tr>`).join('') || '<tr><td colspan="6" class="dim">No activity yet</td></tr>';
+    $('bans').innerHTML = d.bans.length ? d.bans.map(ip => `<button data-act="unban" data-ip="${esc(ip)}" title="Unban">${esc(ip)} ✕</button>`).join('') : '<span class="dim">Nobody banned</span>';
+  }
+  const banBtn = ip => !ip ? '' : data.bans.includes(ip) ? `<button data-act="unban" data-ip="${esc(ip)}">Unban</button>` : `<button data-act="ban" data-ip="${esc(ip)}">Ban IP</button>`;
+  function renderMsgs() {
+    const list = data.messages.filter(m => mfilter === 'all' || m.status === mfilter);
+    $('msgs').innerHTML = list.map(m => `<tr><td>${when(m.t)}</td><td>${esc(m.name)}</td><td class="t">${esc(m.text)}</td>
+      <td><span class="pill ${esc(m.status)}">${m.status === 'held' ? 'review' : esc(m.status)}</span>${m.reason ? `<br><small class="dim">${esc(m.reason)}</small>` : ''}</td>
+      <td>${esc(place(m))}<br><small class="dim">${esc(m.device || '')}</small></td><td class="mono">${esc(m.ip)}</td>
+      <td><div class="acts">${m.status !== 'ok' ? `<button data-act="show" data-id="${esc(m.id)}">Approve</button>` : `<button data-act="hide" data-id="${esc(m.id)}">Hide</button>`}
+        <button data-act="delete" data-id="${esc(m.id)}">Delete</button>${banBtn(m.ip)}</div></td></tr>`).join('') || '<tr><td colspan="7" class="dim">Nothing here</td></tr>';
+  }
+
+  $('login').addEventListener('submit', e => { e.preventDefault(); KEY = $('key').value.trim(); load(); });
+  $('mtabs').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; mfilter = b.dataset.f;
+    [...$('mtabs').children].forEach(x => x.setAttribute('aria-pressed', x === b)); renderMsgs(); });
+  document.addEventListener('click', async e => {
+    const b = e.target.closest('button[data-act]'); if (!b) return;
+    b.disabled = true;
+    const r = await call('POST', { action: b.dataset.act, id: b.dataset.id, ip: b.dataset.ip });
+    if (!r.ok) { b.disabled = false; b.textContent = 'Failed'; return; }
+    load();
+  });
+  if (KEY) load();
+  setInterval(() => { if (KEY && !document.hidden && !$('dash').hidden) load(); }, 60000);
+})();
+</script>
+</body>
+</html>

@@ -1229,11 +1229,15 @@ const G = {
     if (f.img.fxm_super_charge) { const p = fxSeq(f, ['super_charge'], f.x, GY - f.y - 200, 0.75, 52, f.facing, { follow: f, oy: 200, grow: 0.004 }); } CAM.focus = { x: f.x + f.facing * 60, y: GY - f.y - 220, z: 1.42, t: 46 }; this.freeze = 46; this.cutin = { f, t: 0, name: m.name }; AU.sfx('super'); this.shake = 6; },
 };
 
+// tell the hosting page what happened (leaderboard + stats); harmless when played standalone
+function tell(ev, data) { try { if (parent !== window) parent.postMessage({ tru: ev, ...data }, '*'); } catch (e) {} }
 function startMatch() {
+  G.runScore = 0; G.matchT0 = performance.now();
   G.f = [new Fighter(ROSTER[G.sel[0]].id, 0, G), new Fighter(ROSTER[G.sel[1]].id, 1, G)];
   G.f[1].mirror = G.sel[0] === G.sel[1];
   G.cpu = [null, G.mode === 'cpu' ? new CPU(0.6) : null];
   G.round = 1; startRound();
+  tell('match_start', { mode: G.mode, p1: G.f[0].id, p2: G.f[1].id, stage: (STAGES[G.stageI || 0] || {}).id });
 }
 function startRound() {
   G.f[0].resetRound(400, 1); G.f[1].resetRound(880, -1);
@@ -1325,7 +1329,12 @@ function updateFight() {
     }
     if (G.ko.t === 260) {
       const champ = G.f.find(f => f.wins >= 2);
-      if (champ) { G.lastWinner = champ; G.scene = 'results'; G.menuI = 0; G.t = 0; }
+      if (champ) {
+        G.lastWinner = champ; G.scene = 'results'; G.menuI = 0; G.t = 0;
+        const won = champ === G.f[0];
+        tell('match_end', { mode: G.mode, p1: G.f[0].id, p2: G.f[1].id, winner: champ.id, p1won: won, secs: Math.round((performance.now() - G.matchT0) / 1000),
+          score: won && G.mode === 'cpu' ? G.runScore + (G.f[1].wins === 0 ? 1000 : 0) : 0, flawless: won && G.f[1].wins === 0 });
+      }
       else { G.round++; startRound(); }
     }
   }
@@ -1356,6 +1365,7 @@ function endRound(timeout) {
   const [a, b] = G.f; let winner = null;
   if (a.hp !== b.hp) winner = a.hp > b.hp ? a : b;
   if (winner) winner.wins++;
+  if (winner === a) G.runScore += Math.round(a.hp + G.timer * 15 + (a.hp >= a.def.hp ? 500 : 0));
   G.ko = { t: 0, winner };
   if (timeout) { G.announce('TIME', '#fff4e6', 90); AU.say('Time'); }
   else { const l = G.f.find(f => f.hp <= 0) || G.f[0]; CAM.focus = { x: l.x, y: GY - 200, z: 1.5, t: 90, follow: l }; G.announce('K.O.', '#ff2a3d', 100); AU.say('K. O.'); G.slow = 70; G.shake = 20; AU.sfx('boom'); }

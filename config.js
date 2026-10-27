@@ -10,7 +10,7 @@ window.TRU = {
   // playlist/album/artist/track URL. The first one loads on start;
   // the buttons switch between them. Music keeps playing while you fight.
   music: [
-    { dj: 'lotusflow',  url: 'https://open.spotify.com/artist/14gFa7Ik6yuhGvXYmdUTHZ' },
+    { dj: 'lotusflow',  url: 'https://soundcloud.com/mandala-geometry/sets/game-time' },
     { dj: 'Goaty',      url: '' },
     { dj: 'DJ Sunshine', url: '' },
     { dj: 'DJ Moo',     url: '' },
@@ -22,17 +22,6 @@ window.TRU = {
   // Big promo block at the top of the sidebar. A list: the site shows the first one
   // whose `until` date hasn't passed, so it rolls to the next show by itself. null hides it.
   featured: [
-    {
-      until: '2026-10-31',
-      kicker: 'Halloween night',
-      title: 'Dark Circus',
-      sub: 'Tales From The Underground',
-      when: 'Sat · Oct 31 · Doors 7PM · 21+',
-      where: 'Chmura · Ashez · lotusflow · In The Cut · Y\'all Thought · $500 costume contest',
-      img: 'assets/flyers/dark-circus.webp',
-      button: 'Get tickets',
-      url: 'https://theticketing.co/e/bighalloweenbashtribalroots',
-    },
     {
       until: '2026-11-07',
       kicker: 'Next up',
@@ -49,7 +38,6 @@ window.TRU = {
   // ── SHOWS / TICKETS ──────────────────────────────────────
   // date: YYYY-MM-DD. Past dates hide automatically. Leave date '' to show "TBA".
   shows: [
-    { date: '2026-10-31', title: 'Dark Circus: Tales From The Underground', venue: 'Chmura · Ashez · lotusflow · 21+', city: 'Tribal Roots Warehouse', url: 'https://theticketing.co/e/bighalloweenbashtribalroots' },
     { date: '2026-11-07', title: 'AHEE · Bassquest Phase 3', venue: 'Doors 7PM · 21+', city: 'Tribal Roots, Wichita', url: 'https://theticketing.co/e/aheeattribalroots' },
     // { date: '2026-11-21', title: 'Tribal Roots: Underground', venue: 'The Warehouse', city: 'Wichita, KS', url: 'https://tickets…' },
   ],

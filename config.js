@@ -10,7 +10,7 @@ window.TRU = {
   // playlist/album/artist/track URL. The first one loads on start;
   // the buttons switch between them. Music keeps playing while you fight.
   music: [
-    { dj: 'lotusflow',  url: '' },   // e.g. https://soundcloud.com/your-name/sets/your-set
+    { dj: 'lotusflow',  url: 'https://open.spotify.com/artist/14gFa7Ik6yuhGvXYmdUTHZ' },
     { dj: 'Goaty',      url: '' },
     { dj: 'DJ Sunshine', url: '' },
     { dj: 'DJ Moo',     url: '' },

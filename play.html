@@ -54,6 +54,74 @@
   body.touch.portrait #pause-btn { top: auto; bottom: 0; transform: translateX(-50%); font-size: 13px !important; padding: 6px 14px; }
   body.touch.portrait .bar { display: none; }
   body.touch #game { touch-action: none; }
+
+  /* ═══ HANDHELD: Game Boy-style shell, phones held upright ═══ */
+  .shell { display: none; }
+  body.gb.gb #pause-btn { display: none; }
+  body.gb.gb { padding: 0; justify-content: stretch; align-items: stretch; background: #030204; }
+  body.gb.gb .shell { display: flex; flex-direction: column; flex: 1; min-height: 0; position: relative;
+    background: radial-gradient(140% 60% at 20% 0%, #1d1724 0%, #120e16 55%, #0b080e 100%);
+    border-radius: 18px 18px 64px 18px; padding: 10px 14px 14px; overflow: hidden;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.07), inset 0 -3px 0 rgba(0,0,0,.7), inset 2px 0 0 rgba(255,255,255,.02); }
+  /* grain so it reads as matte plastic, not flat */
+  .shell::before { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .18; mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E"); }
+  .gbtop { display: flex; justify-content: space-between; align-items: center; min-height: 34px; font: 700 10px var(--hud); letter-spacing: .22em; color: #5d5167; padding: 0 4px 8px; border-bottom: 1px solid #1f1925; margin: 0 -14px 10px; padding-inline: 18px; }
+  .gbtop i { font-style: normal; }
+  .bezel { position: relative; background: linear-gradient(#262029, #1a151e); border-radius: 10px 10px 42px 10px; padding: 8px 18px 16px 30px; box-shadow: inset 0 2px 6px rgba(0,0,0,.7), 0 1px 0 rgba(255,255,255,.05); }
+  .bezel .lbl { display: flex; align-items: center; gap: 8px; font: 700 9px var(--hud); letter-spacing: .2em; color: #8a7d93; margin-bottom: 6px; white-space: nowrap; }
+  .bezel .lbl::before, .bezel .lbl::after { content: ""; flex: 1; height: 0; border-top: 2px solid var(--blood); border-bottom: 2px solid #ffcf3f; padding-top: 2px; }
+  .bezel .led { position: absolute; left: 9px; top: 46%; width: 8px; height: 8px; border-radius: 50%; background: #3a0d12; }
+  .bezel .led.on { background: var(--blood); box-shadow: 0 0 8px 2px rgba(255,42,61,.7); }
+  .bezel .led::after { content: "BASS"; position: absolute; left: -4px; top: 12px; font: 700 7px var(--hud); letter-spacing: .1em; color: #6b5f74; }
+  body.gb.gb #stage { width: 100%; box-shadow: 0 0 0 2px #000, inset 0 0 20px rgba(0,0,0,.6); border-radius: 3px; overflow: hidden; }
+  .gbrand { display: flex; align-items: baseline; gap: 8px; margin: 10px 2px 0; }
+  .gbrand b { font: 400 22px/1 "Rubik Dirt", var(--hud); color: #e9dfd2; letter-spacing: .02em; }
+  .gbrand span { font: italic 800 15px var(--hud); letter-spacing: .14em; color: var(--blood); }
+  .gbpad { position: relative; flex: 1; min-height: 300px; }
+  /* controls */
+  body.gb.gb #touch { position: absolute; inset: 0; height: auto; top: 0; }
+  body.gb.gb #touch button { -webkit-tap-highlight-color: transparent; font-size: 0; transition: transform .05s, box-shadow .05s, filter .05s; }
+  body.gb.gb #touch button::after { content: attr(data-l); position: absolute; left: 50%; top: calc(100% + 5px); transform: translateX(-50%); font: 800 11px var(--hud); letter-spacing: .14em; color: #8a7d93; white-space: nowrap; pointer-events: none; }
+  /* d-pad: one plus-shaped piece */
+  body.gb.gb #touch .dpad { left: 1vw; top: 8%; bottom: auto; gap: 0; grid-template-columns: repeat(3, 12.5vw); grid-template-rows: repeat(3, 12.5vw);
+    grid-template-areas: ". u ." "l h r" ". d ."; filter: drop-shadow(0 4px 0 #000) drop-shadow(0 8px 10px rgba(0,0,0,.5)); }
+  body.gb.gb #touch .dpad span { display: none; }
+  body.gb.gb #touch .dpad::before { content: ""; grid-area: h; background: #2b2431; }
+  body.gb.gb #touch .dpad::after { content: ""; grid-area: h; margin: 32%; border-radius: 50%; background: radial-gradient(#1a151e, #231d28); }
+  body.gb.gb #touch .dpad button { position: relative; border: 0; border-radius: 0; background: linear-gradient(#332b3a, #241e29); color: #6d6177; font-size: 3.2vw; }
+  body.gb.gb #touch .dpad button::after { display: none; }
+  body.gb.gb #touch .dpad [data-k=u] { grid-area: u; border-radius: 5px 5px 0 0; }
+  body.gb.gb #touch .dpad [data-k=d] { grid-area: d; border-radius: 0 0 5px 5px; }
+  body.gb.gb #touch .dpad [data-k=l] { grid-area: l; border-radius: 5px 0 0 5px; }
+  body.gb.gb #touch .dpad [data-k=r] { grid-area: r; border-radius: 0 5px 5px 0; }
+  body.gb.gb #touch .dpad button.on { background: #1b161f; color: var(--gold); }
+  /* face buttons: slanted pairs like A/B, punches over kicks, big SUPER */
+  body.gb.gb #touch .btns { right: 1vw; top: 3%; bottom: auto; gap: 7vw 4vw; grid-template-columns: 13vw 13vw 15vw; grid-template-rows: 13vw 13vw 10vw;
+    grid-template-areas: "lp hp su" "lk hk su" "s1 s2 s3"; align-items: center; justify-items: center; }
+  body.gb.gb #touch .btns button { position: relative; width: 13vw; height: 13vw; border-radius: 50%; border: 0;
+    background: radial-gradient(circle at 35% 30%, #c62437, #8c1222 60%, #5e0b16); box-shadow: 0 4px 0 #2a050a, 0 7px 10px rgba(0,0,0,.55), inset 0 1px 1px rgba(255,255,255,.25); }
+  body.gb.gb #touch .btns [data-k=lp] { grid-area: lp; transform: translateY(3vw); } body.gb.gb #touch .btns [data-k=hp] { grid-area: hp; }
+  body.gb.gb #touch .btns [data-k=lk] { grid-area: lk; transform: translateY(3vw); } body.gb.gb #touch .btns [data-k=hk] { grid-area: hk; }
+  body.gb.gb #touch .btns [data-k=su] { grid-area: su; width: 15vw; height: 15vw; background: radial-gradient(circle at 35% 30%, #ffe27a, #ff9a1f 55%, #b24e06); box-shadow: 0 4px 0 #4d2202, 0 0 18px rgba(255,154,31,.35), inset 0 1px 1px rgba(255,255,255,.5); }
+  body.gb.gb #touch .btns [data-k=su]::after { color: #ffb347; }
+  body.gb.gb #touch .btns [data-k=s1] { grid-area: s1; } body.gb.gb #touch .btns [data-k=s2] { grid-area: s2; } body.gb.gb #touch .btns [data-k=s3] { grid-area: s3; }
+  body.gb.gb #touch .btns [data-k^=s]:not([data-k=su]) { width: 10vw; height: 10vw; background: radial-gradient(circle at 35% 30%, #3e3546, #231d28 70%); box-shadow: 0 3px 0 #000, 0 6px 8px rgba(0,0,0,.5), inset 0 1px 1px rgba(255,255,255,.12); }
+  body.gb.gb #touch .btns [data-k^=s]:not([data-k=su])::after { color: #ffcf3f; }
+  body.gb.gb #touch .btns button.on { box-shadow: 0 1px 0 #000, inset 0 2px 4px rgba(0,0,0,.5); filter: brightness(1.25); }
+  body.gb.gb #touch .btns [data-k=lp].on, body.gb.gb #touch .btns [data-k=lk].on { transform: translateY(calc(3vw + 3px)); }
+  body.gb.gb #touch .btns [data-k=hp].on, body.gb.gb #touch .btns [data-k=hk].on, body.gb.gb #touch .btns [data-k^=s].on { transform: translateY(3px); }
+  /* start / back pills */
+  .pills { display: none; }
+  body.gb.gb .pills { display: flex; gap: 6vw; position: absolute; left: 50%; bottom: 12%; transform: translateX(-62%) rotate(-24deg); pointer-events: auto; }
+  body.gb.gb .pills button, body.gb.gb #pause-btn { position: relative; width: 15vw; height: 4.4vw; padding: 0; border-radius: 99px !important; border: 0; font-size: 0 !important;
+    background: linear-gradient(#3b3342, #251f2a); box-shadow: 0 2px 0 #000, inset 0 1px 0 rgba(255,255,255,.1); transform: none; left: auto; top: auto; bottom: auto; }
+  body.gb.gb .pills button::after { content: attr(data-l); position: absolute; left: 50%; top: calc(100% + 6px); transform: translateX(-50%); font: 800 10px var(--hud); letter-spacing: .16em; color: #6d6177; }
+  body.gb.gb .pills button.on { box-shadow: inset 0 1px 3px #000; }
+  /* speaker */
+  .grille { display: none; }
+  body.gb.gb .grille { display: flex; gap: 2.4vw; position: absolute; right: 7%; bottom: 7%; transform: rotate(-28deg); }
+  body.gb.gb .grille i { width: 1.6vw; height: 14vw; border-radius: 99px; background: #050306; box-shadow: inset 0 1px 2px #000, 0 1px 0 rgba(255,255,255,.05); }
 </style>
 </head>
 <body>
@@ -66,6 +134,15 @@
     addEventListener('keydown', go, true); addEventListener('pointerdown', go, true);
   })();
 </script>
+<div class="shell" id="shell" aria-hidden="false">
+  <div class="gbtop"><i>◀ OFF · ON ▶</i><i></i></div>
+  <div class="bezel"><div class="lbl">UNDERGROUND · STEREO BASS SOUND</div><span class="led" id="led"></span><div id="screen-slot"></div></div>
+  <div class="gbrand"><b>TRIBAL ROOTS</b><span>UNDERGROUND</span></div>
+  <div class="gbpad" id="gbpad">
+    <div class="pills"><button type="button" id="back-btn" data-l="BACK" aria-label="Back">BACK</button><button type="button" id="start-btn" data-l="START" aria-label="Start / pause">START</button></div>
+    <div class="grille" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+  </div>
+</div>
 <div id="stage">
   <canvas id="game" width="1280" height="720" aria-label="Tribal Roots: Underground game screen"></canvas>
   <div id="touch" hidden>
@@ -74,8 +151,8 @@
       <button data-k="l" aria-label="Left">◀</button><button data-k="d" aria-label="Crouch">▼</button><button data-k="r" aria-label="Right">▶</button>
     </div>
     <div class="btns">
-      <button data-k="lp">LP</button><button data-k="hp">HP</button><button data-k="s1">S1</button><button class="su" data-k="su">SUP</button>
-      <button data-k="lk">LK</button><button data-k="hk">HK</button><button data-k="s2">S2</button><button data-k="s3">S3</button>
+      <button data-k="lp" data-l="LP">LP</button><button data-k="hp" data-l="HP">HP</button><button data-k="s1" data-l="S1">S1</button><button class="su" data-k="su" data-l="SUPER">SUP</button>
+      <button data-k="lk" data-l="LK">LK</button><button data-k="hk" data-l="HK">HK</button><button data-k="s2" data-l="S2">S2</button><button data-k="s3" data-l="S3">S3</button>
     </div>
     <button id="pause-btn" aria-label="Pause">II</button>
   </div>
@@ -91,6 +168,30 @@
 <script src="js/data.js"></script>
 <script src="js/engine.js"></script>
 <script>
+  // ── handheld skin (phones upright). ?skin=classic turns it off.
+  (function () {
+    const stage = document.getElementById('stage'), touch = document.getElementById('touch'), bar = document.querySelector('.bar');
+    const slot = document.getElementById('screen-slot'), pad = document.getElementById('gbpad'), led = document.getElementById('led');
+    const coarse = matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window;
+    const want = coarse && !/[?&]skin=classic/.test(location.search);
+    function apply() {
+      const on = want && innerHeight > innerWidth * 1.15;
+      document.body.classList.toggle('gb', on);
+      if (on && stage.parentNode !== slot) { slot.appendChild(stage); pad.insertBefore(touch, pad.firstChild); }
+      if (!on && stage.parentNode === slot) { document.body.insertBefore(stage, bar); stage.appendChild(touch); }
+    }
+    apply(); addEventListener('resize', apply);
+    // START: confirm in menus, pause in a fight. BACK: back out of menus.
+    const press = (code) => { try { PRESSED.add(code); } catch (e) {} };
+    const tap = (el, fn) => el.addEventListener('pointerdown', e => { e.preventDefault(); AU.init(); el.classList.add('on'); fn(); if (navigator.vibrate) navigator.vibrate(8); });
+    const rel = el => ['pointerup', 'pointercancel', 'pointerleave'].forEach(ev => el.addEventListener(ev, () => el.classList.remove('on')));
+    const sb = document.getElementById('start-btn'), bb = document.getElementById('back-btn');
+    tap(sb, () => press(window.TRUG && TRUG.scene === 'fight' ? 'Escape' : 'Enter')); rel(sb);
+    tap(bb, () => press('Backspace')); rel(bb);
+    // little buzz on every pad press (Android) + power LED on once the game is running
+    touch.addEventListener('pointerdown', e => { if (e.target.closest('button') && navigator.vibrate) navigator.vibrate(8); });
+    const lit = setInterval(() => { if (window.TRUG) { led.classList.add('on'); clearInterval(lit); } }, 300);
+  })();
   document.getElementById('mute').addEventListener('click', e => { AU.init(); AU.setMuted(!AU.muted); e.target.textContent = AU.muted ? 'Sound off' : 'Sound on'; e.target.blur(); });
   document.getElementById('full').addEventListener('click', e => { try { document.fullscreenElement ? document.exitFullscreen() : document.getElementById('stage').requestFullscreen().catch(() => {}); } catch (err) {} e.target.blur(); });
 </script>

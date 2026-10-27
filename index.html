@@ -164,7 +164,7 @@
   @media (orientation: portrait) {
     .touch .app { grid-template-columns: 1fr; height: auto; }
     .touch .stage { height: auto; }
-    .touch .stage iframe { flex: none; height: calc(100vw * 9 / 16 + 46vw + 36px); }
+    .touch .stage iframe { flex: none; height: max(600px, 100svh); } /* the handheld fills the first screen */
     .touch .stagebar { padding: 6px 12px; }
     .touch .side { border-left: 0; border-top: 1px solid var(--line); }
   }
@@ -185,7 +185,7 @@
   html.gm .stage { position: fixed; inset: 0; z-index: 40; height: 100dvh !important; width: 100vw;
     padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); background: #000; }
   html.gm .stage iframe { flex: 1 !important; height: auto !important; }
-  @media (orientation: portrait) { html.gm .stage { padding-top: max(56px, env(safe-area-inset-top)); } }
+  
   .touch #full { display: none; }
   html.gm .stagebar, html.gm .playcover { display: none !important; }
   html.gm .gmx { display: grid; place-items: center; position: fixed; z-index: 41; top: max(8px, env(safe-area-inset-top)); right: max(8px, env(safe-area-inset-right));

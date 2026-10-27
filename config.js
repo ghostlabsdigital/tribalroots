@@ -34,7 +34,7 @@ window.TRU = {
   // ── SHOWS / TICKETS ──────────────────────────────────────
   // date: YYYY-MM-DD. Past dates hide automatically. Leave date '' to show "TBA".
   shows: [
-    { date: '', title: 'Big Halloween Bash', venue: 'Tribal Roots', city: '', url: 'https://theticketing.co/e/bighalloweenbashtribalroots' },
+    { date: '2026-10-31', title: 'Dark Circus: Tales From The Underground', venue: 'Halloween Bash · 7PM–2AM · 21+', city: 'Tribal Roots, Wichita', url: 'https://theticketing.co/e/bighalloweenbashtribalroots' },
     { date: '', title: 'AHEE', venue: 'Tribal Roots', city: '', url: 'https://theticketing.co/e/aheeattribalroots' },
     // { date: '2026-11-21', title: 'Tribal Roots: Underground', venue: 'The Warehouse', city: 'Wichita, KS', url: 'https://tickets…' },
   ],

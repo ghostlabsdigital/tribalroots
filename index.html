@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tribal Roots: Underground</title>
+<meta name="description" content="Tribal Roots: Underground — a browser fighting game starring the Tribal Roots crew. Play free, listen to the DJs, catch the next show.">
+<meta property="og:title" content="Tribal Roots: Underground">
+<meta property="og:description" content="8 fighters. 4 stages. Play free in your browser.">
+<meta property="og:image" content="assets/portraits/title.webp">
+<meta name="theme-color" content="#07050a">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik+Dirt&family=Barlow+Condensed:wght@500;600;700;800&display=swap">
+<style>
+  /* Layout: game owns the screen, a slim sidebar carries music, shows, sponsors, GhostLabs. */
+  :root {
+    --void: #07050a; --panel: #110c17; --line: #241b2e; --ink: #fff4e6; --dim: #9a8ca6;
+    --blood: #ff2a3d; --gold: #ffcf3f; --ghost: #ff7a1a; --lotus: #36f0cf;
+    --display: "Rubik Dirt", Impact, sans-serif;
+    --ui: "Barlow Condensed", "Arial Narrow", sans-serif;
+    --side: 360px;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body { background: var(--void); color: var(--ink); font: 500 17px/1.35 var(--ui); }
+  a { color: inherit; }
+  .app { display: grid; grid-template-columns: 1fr var(--side); height: 100dvh; }
+
+  /* game */
+  .stage { position: relative; min-width: 0; background: #000; display: flex; flex-direction: column; }
+  .stage iframe { flex: 1; width: 100%; border: 0; display: block; background: #000; }
+  .stagebar { display: flex; gap: 10px; align-items: center; justify-content: space-between; padding: 8px max(14px, env(safe-area-inset-left)); border-top: 1px solid var(--line); background: var(--panel); flex-wrap: wrap; }
+  .stagebar .hint { color: var(--dim); font-size: 15px; letter-spacing: .05em; text-transform: uppercase; }
+  .btn { font: 700 15px var(--ui); letter-spacing: .08em; text-transform: uppercase; color: var(--ink); background: transparent; border: 1px solid var(--line); padding: 7px 14px; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+  .btn:hover { border-color: var(--blood); }
+  .btn.hot { background: var(--blood); border-color: var(--blood); }
+  .btn.hot:hover { filter: brightness(1.1); }
+  .btn:focus-visible, .chip:focus-visible { outline: 2px solid var(--lotus); outline-offset: 2px; }
+
+  /* sidebar */
+  .side { background: var(--panel); border-left: 1px solid var(--line); overflow-y: auto; display: flex; flex-direction: column; padding-right: env(safe-area-inset-right); }
+  .brand { display: block; padding: 18px 18px 14px; border-bottom: 1px solid var(--line); text-decoration: none; }
+  .brand b { display: block; font: 400 34px/0.9 var(--display); letter-spacing: .01em; }
+  .brand span { display: block; font: 400 20px var(--display); color: var(--blood); letter-spacing: .28em; margin-top: 4px; }
+  section { padding: 16px 18px; border-bottom: 1px solid var(--line); }
+  h2 { margin: 0 0 10px; font: 800 14px var(--ui); letter-spacing: .18em; text-transform: uppercase; color: var(--dim); display: flex; align-items: center; gap: 8px; }
+  h2::before { content: ""; width: 8px; height: 8px; background: var(--blood); }
+
+  /* music */
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+  .chip { font: 700 14px var(--ui); letter-spacing: .06em; text-transform: uppercase; padding: 5px 10px; background: var(--void); color: var(--dim); border: 1px solid var(--line); cursor: pointer; }
+  .chip[aria-pressed="true"] { color: var(--void); background: var(--gold); border-color: var(--gold); }
+  .player { background: var(--void); border: 1px solid var(--line); min-height: 120px; }
+  .player iframe { display: block; width: 100%; border: 0; }
+  .empty { padding: 14px; color: var(--dim); font-size: 15px; }
+  .empty code { color: var(--ink); font-size: 13px; }
+
+  /* shows */
+  .shows { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+  .show { display: grid; grid-template-columns: 52px 1fr auto; gap: 10px; align-items: center; background: var(--void); border: 1px solid var(--line); padding: 8px; }
+  .date { text-align: center; line-height: 1; }
+  .date .m { font: 800 13px var(--ui); letter-spacing: .12em; color: var(--blood); }
+  .date .d { font: 400 28px var(--display); }
+  .show .t { min-width: 0; }
+  .show .t b { display: block; font-weight: 700; overflow-wrap: anywhere; }
+  .show .t small { color: var(--dim); font-size: 14px; }
+
+  /* ads + cards */
+  .ads { display: grid; gap: 10px; }
+  .ads a { display: block; }
+  .ads img { display: block; width: 100%; height: auto; border: 1px solid var(--line); }
+  .slot { border: 1px dashed var(--line); padding: 18px 14px; text-align: center; color: var(--dim); font-size: 15px; }
+  .slot b { display: block; color: var(--ink); font-size: 18px; letter-spacing: .04em; }
+  .card { background: var(--void); border: 1px solid var(--line); }
+  .card + .card { margin-top: 10px; }
+  .card img { display: block; width: 100%; height: auto; }
+  .card div { padding: 12px; }
+  .card b { display: block; font-size: 19px; }
+  .card p { margin: 4px 0 10px; color: var(--dim); }
+
+  /* ghostlabs */
+  .ghost { margin-top: auto; background: linear-gradient(160deg, rgba(255,122,26,.16), transparent 60%), var(--panel); border-top: 2px solid var(--ghost); border-bottom: 0; }
+  .ghost .logo { font: 800 26px/1 var(--ui); letter-spacing: .06em; color: var(--ghost); text-transform: uppercase; }
+  .ghost p { margin: 6px 0 10px; color: var(--ink); }
+  .ghost small { display: block; color: var(--dim); margin-bottom: 12px; }
+  .ghost .btn { border-color: var(--ghost); }
+  .ghost .btn:hover { background: var(--ghost); color: var(--void); }
+  .mail { display: flex; gap: 6px; align-items: center; margin-top: 10px; font-size: 15px; color: var(--dim); }
+  .mail span { user-select: all; color: var(--ink); overflow-wrap: anywhere; }
+
+  /* narrow screens: game on top, sidebar below */
+  @media (max-width: 960px) {
+    .app { grid-template-columns: 1fr; height: auto; }
+    .stage { height: min(100dvh, calc(100vw * 9 / 16 + 120px)); }
+    .side { border-left: 0; border-top: 1px solid var(--line); padding-left: env(safe-area-inset-left); }
+  }
+  @media (max-width: 700px) { .stagebar .hint { display: none; } }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <main class="stage">
+    <iframe id="game" src="play.html?embed=1" title="Tribal Roots: Underground game" allow="fullscreen; gamepad; autoplay" allowfullscreen></iframe>
+    <div class="stagebar">
+      <span class="hint">Click the game, press Enter · P1 WASD · J U K I · L O H · Space · P2 arrows + numpad · M mute</span>
+      <button class="btn hot" id="full" type="button">Fullscreen</button>
+    </div>
+  </main>
+
+  <aside class="side">
+    <a class="brand" href="./" aria-label="Tribal Roots: Underground home"><b>TRIBAL ROOTS</b><span>UNDERGROUND</span></a>
+
+    <section id="music-sec">
+      <h2>Now spinning</h2>
+      <div class="chips" id="chips" role="group" aria-label="Pick a DJ"></div>
+      <div class="player" id="player"></div>
+    </section>
+
+    <section id="shows-sec">
+      <h2>Shows &amp; tickets</h2>
+      <ul class="shows" id="shows"></ul>
+    </section>
+
+    <section id="cards-sec" hidden>
+      <div id="cards"></div>
+    </section>
+
+    <section id="ads-sec">
+      <h2>Sponsors</h2>
+      <div class="ads" id="ads"></div>
+    </section>
+
+    <section class="ghost">
+      <div class="logo">GhostLabs</div>
+      <p id="gl-line"></p>
+      <small id="gl-pitch"></small>
+      <a class="btn" id="gl-btn" target="_blank" rel="noopener"></a>
+      <div class="mail" id="gl-mail" hidden><span id="gl-email"></span><button class="btn" id="gl-copy" type="button">Copy</button></div>
+    </section>
+  </aside>
+</div>
+
+<script src="config.js"></script>
+<script>
+(() => {
+  const C = window.TRU || {}, $ = id => document.getElementById(id);
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const game = $('game');
+
+  // keep keyboard focus in the game
+  game.addEventListener('load', () => { try { game.contentWindow.focus(); } catch (e) {} });
+  $('full').onclick = () => { const el = game; (el.requestFullscreen || el.webkitRequestFullscreen || (() => {})).call(el); };
+
+  // ── music: SoundCloud or Spotify embeds
+  function embed(url) {
+    if (!url) return null;
+    if (/soundcloud\.com/.test(url)) {
+      const set = /\/sets\//.test(url) || !/soundcloud\.com\/[^/]+\/[^/?]+/.test(url);
+      return { src: 'https://w.soundcloud.com/player/?url=' + encodeURIComponent(url) + '&color=%23ff2a3d&auto_play=false&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=false&visual=true', h: set ? 400 : 300 };
+    }
+    const m = url.match(/open\.spotify\.com\/(?:intl-[a-z]+\/)?(playlist|album|artist|track|episode|show)\/([A-Za-z0-9]+)/);
+    if (m) return { src: `https://open.spotify.com/embed/${m[1]}/${m[2]}?theme=0`, h: m[1] === 'track' ? 152 : 380 };
+    return null;
+  }
+  const music = (C.music || []).filter(t => embed(t.url));
+  const chips = $('chips'), player = $('player');
+  function play(i) {
+    const e = embed(music[i].url);
+    player.innerHTML = `<iframe title="${esc(music[i].dj)} music" src="${e.src}" height="${e.h}" allow="autoplay; encrypted-media; clipboard-write; fullscreen" loading="lazy"></iframe>`;
+    [...chips.children].forEach((c, k) => c.setAttribute('aria-pressed', k === i));
+  }
+  if (music.length) {
+    music.forEach((t, i) => { const b = document.createElement('button'); b.className = 'chip'; b.type = 'button'; b.textContent = t.dj; b.onclick = () => play(i); chips.appendChild(b); });
+    if (music.length === 1) chips.hidden = true;
+    play(0);
+  } else {
+    player.innerHTML = '<div class="empty">Add SoundCloud or Spotify links in <code>config.js</code> → <code>music</code> and the DJ player shows up here.</div>';
+  }
+
+  // ── shows
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const shows = (C.shows || []).filter(s => s.date && new Date(s.date + 'T23:59') >= today).sort((a, b) => a.date.localeCompare(b.date));
+  const M = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+  if (shows.length) {
+    $('shows').innerHTML = shows.map(s => { const d = new Date(s.date + 'T12:00');
+      return `<li class="show"><div class="date"><div class="m">${M[d.getMonth()]}</div><div class="d">${d.getDate()}</div></div>
+        <div class="t"><b>${esc(s.title)}</b><small>${esc([s.venue, s.city].filter(Boolean).join(' · '))}</small></div>
+        ${s.url ? `<a class="btn hot" href="${esc(s.url)}" target="_blank" rel="noopener">Tickets</a>` : ''}</li>`; }).join('');
+  } else {
+    $('shows').innerHTML = '<li class="empty">No shows announced yet. Check back soon.</li>';
+  }
+
+  // ── extra cards
+  const cards = C.cards || [];
+  if (cards.length) {
+    $('cards-sec').hidden = false;
+    $('cards').innerHTML = cards.map(c => `<div class="card">${c.img ? `<img src="${esc(c.img)}" alt="">` : ''}<div>
+      <b>${esc(c.title)}</b>${c.text ? `<p>${esc(c.text)}</p>` : ''}
+      ${c.url ? `<a class="btn" href="${esc(c.url)}" target="_blank" rel="noopener">${esc(c.button || 'Open')}</a>` : ''}</div></div>`).join('');
+  }
+
+  // ── ads (house slot when empty)
+  const ads = C.ads || [];
+  $('ads').innerHTML = ads.length
+    ? ads.map(a => `<a href="${esc(a.url || '#')}" target="_blank" rel="noopener sponsored"><img src="${esc(a.img)}" alt="${esc(a.alt || 'Sponsor')}" loading="lazy"></a>`).join('')
+    : `<div class="slot"><b>Your ad here</b>Reach the Tribal Roots crowd.${C.ghostlabs?.email ? '<br>' + esc(C.ghostlabs.email) : ''}</div>`;
+
+  // ── GhostLabs
+  const G = C.ghostlabs || {};
+  $('gl-line').textContent = G.line || '';
+  $('gl-pitch').textContent = G.pitch || '';
+  const btn = $('gl-btn'); btn.textContent = G.button || 'GhostLabs';
+  if (G.url) btn.href = G.url; else btn.hidden = true;
+  if (G.email) {
+    $('gl-mail').hidden = false; $('gl-email').textContent = G.email;
+    $('gl-copy').onclick = e => { navigator.clipboard?.writeText(G.email).then(() => { e.target.textContent = 'Copied'; }, () => {}); };
+  }
+})();
+</script>
+</body>
+</html>

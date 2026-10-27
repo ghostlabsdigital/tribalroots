@@ -16,7 +16,8 @@ const overlap = (a, b) => a && b && a.x < b.x + b.w && b.x < a.x + a.w && a.y < 
 // ─────────────────────────────── assets
 const IMG = {};
 function loadImage(src) {
-  return new Promise(res => { const i = new Image(); i.onload = () => res(i); i.onerror = () => res(null); i.src = src; });
+  // decode up front so first appearance on screen doesn't hitch
+  return new Promise(res => { const i = new Image(); i.onload = () => (i.decode ? i.decode().catch(() => {}) : Promise.resolve()).then(() => res(i)); i.onerror = () => res(null); i.src = src; });
 }
 async function loadAssets(onProgress) {
   const jobs = [];
@@ -43,11 +44,20 @@ async function loadAssets(onProgress) {
 }
 const tintCache = new Map();
 function tinted(img, color) {
-  const k = img.src + color;
-  if (tintCache.has(k)) return tintCache.get(k);
+  // cache on the image itself (keying by img.src hashed the whole data URI every call = stutter on hits)
+  const m = img._tint || (img._tint = {});
+  if (m[color]) return m[color];
   const c = document.createElement('canvas'); c.width = img.width; c.height = img.height;
   const x = c.getContext('2d'); x.drawImage(img, 0, 0); x.globalCompositeOperation = 'source-in'; x.fillStyle = color; x.fillRect(0, 0, c.width, c.height);
-  tintCache.set(k, c); return c;
+  return (m[color] = c);
+}
+// pre-darkened copy (replaces per-frame ctx.filter, which is slow)
+function shaded(img, k, tint = '7,5,10') {
+  const m = img._shade || (img._shade = {}), key = k + tint;
+  if (m[key]) return m[key];
+  const c = document.createElement('canvas'); c.width = img.width; c.height = img.height;
+  const x = c.getContext('2d'); x.drawImage(img, 0, 0); x.globalCompositeOperation = 'source-atop'; x.fillStyle = `rgba(${tint},${k})`; x.fillRect(0, 0, c.width, c.height);
+  return (m[key] = c);
 }
 
 // ─────────────────────────────── audio (all synthesized, no files)

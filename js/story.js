@@ -139,14 +139,14 @@ class Hero extends Body {
   constructor(id, isBuddy = false) {
     super({ w: 62, h: 190 });
     this.id = id; this.P = poseTable(id); this.buddy = isBuddy;
-    this.hp = 100; this.maxHp = 100; this.meter = 40; this.lives = 3; this.state = 'idle'; this.st = 0; this.atk = null; this.inv = 0; this.flash = 0;
+    this.hp = 100; this.maxHp = 100; this.meter = 70; this.lives = 3; this.state = 'idle'; this.st = 0; this.atk = null; this.inv = 0; this.flash = 0;
     this.coyote = 0; this.jbuf = 0; this.climbLad = null; this.lastSafe = { x: 200, y: 0 }; this.talkT = 0; this.aiT = 0;
   }
   set(s) { if (this.state !== s) { this.state = s; this.st = 0; } }
   get busy() { return ['attack', 'hurt', 'down', 'getup', 'pipe', 'climb', 'super', 'dead', 'script'].includes(this.state); }
   attack(kind) {
-    const T = { lp: [5, 4, 9, 9, 98, 'light'], lk: [6, 4, 11, 11, 112, 'light'], hp: [9, 5, 15, 20, 124, 'heavy'], hk: [11, 5, 17, 23, 138, 'heavy'],
-      air: [4, 10, 4, 15, 112, 'heavy'], c_atk: [5, 4, 11, 11, 120, 'light'] }[kind];
+    const T = { lp: [3, 3, 5, 9, 104, 'light'], lk: [4, 3, 6, 11, 116, 'light'], hp: [6, 4, 9, 20, 128, 'heavy'], hk: [7, 4, 10, 23, 140, 'heavy'],
+      air: [3, 10, 3, 15, 116, 'heavy'], c_atk: [4, 3, 6, 11, 122, 'light'] }[kind];
     this.atk = { kind, s: T[0], a: T[1], r: T[2], dmg: T[3], reach: T[4], sfx: T[5], hit: new Set(), t: 0 };
     this.set('attack'); if (this.onGround) this.vx *= 0.3; AU.sfx('whiff');
   }
@@ -161,7 +161,7 @@ class Hero extends Body {
     return true;
   }
   special(kind) {
-    const cost = kind === 'su' ? 100 : 25;
+    const cost = kind === 'su' ? 100 : 15;
     if (this.meter < cost && !this.buddy) { S.popText(this.x, this.y - 190, 'NEED ENERGY', '#bfb2c8'); return; }
     if (!this.buddy) this.meter -= cost;
     if (kind === 'su') return storySuper(this);
@@ -179,6 +179,7 @@ class Hero extends Body {
   }
   update(inp) {
     this.st++; if (this.inv > 0) this.inv--; if (this.flash > 0) this.flash -= 0.12;
+    if (!this.buddy && this.meter < 100) this.meter = Math.min(100, this.meter + (this.meter < 30 ? 0.12 : 0.05)); // always refilling, faster when low
     const s = this.state;
     if (s === 'dead') { this.vx *= 0.95; this.physics(); if (this.st > 70) S.playerDied(); return; }
     if (s === 'script') { this.vx = 0; this.physics(); return; }
@@ -190,11 +191,13 @@ class Hero extends Body {
     if (s === 'climb') return this.updClimb(inp);
     if (s === 'attack') {
       const a = this.atk; a.t++;
+      if (!this.buddy) for (const k of ['lp', 'lk', 'hp', 'hk']) if (inp.press[k]) { this.queued = k; CTRL[0].consume(k); }
+      if (!a.special && this.queued && a.t >= a.s + a.a && a.kind !== 'air') { const k = this.queued; this.queued = null; this.attack(inp.d ? 'c_atk' : k); return; }
       if (a.special && a.t === a.s) this.fireSpecial(a.kind);
       if (!a.special && a.t >= a.s && a.t < a.s + a.a) S.meleeCheck(this, a);
       this.physics(this.state === 'attack' && a.kind === 'air' ? false : false);
       if (this.onGround) this.vx *= 0.82;
-      if (a.t >= a.s + a.a + a.r || (a.kind === 'air' && this.onGround)) { this.atk = null; this.set(this.onGround ? 'idle' : 'jump'); }
+      if (a.t >= a.s + a.a + a.r || (a.kind === 'air' && this.onGround)) { this.atk = null; this.set(this.onGround ? 'idle' : 'jump'); if (this.queued && this.onGround) { const k = this.queued; this.queued = null; this.attack(k); } }
       return;
     }
     // free movement
@@ -341,7 +344,7 @@ class Foe extends Body {
     this.hp -= dmg; this.flash = 1; S.hitstop = heavy ? 6 : 3; S.shake = Math.max(S.shake, heavy ? 7 : 3);
     S.combo++; S.comboT = 90; if (S.combo === 10 || S.combo === 25) S.barkPool('combo'); S.stats.dmg += dmg;
     S.popText(this.x + rnd(-14, 14), this.y - this.rect().h - 20, String(Math.round(dmg)), heavy ? '#ffcf3f' : '#fff4e6');
-    if (by && by.meter !== undefined && !by.buddy) by.meter = Math.min(100, by.meter + (heavy ? 6 : 3.5));
+    if (by && by.meter !== undefined && !by.buddy) by.meter = Math.min(100, by.meter + (heavy ? 8 : 5));
     spark(this.x, this.y - 100 * this.sc, heavy ? '#ffcf3f' : '#fff4e6', heavy ? 16 : 9, heavy ? 12 : 8);
     if (this.boss) { this.vx = dir * 1.5; if (this.hp <= 0) this.onDefeat(); return; }
     this.vx = dir * (heavy ? 8 : 4); if (heavy && !this.D.float) this.vy = -5;

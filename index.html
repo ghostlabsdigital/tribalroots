@@ -187,6 +187,7 @@
   html.gm .stage iframe { flex: 1 !important; height: auto !important; }
   
   .touch #full { display: none; }
+  @media (orientation: landscape) { html.gm .gmx { left: max(8px, env(safe-area-inset-left)); right: auto; } }
   html.gm .stagebar, html.gm .playcover { display: none !important; }
   html.gm .gmx { display: grid; place-items: center; position: fixed; z-index: 41; top: max(8px, env(safe-area-inset-top)); right: max(8px, env(safe-area-inset-right));
     width: 40px; height: 40px; border-radius: 50%; border: 1px solid rgba(255,244,230,.35); background: rgba(19,13,26,.7); color: var(--ink); font: 700 20px var(--ui); cursor: pointer; }

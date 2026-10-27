@@ -234,10 +234,12 @@
   $('full').onclick = () => { const el = game; (el.requestFullscreen || el.webkitRequestFullscreen || (() => {})).call(el); };
 
   // ── featured show
-  const F = C.featured;
+  // featured can be one show or a list; shows the first whose `until` date hasn't passed
+  const now0 = new Date(); now0.setHours(0, 0, 0, 0);
+  const F = [].concat(C.featured || []).find(f => f && (!f.until || new Date(f.until + 'T23:59') >= now0));
   if (F && (F.title || F.url)) {
     const el = $('feat'); el.hidden = false;
-    el.innerHTML = `${F.img ? `<img src="${esc(F.img)}" alt="">` : ''}<div class="in">
+    el.innerHTML = `${F.img ? (F.url ? `<a href="${esc(F.url)}" target="_blank" rel="noopener"><img src="${esc(F.img)}" alt="${esc(F.title)} flyer"></a>` : `<img src="${esc(F.img)}" alt="">`) : ''}<div class="in">
       <div class="k">${esc(F.kicker || 'Next up')}</div><h3>${esc(F.title)}</h3>
       ${F.sub ? `<div class="s">${esc(F.sub)}</div>` : ''}${F.when || F.where ? `<div class="w">${esc([F.when, F.where].filter(Boolean).join(' · '))}</div>` : ''}
       ${F.url ? `<a class="btn hot" href="${esc(F.url)}" target="_blank" rel="noopener">${esc(F.button || 'Get tickets')}</a>` : ''}</div>`;

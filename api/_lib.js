@@ -3,8 +3,10 @@
 // Vercel injects KV_REST_API_URL / KV_REST_API_TOKEN (or UPSTASH_REDIS_REST_URL / _TOKEN).
 import crypto from 'node:crypto';
 
-const URL_ = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
-const TOKEN = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
+// accept any prefix the Vercel integration was given (KV_, STORAGE_, UPSTASH_REDIS_, custom…)
+const envKey = suffix => Object.keys(process.env).find(k => k.endsWith(suffix) && !k.includes('READ_ONLY'));
+const URL_ = process.env.KV_REST_API_URL || process.env.STORAGE_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL || process.env[envKey('_REST_API_URL') || envKey('_REDIS_REST_URL') || ''];
+const TOKEN = process.env.KV_REST_API_TOKEN || process.env.STORAGE_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN || process.env[envKey('_REST_API_TOKEN') || envKey('_REDIS_REST_TOKEN') || ''];
 export const ready = !!(URL_ && TOKEN);
 
 export async function redis(...cmd) {

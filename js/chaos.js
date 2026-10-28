@@ -125,6 +125,9 @@ const CHAOS = (() => {
       if (pool.length) { const id = pool[(Math.random() * pool.length) | 0].id; G.ttPlan = { id }; ensureFighters([id]); }
     }
     if (window.__forceTT) { const id = ROSTER.find(r => ![ROSTER[G.sel[0]].id, ROSTER[G.sel[1]].id].includes(r.id)).id; G.ttPlan = { id }; ensureFighters([id]); }
+    // ONE surprise per match: a crasher or the turntables, never both
+    G.evUsed = false;
+    if (kinds.length && G.ttPlan && !window.__forceTT) { if (Math.random() < 0.5) G.ttPlan = null; else kinds = []; }
   }
   function roundStart() {
     C = []; nextT = 100 + 60 * (6 + Math.random() * 8);
@@ -134,18 +137,18 @@ const CHAOS = (() => {
   function update() {
     if (G.ko || G.roundT < 100) return;
     // crashers
-    if (kinds.length && --nextT <= 0) {
+    if (kinds.length && !G.evUsed && !G.ally && --nextT <= 0) {
       nextT = 60 * (9 + Math.random() * 10);
       const k = kinds[(Math.random() * kinds.length) | 0];
-      if (C.filter(c => !c.dead).length < 2 && SPR.want.has(DEF[k].set)) { const c = new Crasher(k); C.push(c); if (!G.text) G.announce(`${DEF[k].name} CRASHED THE FIGHT!`, DEF[k].glow, 70); }
+      if (!C.length && SPR.want.has(DEF[k].set)) { const c = new Crasher(k); C.push(c); G.evUsed = true; if (!G.text) G.announce(`${DEF[k].name} CRASHED THE FIGHT!`, DEF[k].glow, 70); }
     }
     for (const c of C) c.update(); C = C.filter(c => !c.dead);
     // turntables trigger
-    if (G.ttAt && G.roundT >= G.ttAt && !G.tt && !G.ttDone && G.freeze <= 0 && fighterReady(G.ttPlan.id)) {
+    if (G.ttAt && G.roundT >= G.ttAt && !G.tt && !G.ttDone && !G.evUsed && !C.length && G.freeze <= 0 && fighterReady(G.ttPlan.id)) {
       let side = 1;
       if (G.mode === 'vs') { const [a, b] = G.f; side = a.hp / a.def.hp < b.hp / b.def.hp ? 0 : 1; }
       if (G.f[side].hp <= 0) return;
-      G.tt = { t: 0, id: G.ttPlan.id, side }; G.ttDone = true;
+      G.tt = { t: 0, id: G.ttPlan.id, side }; G.ttDone = true; G.evUsed = true;
       AU.sfx('super'); try { AU.say('How the turn tables'); } catch (e) {}
     }
   }

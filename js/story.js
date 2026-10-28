@@ -1202,17 +1202,17 @@ const LORE = [
 ];
 const wake = [
   { fn: () => { const p = S.player; p.set('script'); p.scriptPose = p.P.down; if (S.buddy) { S.buddy.x = p.x + 110; S.buddy.face = -1; } } }, { wait: 30 },
-  say('buddy', 'Yo. YO. Get up — don’t look at the lights, look at me. You good?'),
+  say('buddy', 'Hey. HEY. Up. Don’t look at the lights, look at me. You good?'),
   { fn: () => { const p = S.player; p.scriptPose = p.P.getup; } }, { wait: 22 },
   { fn: () => { const p = S.player; p.set('idle'); p.face = 1; } },
-  say('player', 'My head’s ringing... why is everybody just standing there?'),
-  say('buddy', 'The drop hit and the whole room flatlined. Six hundred people. Except you and me.'),
-  say('buddy', 'Hear that? Under the kick. A hum. It’s coming out of the vents, and it’s not ours.'),
-  say('buddy', 'And don’t trust the ones still moving. Something’s wrong with their faces.'),
+  say('player', 'Feels like somebody unplugged my skull... why’s everybody just standing there?'),
+  say('buddy', 'Drop hit and the whole room flatlined. Six hundred people. Everybody but us.'),
+  say('buddy', 'Hear that? Under the kick. That hum’s coming out of the vents. That’s not our sound system.'),
+  say('buddy', 'And the ones still moving? Don’t trust ’em. Look at their faces.'),
 ];
 const L1 = {
   name: 'THE WAREHOUSE', sub: 'Something is wrong with the crowd.', mat: 'wh', buddy: 'lotusflow', buddyAlt: 'shea',
-  intro: [{ cut: 'l1_freeze', lines: [['narrator', 'Saturday night. Tribal Roots Warehouse. Sold out. The drop hits... and six hundred people stop at once.'], ['narrator', 'Frozen mid-jump. Eyes glowing purple. Swaying to a beat nobody on stage is playing.']] }, ...wake],
+  intro: [{ cut: 'l1_freeze', lines: [['narrator', 'Saturday night at the Tribal Roots Warehouse. Sold out. The drop hits... and six hundred people stop dead.'], ['narrator', 'Frozen mid-jump. Eyes glowing purple. Swaying to a beat nobody on stage is playing.']] }, ...wake],
   scenes: [
     { bg: 'l1a', w: 3800, ground: 652, objective: 'CLIMB TO THE VENT', hint: 'Climb the speaker stacks. Find the vent.', exit: 'pipe',
       lights: [[400, 220, '#ff2a4d', 260], [1200, 200, '#2ef0d8', 300], [2100, 220, '#9b5cff', 300], [3000, 200, '#ff2a4d', 260]],
@@ -1230,10 +1230,10 @@ const L1 = {
         { t: 'glows', x: 860, y: 340, n: 6, dx: 55, arc: 20 }, { t: 'glows', x: 1200, y: 600, n: 5 }, { t: 'glows', x: 2050, y: 340, n: 6, dx: 55 }, { t: 'glows', x: 2900, y: 590, n: 5 },
         { t: 'foe', k: 'vamp_raver', x: 1000 }, { t: 'foe', k: 'vamp_raver', x: 1500 }, { t: 'foe', k: 'vamp_vip', x: 2050 }, { t: 'foe', k: 'vamp_bouncer', x: 2500 },
         { t: 'foe', k: 'vamp_raver', x: 3150 }, { t: 'foe', k: 'vamp_vip', x: 3400 },
-        { t: 'talk', x: 900, beats: [say('buddy', 'Those aren’t ravers. Check the necks. That’s scales, bro. Actual scales.'), say('player', 'Cool. Cool cool cool. Then we hit ’em.')] },
+        { t: 'talk', x: 900, beats: [say('buddy', 'Those aren’t ravers. Look at their necks. Those are scales, bro. Actual scales.'), say('player', 'Cool. Cool cool cool. Then we hit ’em.')] },
       ] },
     { bg: 'l1b', w: 3000, ground: 640, gaps: [[1450, 1700]], hint: 'Watch the fans.', tint: 'rgba(30,10,40,0.12)',
-      enter: [say('buddy', 'It’s louder in here. Like we’re crawling down its throat. Keep moving.')],
+      enter: [say('buddy', 'It’s louder in here. Feels like we’re crawling down its throat. Keep moving.')],
       items: [
         { t: 'hazard', k: 'fan', x: 600, w: 320 }, { t: 'hazard', k: 'fan', x: 2100, w: 320 },
         { t: 'plat', m: 'move', x: 1462, y: 590, s: 0.25, mv: { dy: 40, per: 160 } }, { t: 'pick', k: 'vinyl', x: 1575, y: 470 },
@@ -1244,18 +1244,18 @@ const L1 = {
     { bg: 'l1c', w: 1700, ground: 650, lights: [[1350, 380, '#c77bff', 360]],
       items: [
         { t: 'plat', m: 'short', x: 300, y: 480 }, { t: 'pick', k: 'vinyl', x: 450, y: 420 },
-        { t: 'boss', k: 'transmitter', x: 1380, at: 520, lock: 420, obj: 'DESTROY THE TRANSMITTER', beats: [say('buddy', 'There it is. It’s wired into every speaker in the building. It’s been playing UNDER us all night.'), say('player', 'Then let’s pull the plug on it.')] },
+        { t: 'boss', k: 'transmitter', x: 1380, at: 520, lock: 420, obj: 'DESTROY THE TRANSMITTER', beats: [say('buddy', 'There it is. Wired into every speaker in the building. It’s been playing under our set all night.'), say('player', 'Cool. Let’s unplug it.')] },
       ],
-      win: [{ fn: () => { const x = 1300; S.picks.push(new Pick('ticket', x, 590, { onGet: () => S.levelComplete() })); S.objective = 'GRAB THE TICKET'; } }, say('buddy', 'Wait... something fell out of it. Is that a ticket?')] },
+      win: [{ fn: () => { const x = 1300; S.picks.push(new Pick('ticket', x, 590, { onGet: () => S.levelComplete() })); S.objective = 'GRAB THE TICKET'; } }, say('buddy', 'Hold up... something fell out of it. Is that a ticket?')] },
   ],
   outro: [
     { cut: 'l1_ticket', lines: [['narrator', 'Gold foil. “FREE TICKET — ALL SHOWS.” Still warm. Still humming in your hand.']] },
-    { cut: 'l1_shea', lines: [['shea', '...Put that down. Slowly. Where did you get this?'], ['buddy', 'Pulled it out of a machine in the vents. It was feeding off the whole room.'], ['shea', 'Three weeks I’ve been hearing it. Under every set, every venue. I call it the Hum. Thought I was losing it.'], ['shea', 'These tickets are everywhere. People take one, go to a show, and come home... quieter. Emptier. Like something drank them.'], ['shea', 'Old Town’s full of dead-eyed crowds tonight. And Goaty’s playing down there. Go. Now.']] },
+    { cut: 'l1_shea', lines: [['shea', '...Put that down. Slowly. Where’d you get that?'], ['buddy', 'Out of a machine in the vents. It was eating the whole room.'], ['shea', 'Three weeks I’ve been hearing that. Under every set, every venue. I’ve been calling it the Hum. Thought I was losing my mind.'], ['shea', 'Those tickets are everywhere. People grab one, go to a show, and come home... quiet. Like something drank them.'], ['shea', 'Old Town’s full of dead-eyed crowds tonight, and Goaty’s playing down there. Go. Now.']] },
   ],
 };
 const L2 = {
   name: 'OLD TOWN', sub: 'Goaty is DJing like he’s asleep.', mat: 'ot', buddy: 'lotusflow', buddyAlt: 'shea',
-  intro: [{ cut: 'l2_point', lines: [['buddy', 'That’s Goaty’s set coming off the festival stage.'], ['buddy', 'But listen to it. No drops. No chaos. Goaty doesn’t play like that. He sounds asleep.'], ['player', 'Same frozen crowd, same hum. There’s a transmitter on that stage.']] }],
+  intro: [{ cut: 'l2_point', lines: [['buddy', 'That’s Goaty’s set coming off the festival stage.'], ['buddy', 'But listen. No drops. No chaos. Goaty doesn’t play like that. He sounds asleep.'], ['player', 'Same frozen crowd. Same hum. Bet you there’s a transmitter on that stage.']] }],
   scenes: [
     { bg: 'l2a', w: 3600, ground: 650, hint: 'Men in Black. Don’t let them stop you.', lights: [[400, 260, '#ffb347', 200], [1700, 260, '#ffb347', 200], [2900, 260, '#ffb347', 200]],
       items: [
@@ -1267,7 +1267,7 @@ const L2 = {
         { t: 'prop', k: 'bin', x: 2650, s: 0.5, solid: true }, { t: 'cp', x: 1800 }, { t: 'pick', k: 'pendant', x: 2700, y: 470 },
         { t: 'glows', x: 1600, y: 300, n: 6, dx: 55 }, { t: 'glows', x: 600, y: 600, n: 5 }, { t: 'glows', x: 3000, y: 600, n: 5 },
         { t: 'foe', k: 'mib', x: 950 }, { t: 'foe', k: 'vamp_raver', x: 1400 }, { t: 'foe', k: 'mib', x: 2000 }, { t: 'foe', k: 'vamp_bouncer', x: 2600 }, { t: 'foe', k: 'mib', x: 3100 }, { t: 'foe', k: 'mib', x: 3300 },
-        { t: 'talk', x: 600, beats: [say('buddy', 'Black suits. Sunglasses. In Old Town. At 2am. Yeah — those aren’t cops.')] },
+        { t: 'talk', x: 600, beats: [say('buddy', 'Black suits and sunglasses in Old Town at 2am. Yeah, those aren’t cops.')] },
       ] },
     { bg: 'l2b', w: 4200, ground: 650, gaps: [[900, 1120], [1900, 2160], [3000, 3240]], storm: true, hint: 'Rooftops. Mind the gaps.',
       items: [
@@ -1279,7 +1279,7 @@ const L2 = {
         { t: 'foe', k: 'mib', x: 700 }, { t: 'foe', k: 'vamp_raver', x: 1500 }, { t: 'foe', k: 'mib', x: 1700 }, { t: 'foe', k: 'vamp_vip', x: 2600 }, { t: 'foe', k: 'mib', x: 2800 }, { t: 'foe', k: 'vamp_bouncer', x: 3600 }, { t: 'foe', k: 'mib', x: 3900 },
       ] },
     { bg: 'l2c', w: 1800, ground: 650, lights: [[1450, 300, '#9b5cff', 340]],
-      enter: [{ cut: 'l2_hypno', lines: [['narrator', 'Goaty on the decks, eyes glowing purple. Behind him, a promoter in a suit — scales up his neck — drinking in the whole crowd.'], ['buddy', 'That’s the leech. Knock him off that stage and Goaty comes back.']] }],
+      enter: [{ cut: 'l2_hypno', lines: [['narrator', 'Goaty’s on the decks, eyes glowing purple. Behind him, a promoter in a suit, scales creeping up his neck, drinking in the whole crowd.'], ['buddy', 'There’s the leech. Knock him off that stage and we get Goaty back.']] }],
       items: [
         { t: 'crowd', x0: 200, x1: 1700, n: 14 },
         { t: 'plat', m: 'short', x: 330, y: 480 }, { t: 'pick', k: 'vinyl', x: 480, y: 420 },
@@ -1288,13 +1288,13 @@ const L2 = {
       ],
       win: [{ fn: () => { const g = S.npcs.find(n => n.k === 'goaty_dj'); if (g) g.snap = true; S.crowdFreed = true; const tb = S.props.find(p => p.k === 'txbox'); if (tb) { tb.k = 'tx_dead'; tb.im = P_('tx_dead'); tb.glow = null; S.blast({ x: tb.x, y: 560, r: 120, dmg: 0, color: '#9b5cff', fx: true }); } } }, { wait: 50 },
         { fn: () => { const g = S.npcs.find(n => n.k === 'goaty_dj'); if (g) g.freed = true; } },
-        say('goaty', '...Bro. Why am I sweating. How long was I up there?'), { fn: () => S.levelComplete() }] },
+        say('goaty', '...Bro. Why am I so sweaty? How long was I up there?'), { fn: () => S.levelComplete() }] },
   ],
-  outro: [{ cut: 'l2_freed', lines: [['goaty', 'I could hear it the whole time. Under every track. Like somebody else had their hands on my mixer.'], ['ghostlabs', 'Vito’s been growling at the sky all week. Same frequency’s lighting up out by the airfield.'], ['goaty', 'Air Capital Property Maintenance. Drew’s shop. He called me Tuesday saying there were lights over his hangars. I laughed at him.'], ['buddy', 'Nobody’s laughing now. Let’s go.']] }],
+  outro: [{ cut: 'l2_freed', lines: [['goaty', 'I could hear it the whole time. Under every track. Like somebody else had their hands on my mixer.'], ['ghostlabs', 'Vito’s been growling at the sky all week. And that same frequency’s lighting up out by the airfield.'], ['goaty', 'That’s Drew’s shop. Air Capital Property Maintenance. He called me Tuesday about lights over his hangars and I laughed at him.'], ['buddy', 'Nobody’s laughing now. Let’s go.']] }],
 };
 const L3 = {
   name: 'AIR CAPITAL', sub: 'Air Capital Property Maintenance. Lights over the hangars.', mat: 'ac', buddy: 'goaty', buddyAlt: 'ghostlabs',
-  intro: [say('buddy', 'Drew’s hangar is at the far end of the field. Stay low. Something up there is circling.')],
+  intro: [say('buddy', 'Drew’s hangar’s at the far end of the field. Stay low. Something up there keeps circling.')],
   scenes: [
     { bg: 'l3a', w: 4000, ground: 655, storm: true, hint: 'Greys. Real ones.',
       items: [
@@ -1307,14 +1307,14 @@ const L3 = {
         { t: 'foe', k: 'grey', x: 1150 }, { t: 'foe', k: 'grey', x: 1700 }, { t: 'foe', k: 'grey', x: 2250 }, { t: 'foe', k: 'grey', x: 2750 }, { t: 'foe', k: 'grey', x: 3300 }, { t: 'foe', k: 'grey', x: 3700 },
       ] },
     { bg: 'l3b', w: 1900, ground: 655,
-      enter: [{ cut: 'l3_fight', lines: [['narrator', 'Inside the hangar: one man, one wrench, one very angry possum — holding off a pack of Greys.'], ['drew', 'COULD USE A HAND HERE, Y’ALL!']] }],
+      enter: [{ cut: 'l3_fight', lines: [['narrator', 'Inside the hangar: one man, one wrench, one very angry possum — holding off a pack of Greys.'], ['drew', 'Y’ALL GONNA STAND THERE OR WHAT?!']] }],
       items: [
         { t: 'plat', m: 'short', x: 280, y: 470 }, { t: 'pick', k: 'vinyl', x: 430, y: 410 },
         { t: 'npc', k: 'drew', x: 1560, face: -1 }, { t: 'pipe', k: 'hatch', x: 1700, s: 0.42, need: () => S.flags.hatch },
-        { t: 'talk', x: 640, beats: [{ fn: () => { S.objective = 'SAVE DREW'; S.lock = { x0: 620, waves: [['grey', 'grey'], ['grey', 'grey', 'grey']], wi: 0, done: [say('buddy', 'Okay, that one’s got a cape. That’s the boss.'), { fn: () => S.startBoss({ k: 'commander', x: 1400, lock: 620, obj: 'DEFEAT THE GREY COMMANDER' }) }] }; } }] },
+        { t: 'talk', x: 640, beats: [{ fn: () => { S.objective = 'SAVE DREW'; S.lock = { x0: 620, waves: [['grey', 'grey'], ['grey', 'grey', 'grey']], wi: 0, done: [say('buddy', 'Okay, that one’s got a cape. That’s gotta be the boss.'), { fn: () => S.startBoss({ k: 'commander', x: 1400, lock: 620, obj: 'DEFEAT THE GREY COMMANDER' }) }] }; } }] },
       ],
       win: [{ fn: () => { const d = S.npcs.find(n => n.k === 'drew'); if (d) d.talk = true; } },
-        { cut: 'l3_hatch', lines: [['drew', 'They keep coming for the engines. Not the planes — the ENGINES. Since summer.'], ['drew', 'More of ’em are coming. There’s an old maintenance tunnel under this shop. Runs under the whole city.'], ['drew', 'Fair warning. Down there you’re gonna meet the Machine Elves. Little guys. Grinning. Sharp.'], ['drew', 'They don’t let just anybody through. You’ll have to earn it.']] },
+        { cut: 'l3_hatch', lines: [['drew', 'They keep coming for the engines. Not the planes. The ENGINES. All summer.'], ['drew', 'More of ’em are on the way. There’s an old maintenance tunnel under the shop. Runs under the whole city.'], ['drew', 'Fair warning. Down there you’re gonna meet the Machine Elves. Little guys. Big grins. Real pointy.'], ['drew', 'They don’t let just anybody through. You gotta earn it.']] },
         { fn: () => { S.flags.hatch = true; S.objective = 'DROP DOWN THE HATCH'; const d = S.npcs.find(n => n.k === 'drew'); if (d) d.talk = false, d.calm = true; } }] },
     { bg: 'l3c', w: 2800, ground: 650, hint: 'Into the tunnels.',
       items: [
@@ -1324,11 +1324,11 @@ const L3 = {
         { t: 'talk', x: 1900, beats: [say('buddy', 'Was that... a tiny guy with a glowing spear?'), say('drew', 'Told you. Elves. Don’t make eye contact. Actually, do. They respect that.')] },
       ] },
   ],
-  outro: [say('drew', 'Watch your step. From here on, it’s their kingdom. We’re the guests.')],
+  outro: [say('drew', 'Watch your step. From here down it’s their kingdom. We’re just guests.')],
 };
 const L4 = {
   name: 'THE SEWERS', sub: 'The kingdom of the Machine Elves.', mat: 'sw', buddy: 'drew', buddyAlt: 'goaty',
-  intro: [say('buddy', 'Stay out of the deep water. And anything in a pointy hat? Not friendly yet.')],
+  intro: [say('buddy', 'Stay out of the deep water. And anything in a pointy hat ain’t friendly. Yet.')],
   scenes: [
     { bg: 'l4a', w: 4200, ground: 655, gaps: [[1500, 1720]], hint: 'Deep water slows you down.',
       items: [
@@ -1346,12 +1346,12 @@ const L4 = {
         { t: 'plat', m: 'long', x: 1050, y: 470 }, { t: 'plat', m: 'short', x: 1600, y: 360 }, { t: 'pick', k: 'vinyl', x: 1740, y: 300 },
         { t: 'cp', x: 1450 }, { t: 'pick', k: 'pendant', x: 2200, y: 600 }, { t: 'glows', x: 1080, y: 410, n: 7, dx: 55 },
         { t: 'foe', k: 'elf_spear', x: 800 }, { t: 'foe', k: 'elf_sling', x: 1200 }, { t: 'foe', k: 'elf_bomber', x: 1900 }, { t: 'foe', k: 'elf_spear', x: 2100 }, { t: 'foe', k: 'elf_sling', x: 2300 },
-        { t: 'boss', k: 'elfking', x: 3250, at: 2560, lock: 2320, obj: 'EARN THE KING’S RESPECT', beats: [say('elfking', 'HUM-CARRIERS! Stinking of the dome! In MY tunnels! Elves — to the throne!'), say('buddy', 'He thinks we’re with them. Only one way to argue with a king.')] },
+        { t: 'boss', k: 'elfking', x: 3250, at: 2560, lock: 2320, obj: 'EARN THE KING’S RESPECT', beats: [say('elfking', 'HUM-CARRIERS! You reek of the dome! In MY tunnels?! Elves, to the throne!'), say('buddy', 'He thinks we’re with them. Guess we argue the old-fashioned way.')] },
         { t: 'pipe', k: 'elbow', x: 3460, s: 0.4, need: () => S.flags.kingDone },
       ],
       win: [
-        { cut: 'l4_king', lines: [['elfking', '...Hah! HAH! No Hum-carrier fights like that. You carry the BEAT, not the Hum!'], ['elfking', 'Forgive us. For a hundred and fifty years we have guarded what grows beneath this city.'], ['elfking', 'The Tree of Life’s roots run under all of Wichita. Every honest show feeds them. The Hum is poisoning them, one ticket at a time.']] },
-        { cut: 'l4_sun', lines: [['elfking', 'We sheltered one of yours. We believed he was a sun spirit. He lights the dark.'], ['sunshine', 'Took y’all long enough. These little dudes made me DJ for three days straight.'], ['elfking', 'The Hum comes from one place. Beneath the great dome you call... Century II.'], ['elfking', 'Take the root tunnel. But the dome’s servants crawl thick down there. Go loud.']] },
+        { cut: 'l4_king', lines: [['elfking', '...Hah! HAH! No Hum-carrier swings like that. You carry the BEAT, not the Hum!'], ['elfking', 'Forgive us. A hundred and fifty years we’ve guarded what grows under this city. We get jumpy.'], ['elfking', 'The roots of the Tree of Life run under all of Wichita. Every honest show feeds them. The Hum poisons them, one ticket at a time.']] },
+        { cut: 'l4_sun', lines: [['elfking', 'We’ve been sheltering one of yours. We took him for a sun spirit. He makes the dark... less.'], ['sunshine', 'Took y’all long enough. These little dudes had me DJing three days straight. No bathroom breaks.'], ['elfking', 'The Hum comes from one place. Beneath the great dome you call... Century II.'], ['elfking', 'Take the root tunnel. The dome’s servants crawl thick down there. Go loud.']] },
         { fn: () => { S.flags.kingDone = true; S.objective = 'TAKE THE ROOT TUNNEL'; } }] },
     { bg: 'l4c', w: 3600, ground: 655, hint: 'Don’t touch the green.',
       items: [
@@ -1360,14 +1360,14 @@ const L4 = {
         { t: 'prop', k: 'roots', x: 600, s: 0.6 }, { t: 'prop', k: 'roots', x: 1900, s: 0.6 }, { t: 'prop', k: 'root_spk', x: 3300, s: 0.55, glow: '#9b5cff' },
         { t: 'cp', x: 1700 }, { t: 'glows', x: 2740, y: 320, n: 7, dx: 55 },
         { t: 'foe', k: 'vamp_raver', x: 700 }, { t: 'foe', k: 'vamp_vip', x: 1300 }, { t: 'foe', k: 'vamp_bouncer', x: 1900 }, { t: 'foe', k: 'vamp_raver', x: 2500 }, { t: 'foe', k: 'vamp_vip', x: 3000 }, { t: 'foe', k: 'vamp_raver', x: 3300 },
-        { t: 'talk', x: 400, beats: [say('sunshine', 'I got the light. Y’all got the hands. Don’t step in the green stuff.')] },
+        { t: 'talk', x: 400, beats: [say('sunshine', 'I got the light, y’all got the hands. And don’t step in the green stuff.')] },
       ] },
   ],
-  outro: [say('sunshine', 'Feel that in your chest? We’re right under it. The whole dome is humming.')],
+  outro: [say('sunshine', 'Feel that in your chest? We’re right under it. The whole dome’s humming.')],
 };
 const L5 = {
   name: 'CENTURY II', sub: 'The dome was never a building.', mat: 'c2', buddy: 'sunshine', buddyAlt: 'lotusflow',
-  intro: [{ cut: 'l5_reveal', lines: [['narrator', 'They climb up beneath Century II. And the dome... was never a building.'], ['sunshine', 'That’s a SHIP. They built a convention center around a crashed spaceship.'], ['player', 'Every graduation. Every concert. Every crowd that ever cheered in here...'], ['sunshine', '...was feeding it. Fifty years of Wichita, feeding it.']] }],
+  intro: [{ cut: 'l5_reveal', lines: [['narrator', 'They climb up into the belly of Century II. And the dome... was never a building.'], ['sunshine', 'That’s a SHIP. They built a convention center around a crashed spaceship. In WICHITA.'], ['player', 'Every graduation. Every concert. Every crowd that ever screamed in here...'], ['sunshine', '...was feeding it. Fifty-some years of Wichita, just feeding it.']] }],
   scenes: [
     { bg: 'l5a', w: 4000, ground: 650, hint: 'Follow the cables.', lights: [[700, 300, '#2ef0d8', 300], [1900, 260, '#9b5cff', 320], [3100, 300, '#2ef0d8', 300]],
       items: [
@@ -1385,29 +1385,29 @@ const L5 = {
         { t: 'talk', x: 1380, beats: [
           { fn: () => { const g = S.npcs.find(n => n.k === 'greyleader'); if (g) g.talk = true; } },
           say('greyleader', 'Lower your hands. If I wanted you harmed, the Hum would already have you.'),
-          say('greyleader', 'We fell here long ago. A storm over the prairie, and then... the ground.'),
-          say('greyleader', 'Our ship runs on one thing: what a crowd gives off when the music hits and everyone becomes one.'),
-          say('greyleader', 'We only wanted to go home. Then a man in a very nice suit came to us with a deal.'),
-          { cut: 'l5_deal', lines: [['greyleader', 'He would build the dome around us. Keep the crowds coming. Keep the transmitters running.'], ['greyleader', 'In return, he would feed too. He was the first energy vampire.'], ['greyleader', 'He has kept us stranded on purpose. The day our ship is full, it leaves, and his supply leaves with it.']] },
+          say('greyleader', 'We fell here a long time ago. A storm over the prairie. Then... the ground.'),
+          say('greyleader', 'Our ship runs on one thing. What a crowd gives off when the music hits and everyone moves as one.'),
+          say('greyleader', 'We only wanted to go home. Then a man in a very nice suit offered us a deal.'),
+          { cut: 'l5_deal', lines: [['greyleader', 'He would build the dome around us. Keep the crowds coming. Keep the transmitters humming.'], ['greyleader', 'In return, he got to feed too. He was the first of the energy vampires.'], ['greyleader', 'He’s kept us stranded on purpose. The day our ship is full, it leaves, and his meal ticket leaves with it.']] },
           say('player', 'Let me guess. Nice watch. No soul.'),
-          say('greyleader', 'Then your warehouse opened. The energy stopped rising to the dome. It sank into the ground. Into the roots.'),
-          say('greyleader', 'Every show you throw, another transmitter dies. He is panicking. Turning more people. Selling more tickets.'),
-          say('greyleader', 'He is by the river, out back. Stop him. Then throw the realest show this city has ever heard. It may be enough to send us home.'),
-          { fn: () => { const g = S.npcs.find(n => n.k === 'greyleader'); if (g) g.talk = false; S.objective = 'SURVIVE THE AMBUSH'; S.lock = { x0: 1100, waves: [['mib', 'mib'], ['vamp_vip', 'mib', 'vamp_bouncer']], wi: 0, done: [say('sunshine', 'River. Now. Somebody text the crew — we’re throwing a show.')] }; } },
+          say('greyleader', 'Then your warehouse opened. The energy stopped rising to the dome. It sank down. Into the roots.'),
+          say('greyleader', 'Every show you throw, another transmitter dies. So he panics. Turns more people. Prints more tickets.'),
+          say('greyleader', 'He’s down by the river, out back. Stop him. Then throw the realest show this city’s ever heard. It might be enough to get us home.'),
+          { fn: () => { const g = S.npcs.find(n => n.k === 'greyleader'); if (g) g.talk = false; S.objective = 'SURVIVE THE AMBUSH'; S.lock = { x0: 1100, waves: [['mib', 'mib'], ['vamp_vip', 'mib', 'vamp_bouncer']], wi: 0, done: [say('sunshine', 'River. Now. Somebody text the group chat. We’re throwing a show.')] }; } },
         ] },
       ] },
     { bg: 'l5c', w: 1800, ground: 650, lights: [[900, 260, '#2ef0b0', 380]],
       items: [
         { t: 'crowd', x0: 150, x1: 1750, n: 18 },
         { t: 'plat', m: 'short', x: 280, y: 480 }, { t: 'pick', k: 'vinyl', x: 430, y: 420 },
-        { t: 'boss', k: 'executive', x: 1320, at: 560, lock: 520, obj: 'STOP THE EXECUTIVE', beats: [say('exec', 'So. The warehouse kids. I’ve been watching your little shows bleed me dry.'), say('exec', 'Do you know what a crowd is worth? I do. I’ve been collecting since 1969.'), say('player', 'A crowd’s not a product, man.'), say('exec', 'Everything is a product. Even you. ESPECIALLY you.')] },
+        { t: 'boss', k: 'executive', x: 1320, at: 560, lock: 520, obj: 'STOP THE EXECUTIVE', beats: [say('exec', 'Well. The warehouse kids. Do you have any idea what your little shows have cost me?'), say('exec', 'Fifty-some years I’ve run this town’s nights. Every ticket. Every crowd. Mine.'), say('player', 'They were never yours, man.'), say('exec', 'Everything’s for sale, kid. You just haven’t heard your price yet.'), say('player', 'Then come collect.')] },
       ],
-      win: [say('sunshine', 'He’s down, but the whole city’s still under! We need the realest drop this town has ever heard!'), say('sunshine', 'EVERYBODY — ON THE BEAT!'), { fn: () => startDrop() }] },
+      win: [say('sunshine', 'He’s down! But look... the whole city’s still under.'), say('player', 'Then we wake ’em up. One drop. The realest one this town’s ever heard.'), say('sunshine', 'You heard ’em. EVERYBODY, ON THE BEAT!'), { fn: () => startDrop() }] },
   ],
   ending: [
-    { cut: 'l5_wake', lines: [['narrator', 'On the drop, the whole riverbank wakes up. The purple drains out of their eyes. The roots light up under their feet.'], ['narrator', 'One real show. More energy than the dome ever stole.']] },
-    { cut: 'l5_ship', lines: [['greyleader', 'It is full. After all this time... it is full.'], ['greyleader', 'Thank you, Tribal Roots. When we leave, every transmitter in this city dies with us. Keep throwing real shows.'], ['narrator', 'The ship tears free of the dome and rises into the night.']] },
-    { cut: 'l5_dawn', lines: [['narrator', 'Dawn over downtown. Where Century II stood, there’s just an empty lot.'], ['buddy', '...So. Who’s telling the city council?'], ['player', 'Not it. Somebody get me a breakfast burrito.']] },
+    { cut: 'l5_wake', lines: [['narrator', 'The drop lands and the whole riverbank wakes up. The purple drains out of their eyes. The roots light up under their feet.'], ['narrator', 'One real show. More than the dome stole in fifty years.']] },
+    { cut: 'l5_ship', lines: [['greyleader', 'It’s full. After all this time... it’s actually full.'], ['greyleader', 'Thank you, Tribal Roots. When we go, every transmitter in this city goes dark with us.'], ['greyleader', 'Keep throwing real shows. We’ll be listening.'], ['narrator', 'The ship tears loose from the dome and climbs into the night. The whole riverbank watches it go.']] },
+    { cut: 'l5_dawn', lines: [['narrator', 'Sunrise over downtown. Where Century II stood, there’s nothing but an empty lot.'], ['buddy', '...So. Who’s telling the city council?'], ['player', 'Not it. I need a breakfast burrito and like nine hours of sleep.'], ['buddy', 'Same time next Saturday?'], ['player', 'Obviously.']] },
     { fn: () => S.levelComplete() },
   ],
 };
@@ -1426,7 +1426,7 @@ L1.scenes[0] = { bg: 'l1a', w: 3800, ground: 652, objective: 'GET TO THE VENT', 
     { t: 'crowd', x0: 240, x1: 3600, n: 26 },
     { t: 'prop', k: 'truss', x: 1100, y: 250, s: 0.8 }, { t: 'prop', k: 'truss', x: 2500, y: 250, s: 0.8 },
     { t: 'prop', k: 'movhead', x: 860, y: 300, s: 0.45, glow: '#ff4fd8' }, { t: 'prop', k: 'movhead', x: 2700, y: 300, s: 0.45, glow: '#2ef0d8' },
-    { t: 'tip', x: 420, y: 230, s: 'W JUMP   ·   J K U I ATTACK' },
+    { t: 'tip', x: 420, y: 230, s: 'W JUMP   ·   J K L ; ATTACK' },
     ...row(330, 600, 5),
     { t: 'prop', k: 'spk_a', x: 760, s: 0.6, solid: true, glow: '#ff2a4d' }, ...row(700, 450, 3),
     PL(880, 480), ...arc(900, 420, 1180, 420, 6, 40),
@@ -1435,7 +1435,7 @@ L1.scenes[0] = { bg: 'l1a', w: 3800, ground: 652, objective: 'GET TO THE VENT', 
     { t: 'foe', k: 'vamp_raver', x: 1080 }, { t: 'foe', k: 'vamp_raver', x: 1520 },
     { t: 'prop', k: 'bar', x: 1620, s: 0.55, solid: true, glow: '#ff4fd8' }, ...row(1540, 440, 4),
     { t: 'cp', x: 1880 },
-    { t: 'talk', x: 1000, beats: [say('buddy', 'Those aren’t ravers. Check the necks. That’s scales, bro. Actual scales.'), say('player', 'Cool. Cool cool cool. Then we hit ’em.')] },
+    { t: 'talk', x: 1000, beats: [say('buddy', 'Those aren’t ravers. Look at their necks. Those are scales, bro. Actual scales.'), say('player', 'Cool. Cool cool cool. Then we hit ’em.')] },
     PL(2040, 330), { t: 'ladder', x: 2200, y0: 330 }, { t: 'tip', x: 2200, y: 230, s: 'LADDERS: STAND ON ONE, HOLD W' },
     ...row(2060, 280, 6),
     PL(2420, 190, 'short'), { t: 'pick', k: 'vinyl', x: 2530, y: 140 },
@@ -1445,10 +1445,10 @@ L1.scenes[0] = { bg: 'l1a', w: 3800, ground: 652, objective: 'GET TO THE VENT', 
     { t: 'prop', k: 'spk_tower', x: 3060, s: 0.6, solid: true, glow: '#9b5cff' },
     PL(3180, 330), ...row(3200, 280, 4),
     { t: 'pipe', k: 'vent', x: 3420, y: 330, s: 0.42, need: () => S.flags.vent },
-    { t: 'arena', x: 2900, x0: 2520, obj: 'CLEAR THE FLOOR', waves: [['vamp_raver', 'vamp_vip'], ['vamp_bouncer', 'vamp_raver']], done: [{ fn: () => { S.flags.vent = true; S.objective = 'UP THE TOWER TO THE VENT'; } }, say('buddy', 'Clear! Climb the speaker tower — the vent’s up top.')] },
+    { t: 'arena', x: 2900, x0: 2520, obj: 'CLEAR THE FLOOR', waves: [['vamp_raver', 'vamp_vip'], ['vamp_bouncer', 'vamp_raver']], done: [{ fn: () => { S.flags.vent = true; S.objective = 'UP THE TOWER TO THE VENT'; } }, say('buddy', 'Floor’s clear! Up the speaker tower, vent’s at the top.')] },
   ] };
 L1.scenes[1] = { bg: 'l1b', w: 3000, ground: 640, gaps: [[1380, 1620]], tint: 'rgba(30,10,40,0.12)',
-  enter: [say('buddy', 'It’s louder in here. Like we’re crawling down its throat. Keep moving.')],
+  enter: [say('buddy', 'It’s louder in here. Feels like we’re crawling down its throat. Keep moving.')],
   items: [
     { t: 'hazard', k: 'fan', x: 480, w: 300 }, { t: 'tip', x: 600, y: 230, s: 'FANS PUSH YOU BACK — KEEP MOVING' },
     PL(860, 480, 'long', { crumble: true }), { t: 'tip', x: 1000, y: 260, s: 'CRACKED GRATES DROP — DON’T STAND STILL' }, ...row(880, 430, 5),
@@ -1461,13 +1461,13 @@ L1.scenes[1] = { bg: 'l1b', w: 3000, ground: 640, gaps: [[1380, 1620]], tint: 'r
     { t: 'foe', k: 'vamp_vip', x: 2300 }, { t: 'foe', k: 'vamp_raver', x: 2650 }, ...row(2500, 600, 6),
   ] };
 L1.scenes[2].items = [PL(220, 480, 'short'), PL(470, 320, 'short'), { t: 'pick', k: 'vinyl', x: 570, y: 265 }, ...arc(260, 430, 560, 270, 4, 40),
-  { t: 'boss', k: 'transmitter', x: 1380, at: 640, lock: 420, obj: 'DESTROY THE TRANSMITTER', beats: [say('buddy', 'There it is. It’s wired into every speaker in the building. It’s been playing UNDER us all night.'), say('player', 'Then let’s pull the plug on it.')] }];
+  { t: 'boss', k: 'transmitter', x: 1380, at: 640, lock: 420, obj: 'DESTROY THE TRANSMITTER', beats: [say('buddy', 'There it is. Wired into every speaker in the building. It’s been playing under our set all night.'), say('player', 'Cool. Let’s unplug it.')] }];
 
 L2.scenes[0] = { bg: 'l2a', w: 3600, ground: 650, lights: L2.scenes[0].lights,
   items: [
     { t: 'prop', k: 'lights', x: 900, y: 210, s: 0.7 }, { t: 'prop', k: 'lights', x: 2300, y: 210, s: 0.7 },
     { t: 'prop', k: 'lamp', x: 400, s: 0.6 }, { t: 'prop', k: 'lamp', x: 1750, s: 0.6 }, { t: 'prop', k: 'lamp', x: 3000, s: 0.6 },
-    { t: 'talk', x: 500, beats: [say('buddy', 'Black suits. Sunglasses. In Old Town. At 2am. Yeah — those aren’t cops.')] },
+    { t: 'talk', x: 500, beats: [say('buddy', 'Black suits and sunglasses in Old Town at 2am. Yeah, those aren’t cops.')] },
     { t: 'prop', k: 'crates', x: 760, s: 0.55, solid: true }, ...row(710, 450, 3),
     PL(900, 470, 'long'), ...row(920, 420, 6),
     { t: 'foe', k: 'mib', x: 1050 }, { t: 'foe', k: 'vamp_raver', x: 1380 },
@@ -1475,7 +1475,7 @@ L2.scenes[0] = { bg: 'l2a', w: 3600, ground: 650, lights: L2.scenes[0].lights,
     PL(1240, 320, 'long'), { t: 'ladder', x: 1400, y0: 320 }, ...row(1260, 270, 6),
     PL(1600, 190, 'short'), { t: 'pick', k: 'vinyl', x: 1700, y: 140 },
     { t: 'cp', x: 1900 },
-    { t: 'arena', x: 2350, x0: 1980, obj: 'MEN IN BLACK — TAKE THEM OUT', waves: [['mib', 'mib'], ['mib', 'vamp_vip', 'mib']], done: [say('buddy', 'Suits don’t bleed, they leak. Gross. The stage is close.')] },
+    { t: 'arena', x: 2350, x0: 1980, obj: 'MEN IN BLACK — TAKE THEM OUT', waves: [['mib', 'mib'], ['mib', 'vamp_vip', 'mib']], done: [say('buddy', 'They don’t bleed, they leak. Gross. Stage is close.')] },
     PL(2200, 470, 'short', { crumble: true }), PL(2460, 330, 'short', { crumble: true }), ...arc(2220, 420, 2560, 280, 5, 30),
     { t: 'bounce', x: 2950, k: 'spk_c' }, ...arc(2950, 380, 3150, 220, 4, 60), PL(3080, 240, 'short'), { t: 'pick', k: 'pendant', x: 3180, y: 185 },
     { t: 'foe', k: 'vamp_bouncer', x: 3250 }, ...row(3300, 600, 5),
@@ -1513,7 +1513,7 @@ L3.scenes[0] = { bg: 'l3a', w: 4000, ground: 655, storm: true,
   ] };
 L3.scenes[1].items = [ PL(240, 480, 'short'), PL(480, 330, 'short'), { t: 'pick', k: 'vinyl', x: 580, y: 275 }, ...arc(260, 430, 570, 280, 4, 40),
   { t: 'npc', k: 'drew', x: 1560, face: -1 }, { t: 'pipe', k: 'hatch', x: 1700, s: 0.42, need: () => S.flags.hatch },
-  { t: 'talk', x: 700, beats: [{ fn: () => { S.objective = 'SAVE DREW'; S.lock = { x0: 620, waves: [['grey', 'grey'], ['grey', 'grey', 'grey']], wi: 0, done: [say('buddy', 'Okay, that one’s got a cape. That’s the boss.'), { fn: () => S.startBoss({ k: 'commander', x: 1400, lock: 620, obj: 'DEFEAT THE GREY COMMANDER' }) }] }; } }] } ];
+  { t: 'talk', x: 700, beats: [{ fn: () => { S.objective = 'SAVE DREW'; S.lock = { x0: 620, waves: [['grey', 'grey'], ['grey', 'grey', 'grey']], wi: 0, done: [say('buddy', 'Okay, that one’s got a cape. That’s gotta be the boss.'), { fn: () => S.startBoss({ k: 'commander', x: 1400, lock: 620, obj: 'DEFEAT THE GREY COMMANDER' }) }] }; } }] } ];
 L3.scenes[2] = { bg: 'l3c', w: 2800, ground: 650,
   items: [
     { t: 'conv', x: 400, w: 600, dir: 1 }, ...row(420, 600, 8),
@@ -1545,12 +1545,12 @@ L4.scenes[1] = { bg: 'l4b', w: 3600, ground: 655, lights: L4.scenes[1].lights, w
     { t: 'bounce', x: 1500, k: 'mush_pink', s: 0.4, v: 28 }, ...arc(1500, 380, 1700, 220, 4, 50), PL(1640, 230, 'short'), { t: 'pick', k: 'vinyl', x: 1740, y: 175 },
     { t: 'foe', k: 'elf_spear', x: 800 }, { t: 'foe', k: 'elf_sling', x: 1250 }, { t: 'foe', k: 'elf_bomber', x: 1950 }, { t: 'foe', k: 'elf_spear', x: 2100 },
     { t: 'cp', x: 1880 }, { t: 'pick', k: 'pendant', x: 2250, y: 590 },
-    { t: 'boss', k: 'elfking', x: 3250, at: 2600, lock: 2320, obj: 'EARN THE KING’S RESPECT', beats: [say('elfking', 'HUM-CARRIERS! Stinking of the dome! In MY tunnels! Elves — to the throne!'), say('buddy', 'He thinks we’re with them. Only one way to argue with a king.')] },
+    { t: 'boss', k: 'elfking', x: 3250, at: 2600, lock: 2320, obj: 'EARN THE KING’S RESPECT', beats: [say('elfking', 'HUM-CARRIERS! You reek of the dome! In MY tunnels?! Elves, to the throne!'), say('buddy', 'He thinks we’re with them. Guess we argue the old-fashioned way.')] },
     { t: 'pipe', k: 'elbow', x: 3460, s: 0.4, need: () => S.flags.kingDone },
   ] };
 L4.scenes[2] = { bg: 'l4c', w: 3600, ground: 655, dark: 0.82,
   items: [
-    { t: 'talk', x: 300, beats: [say('sunshine', 'I got the light. Y’all got the hands. Don’t step in the green stuff.')] },
+    { t: 'talk', x: 300, beats: [say('sunshine', 'I got the light, y’all got the hands. And don’t step in the green stuff.')] },
     { t: 'tip', x: 600, y: 230, s: 'GREEN ACID BURNS — STAY ON THE ROOTS' },
     { t: 'hazard', k: 'acid', x: 880, w: 380 }, PL(900, 500, 'short', { crumble: true }), PL(1130, 500, 'short', { crumble: true }), ...row(920, 450, 7),
     { t: 'foe', k: 'vamp_raver', x: 700 }, { t: 'foe', k: 'vamp_vip', x: 1450 },
@@ -1569,7 +1569,7 @@ L5.scenes[0] = { bg: 'l5a', w: 4000, ground: 650, lights: L5.scenes[0].lights,
     { t: 'prop', k: 'console', x: 1500, s: 0.5, solid: true }, PL(1620, 460, 'long'), PL(1900, 320, 'short', { crumble: true }), ...row(1640, 410, 6),
     { t: 'lift', x: 2150, w: 140, top: 190, col: '#c77bff' }, PL(2290, 210, 'short'), { t: 'pick', k: 'vinyl', x: 2390, y: 155 }, ...row(2170, 260, 3),
     { t: 'cp', x: 2200 },
-    { t: 'arena', x: 2700, x0: 2350, obj: 'THEY’RE ALL HERE', waves: [['grey', 'vamp_vip'], ['mib', 'vamp_bouncer', 'grey']], done: [say('sunshine', 'All these cables run one direction. Something up ahead wants us to find it.')] },
+    { t: 'arena', x: 2700, x0: 2350, obj: 'THEY’RE ALL HERE', waves: [['grey', 'vamp_vip'], ['mib', 'vamp_bouncer', 'grey']], done: [say('sunshine', 'Every cable runs the same way. Something up ahead wants to be found.')] },
     { t: 'bounce', x: 3300, k: 'spk_d', s: 0.4 }, ...arc(3300, 380, 3520, 230, 4, 50), PL(3460, 240, 'short'), { t: 'pick', k: 'pendant', x: 3560, y: 185 },
     PL(3000, 530, 'move', { s: 0.24, mv: { dx: 140, per: 200 } }), ...row(3700, 600, 5),
     { t: 'prop', k: 'curtain', x: 3800, s: 0.7 },

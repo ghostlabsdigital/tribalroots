@@ -63,7 +63,8 @@
   #touch .stick .ar { position: absolute; color: rgba(255,244,230,0.45); font: 800 3.2vmin var(--hud); }
   #touch .stick .ar.u { left: 50%; top: 3%; transform: translateX(-50%); } #touch .stick .ar.d { left: 50%; bottom: 3%; transform: translateX(-50%); }
   #touch .stick .ar.l { left: 4%; top: 50%; transform: translateY(-50%); } #touch .stick .ar.r { right: 4%; top: 50%; transform: translateY(-50%); }
-  #touch .stick.on .ar { color: rgba(255,207,63,0.8); }
+  #touch .stick .ar.hot { color: #ffcf3f; transform: translate(var(--tx,0), var(--ty,0)) scale(1.35); text-shadow: 0 0 10px rgba(255,207,63,0.9); }
+  #touch .stick .ar.u, #touch .stick .ar.d { --tx: -50%; } #touch .stick .ar.l, #touch .stick .ar.r { --ty: -50%; }
   body.touch.portrait #touch .stick { width: 50%; height: 100%; }
   body.touch.portrait #touch .stick .base { width: 36vw; height: 36vw; left: 4vw; bottom: auto; top: 3vw; }
   body.touch.portrait #touch .stick .knob { width: 15vw; height: 15vw; left: 14.5vw; bottom: auto; top: 13.5vw; }
@@ -87,7 +88,7 @@
   <canvas id="game" width="1280" height="720" aria-label="Tribal Roots: Underground game screen"></canvas>
   <div id="touch" hidden>
     <div class="stick" id="stick" aria-label="Move: slide your thumb. Push up to jump.">
-      <div class="base"><span class="ar u">▲</span><span class="ar l">◀</span><span class="ar r">▶</span><span class="ar d">▼</span></div>
+      <div class="base"><span class="ar u">▲</span><span class="ar l">◀&#xFE0E;</span><span class="ar r">▶&#xFE0E;</span><span class="ar d">▼</span></div>
       <div class="knob"></div>
     </div>
     <div class="btns">

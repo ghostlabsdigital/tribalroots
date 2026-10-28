@@ -430,7 +430,10 @@ class Fighter {
     if (this.inv > 0) this.inv--;
     if (this.flash > 0) this.flash--;
     this.sx = lerp(this.sx, 1, 0.22); this.sy = lerp(this.sy, 1, 0.22);
-    const o = this.opp, toOpp = o.x >= this.x ? 1 : -1;
+    const o = this.opp; let tx = o.x;
+    // face whoever is closest: the opponent or a bad guy that crashed the fight
+    if (window.CHAOS) for (const c of CHAOS.list()) if (!c.dead && c.hp > 0 && c.state !== 'leave' && Math.abs(c.x - this.x) < Math.abs(tx - this.x)) tx = c.x;
+    const toOpp = tx >= this.x ? 1 : -1;
     const fwdHeld = toOpp > 0 ? inp.r : inp.l, backHeld = toOpp > 0 ? inp.l : inp.r;
     this.block = backHeld && !inp.u;
     this.crouchBlockHeld = inp.d;

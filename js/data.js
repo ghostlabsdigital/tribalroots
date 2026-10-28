@@ -19,6 +19,9 @@ const ROSTER = [
   { id: 'bearflame', playable: true },
   { id: 'brenda', playable: true },
   { id: 'drew', playable: true },
+  { id: 'josh', playable: true },
+  { id: 'nate', playable: true },
+  { id: 'chance', playable: true },
 ];
 
 const STAGES = [
@@ -39,6 +42,78 @@ const STAGES = [
 ];
 
 const FIGHTERS = {
+  josh: {
+    name: 'JOSH BREEN', tag: 'Camera guy. He already got the shot.', color: '#3f7bff', color2: '#bfe0ff',
+    hp: 1060, walk: 4.2, back: 3.2, jump: 18.5, jumpX: 5, dash: 12.5,
+    anim: {
+      idle: ['idle'], walk_f: ['walk_f', 'run_a', 'walk_f2', 'run_b'], walk_b: ['walk_f2', 'walk_f'], dash: ['run_a', 'run_b'], backdash: ['dodge'],
+      jump: ['jump'], fall: ['jump'], land: ['c_block'], crouch: ['c_block'],
+      block: ['block'], c_block: ['c_block'], hit_l: ['hit_l'], hit_h: ['hit_h'], launch: ['hit_air'],
+      ground: ['ground'], getup: ['getup'], stun: ['stun'],
+      entrance: ['talk_a', 'talk_b'], victory: ['talk_b'], defeat: ['ground'],
+    },
+    moves: {
+      lp: { pose: 'lp', s: 4, a: 3, r: 8, dmg: 40, hs: 14, bs: 9, kb: 6, lvl: 'mid', stop: 6, sfx: 'light' },
+      lk: { pose: 'lk', s: 6, a: 3, r: 11, dmg: 50, hs: 15, bs: 10, kb: 8, lvl: 'mid', stop: 7, sfx: 'light' },
+      hp: { pose: 'hp', s: 9, a: 4, r: 17, dmg: 90, hs: 20, bs: 14, kb: 14, lvl: 'mid', stop: 10, sfx: 'heavy', heavy: true, lunge: 5 },
+      hk: { pose: 'hk', s: 11, a: 4, r: 19, dmg: 100, hs: 21, bs: 15, kb: 16, lvl: 'mid', stop: 11, sfx: 'heavy', heavy: true },
+      c_light: { pose: 'c_atk', s: 5, a: 3, r: 10, dmg: 36, hs: 13, bs: 9, kb: 6, lvl: 'low', stop: 6, sfx: 'light', crouch: true },
+      sweep: { pose: 'c_atk', s: 9, a: 4, r: 22, dmg: 80, hs: 0, bs: 14, kb: 10, lvl: 'low', stop: 10, sfx: 'heavy', kd: true, heavy: true, crouch: true },
+      air: { pose: 'air_atk', s: 5, a: 10, r: 4, dmg: 70, hs: 17, bs: 11, kb: 7, lvl: 'high', stop: 8, sfx: 'heavy', air: true },
+      s1: { name: 'Rolling Shutter', pose: 'rolling_shutter', wind: 'shutter_jab', s: 11, a: 2, r: 22, special: 'proj', p: { speed: 13, dmg: 68, y: 200, scale: 0.55 }, sfx: 'cast' },
+      s2: { name: 'Flash Counter', pose: 'flash_counter', wind: 'shutter_jab', s: 9, a: 2, r: 24, special: 'fxBurst', p: { at: 'front', reach: 190, fx: 'fx_flash', fxs: 0.7, cy: 210, w: 300, h: 360, dmg: 105, hs: 40, kb: 18, kd: true, dur: 8, inv: 10 }, sfx: 'cast' },
+      s3: { name: 'Frame Trap', pose: 'frame_trap', wind: 'focus_lock', s: 12, a: 2, r: 26, special: 'fxBurst', p: { at: 'opp', fx: 'fx_s2', fxs: 0.75, cy: 200, w: 260, h: 380, delay: 18, hits: 3, every: 6, dur: 18, dmg: 80, chipDmg: 24, kb: 8, kd: true }, sfx: 'cast' },
+      su: { name: 'Final Cut', pose: 'final_cut', wind: 'exposure_burst', s: 8, a: 2, r: 50, special: 'ultimate', p: { fx: 'fx_super', fxs: 1.05 }, super: true, sfx: 'super' },
+    },
+  },
+  nate: {
+    name: 'NATTY NATE', tag: 'The Juicer. 100% natural. Probably.', color: '#ffb21a', color2: '#7dff6b',
+    hp: 980, walk: 4.8, back: 3.8, jump: 18.5, jumpX: 5, dash: 12.5,
+    anim: {
+      idle: ['idle'], walk_f: ['walk_f', 'run_a', 'walk_f2', 'run_b'], walk_b: ['walk_f2', 'walk_f'], dash: ['run_a', 'run_b'], backdash: ['dodge'],
+      jump: ['jump'], fall: ['jump'], land: ['c_block'], crouch: ['c_block'],
+      block: ['block'], c_block: ['c_block'], hit_l: ['stun'], hit_h: ['stun'], launch: ['hit_air'],
+      ground: ['ground'], getup: ['getup'], stun: ['stun'],
+      entrance: ['juice_sip', 'talk_b'], victory: ['juice_sip'], defeat: ['ground'],
+    },
+    moves: {
+      lp: { pose: 'lp', s: 4, a: 3, r: 8, dmg: 40, hs: 14, bs: 9, kb: 6, lvl: 'mid', stop: 6, sfx: 'light' },
+      lk: { pose: 'lk', s: 6, a: 3, r: 11, dmg: 50, hs: 15, bs: 10, kb: 8, lvl: 'mid', stop: 7, sfx: 'light' },
+      hp: { pose: 'hp', s: 9, a: 4, r: 17, dmg: 90, hs: 20, bs: 14, kb: 14, lvl: 'mid', stop: 10, sfx: 'heavy', heavy: true, lunge: 5 },
+      hk: { pose: 'hk', s: 11, a: 4, r: 19, dmg: 100, hs: 21, bs: 15, kb: 16, lvl: 'mid', stop: 11, sfx: 'heavy', heavy: true },
+      c_light: { pose: 'c_atk', s: 5, a: 3, r: 10, dmg: 36, hs: 13, bs: 9, kb: 6, lvl: 'low', stop: 6, sfx: 'light', crouch: true },
+      sweep: { pose: 'c_atk', s: 9, a: 4, r: 22, dmg: 80, hs: 0, bs: 14, kb: 10, lvl: 'low', stop: 10, sfx: 'heavy', kd: true, heavy: true, crouch: true },
+      air: { pose: 'air_atk', s: 5, a: 10, r: 4, dmg: 70, hs: 17, bs: 11, kb: 7, lvl: 'high', stop: 8, sfx: 'heavy', air: true },
+      s1: { name: 'Sack Meteor', pose: 'sack_meteor', wind: 'toe_pop', s: 11, a: 2, r: 22, special: 'proj', p: { speed: 12, dmg: 70, y: 190, scale: 0.5 }, sfx: 'cast' },
+      s2: { name: 'Juice Charge', pose: 'juice_charge', wind: 'juice_sip', s: 11, a: 2, r: 26, special: 'fxBurst', p: { at: 'front', reach: 230, fx: 'jx_wave', fxs: 0.75, cy: 120, w: 340, h: 260, hits: 3, every: 6, dur: 18, dmg: 70, chipDmg: 24, kb: 14, kd: true, lvl: 'low' }, sfx: 'cast' },
+      s3: { name: 'Flow State', pose: 'flow_state', wind: 'around_world', s: 9, a: 2, r: 24, special: 'fxBurst', p: { at: 'self', reach: 20, fx: 'fx_orbit', fxs: 0.75, cy: 210, w: 360, h: 420, hits: 3, every: 6, dur: 18, dmg: 76, chipDmg: 26, kb: 16, kd: true, launch: 15, inv: 10 }, sfx: 'cast' },
+      su: { name: '100% Natural', pose: 'natural', wind: 'juice_charge', s: 8, a: 2, r: 50, special: 'ultimate', p: { fx: 'jx_geyser', fxs: 1.05 }, super: true, sfx: 'super' },
+    },
+  },
+  chance: {
+    name: 'CHANCE', tag: 'Resident Wild Man. Fire poi, no brakes.', color: '#ff5a1a', color2: '#ffd23f',
+    hp: 1040, walk: 4.4, back: 3.4, jump: 18.5, jumpX: 5, dash: 12.5,
+    anim: {
+      idle: ['idle'], walk_f: ['walk_f', 'run_a', 'walk_f2', 'run_b'], walk_b: ['walk_f2', 'walk_f'], dash: ['run_a', 'run_b'], backdash: ['dodge'],
+      jump: ['jump'], fall: ['jump'], land: ['c_block'], crouch: ['c_block'],
+      block: ['block'], c_block: ['c_block'], hit_l: ['stun'], hit_h: ['stun'], launch: ['hit_air'],
+      ground: ['ground'], getup: ['getup'], stun: ['stun'],
+      entrance: ['fire_halo', 'talk_b'], victory: ['ring_of_fire'], defeat: ['ground'],
+    },
+    moves: {
+      lp: { pose: 'lp', s: 4, a: 3, r: 8, dmg: 40, hs: 14, bs: 9, kb: 6, lvl: 'mid', stop: 6, sfx: 'light' },
+      lk: { pose: 'lk', s: 6, a: 3, r: 11, dmg: 50, hs: 15, bs: 10, kb: 8, lvl: 'mid', stop: 7, sfx: 'light' },
+      hp: { pose: 'hp', s: 9, a: 4, r: 17, dmg: 90, hs: 20, bs: 14, kb: 14, lvl: 'mid', stop: 10, sfx: 'heavy', heavy: true, lunge: 5 },
+      hk: { pose: 'hk', s: 11, a: 4, r: 19, dmg: 100, hs: 21, bs: 15, kb: 16, lvl: 'mid', stop: 11, sfx: 'heavy', heavy: true },
+      c_light: { pose: 'c_atk', s: 5, a: 3, r: 10, dmg: 36, hs: 13, bs: 9, kb: 6, lvl: 'low', stop: 6, sfx: 'light', crouch: true },
+      sweep: { pose: 'c_atk', s: 9, a: 4, r: 22, dmg: 80, hs: 0, bs: 14, kb: 10, lvl: 'low', stop: 10, sfx: 'heavy', kd: true, heavy: true, crouch: true },
+      air: { pose: 'air_atk', s: 5, a: 10, r: 4, dmg: 70, hs: 17, bs: 11, kb: 7, lvl: 'high', stop: 8, sfx: 'heavy', air: true },
+      s1: { name: 'Ember Wake', pose: 'double_poi', wind: 'ember_wake', s: 12, a: 2, r: 22, special: 'proj', p: { speed: 10.5, dmg: 74, y: 200, scale: 0.55 }, sfx: 'cast' },
+      s2: { name: 'Phoenix Step', pose: 'phoenix_step', wind: 'ember_wake', s: 10, a: 2, r: 26, special: 'fxBurst', p: { at: 'front', reach: 180, fx: 'fx_s2', fxs: 0.8, cy: 230, w: 300, h: 400, dmg: 112, kb: 22, kd: true, launch: 16, dur: 8 }, sfx: 'cast' },
+      s3: { name: 'Wildfire Trap', pose: 'wildfire_trap', wind: 'dragon_sweep', s: 11, a: 2, r: 26, special: 'fxBurst', p: { at: 'opp', fx: 'fx_s1', fxs: 0.8, cy: 50, w: 300, h: 260, delay: 22, dmg: 95, kb: 6, kd: true, launch: 15, lvl: 'low', dur: 10 }, sfx: 'cast' },
+      su: { name: 'Inferno Spiral', pose: 'inferno_spiral', wind: 'fire_halo', s: 8, a: 2, r: 50, special: 'ultimate', p: { fx: 'fx_super', fxs: 1.05 }, super: true, sfx: 'super' },
+    },
+  },
   drew: {
     name: 'DREW', tag: 'Air Capital Property Maintenance. The possum stays.', color: '#ff9a3c', color2: '#7fd6ff',
     hp: 1060, walk: 4.3, back: 3.3, jump: 18.5, jumpX: 5, dash: 12.5,

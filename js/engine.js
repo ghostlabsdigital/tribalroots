@@ -1246,7 +1246,7 @@ class CPU {
   }
   plan(me, op, dist, g) {
     const r = Math.random(), L = this.lvl; this.cool = Math.floor(rnd(4, 22) / (0.4 + L));
-    const hasProj = ['lotusBloom', 'glitchCast', 'bassRelease', 'greenWarning', 'bassPush', 'cowprintCannon', 'stacheShot', 'butterflyKiss'].includes(me.def.moves.s1.special);
+    const hasProj = ['lotusBloom', 'glitchCast', 'bassRelease', 'greenWarning', 'bassPush', 'cowprintCannon', 'stacheShot', 'butterflyKiss', 'proj'].includes(me.def.moves.s1.special);
     if (me.meter >= 100 && dist < 520 && r < 0.5) { this.q = [{ p: 'su' }]; return; }
     if (op.state === 'ground' || op.state === 'getup') { this.q = [{ h: ['f'], n: 12 }]; return; }
     if (dist > 520) {

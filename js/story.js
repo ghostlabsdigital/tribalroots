@@ -59,7 +59,7 @@ function drawFrame(ref, x, y, face, sc = PS, alpha = 1, flash = 0, shade = 0) {
 }
 
 // ─────────────────────────────── characters: pose tables
-const NEW5 = new Set(['pixie', 'starlena', 'tommy', 'bearflame', 'brenda']);
+const NEW5 = new Set(['pixie', 'starlena', 'tommy', 'bearflame', 'brenda', 'josh', 'nate', 'chance']);
 function poseTable(id) {
   if (id === 'drew') {
     const mv = n => 'drew_move__' + n, cb = n => 'drew_combat__' + n;
@@ -75,8 +75,8 @@ function poseTable(id) {
     idle: (A.idle || ['idle']).map(F), walk, jump: F(has('jump_rise') ? 'jump_rise' : A.jump[0]), fall: F(has('jump_fall') ? 'jump_fall' : (A.fall || A.jump)[0]),
     land: F(A.land ? A.land[0] : A.crouch[0]), crouch: F(A.crouch[0]),
     climb: NEW5.has(id) ? [F('climb_a'), F('climb_b')] : [st('climb_a'), st('climb_b')],
-    talk: NEW5.has(id) ? [F('idle'), F(has('taunt') ? 'taunt' : 'idle')] : [st('talk_a'), st('talk_b')],
-    pipe: NEW5.has(id) ? F(A.crouch[0]) : st('pipe'), ledge: NEW5.has(id) ? F('climb_a') : st('ledge'),
+    talk: NEW5.has(id) ? (has('talk_a') ? [F('talk_a'), F('talk_b')] : [F('idle'), F(has('taunt') ? 'taunt' : 'idle')]) : [st('talk_a'), st('talk_b')],
+    pipe: NEW5.has(id) ? F(has('pipe') ? 'pipe' : A.crouch[0]) : st('pipe'), ledge: NEW5.has(id) ? F(has('ledge') ? 'ledge' : 'climb_a') : st('ledge'),
     hit: F(A.hit_l[0]), down: F(A.ground[0]), getup: F(A.getup[0]),
     lp: F(M.lp.pose), lk: F(M.lk.pose), hp: F(M.hp.pose), hk: F(M.hk.pose), air: F(M.air.pose), c_atk: F(M.c_light.pose),
     wind: F(has('w_lp') ? 'w_lp' : A.idle[0]), sp: F(M.s1.pose), sp2: F((M.s2 || M.s1).pose), sp3: F((M.s3 || M.s2 || M.s1).pose), su: F(M.su.pose), victory: F(A.victory[0]), block: F(A.block[0]),

@@ -46,7 +46,7 @@ const FIGHTERS = {
     name: 'JOSH BREEN', tag: 'Camera guy. He already got the shot.', color: '#3f7bff', color2: '#bfe0ff',
     hp: 1060, walk: 4.9, back: 3.9, jump: 18.5, jumpX: 5, dash: 14,
     anim: {
-      idle: ['idle'], walk_f: ['walk_f', 'run_a', 'walk_f2', 'run_b'], walk_b: ['walk_f2', 'walk_f'], dash: ['run_a', 'run_b'], backdash: ['dodge'],
+      idle: ['idle'], walk_f: ['walk_f', 'walk_f2'], walk_b: ['idle'], dash: ['run_a', 'run_b'], backdash: ['dodge'],
       jump: ['jump'], fall: ['jump'], land: ['c_block'], crouch: ['c_block'],
       block: ['block'], c_block: ['c_block'], hit_l: ['hit_l'], hit_h: ['hit_h'], launch: ['hit_air'],
       ground: ['ground'], getup: ['getup'], stun: ['stun'],
@@ -70,7 +70,7 @@ const FIGHTERS = {
     name: 'NATTY NATE', tag: 'The Juicer. 100% natural. Probably.', color: '#ffb21a', color2: '#7dff6b',
     hp: 980, walk: 4.8, back: 3.8, jump: 18.5, jumpX: 5, dash: 12.5,
     anim: {
-      idle: ['idle'], walk_f: ['walk_f', 'run_a', 'walk_f2', 'run_b'], walk_b: ['walk_f2', 'walk_f'], dash: ['run_a', 'run_b'], backdash: ['dodge'],
+      idle: ['idle'], walk_f: ['walk_f', 'walk_f2'], walk_b: ['idle'], dash: ['run_a', 'run_b'], backdash: ['dodge'],
       jump: ['jump'], fall: ['jump'], land: ['c_block'], crouch: ['c_block'],
       block: ['block'], c_block: ['c_block'], hit_l: ['stun'], hit_h: ['stun'], launch: ['hit_air'],
       ground: ['ground'], getup: ['getup'], stun: ['stun'],
@@ -94,7 +94,7 @@ const FIGHTERS = {
     name: 'CHANCE', tag: 'Resident Wild Man. Fire poi, no brakes.', color: '#ff5a1a', color2: '#ffd23f',
     hp: 1040, walk: 4.4, back: 3.4, jump: 18.5, jumpX: 5, dash: 12.5,
     anim: {
-      idle: ['idle'], walk_f: ['walk_f', 'run_a', 'walk_f2', 'run_b'], walk_b: ['walk_f2', 'walk_f'], dash: ['run_a', 'run_b'], backdash: ['dodge'],
+      idle: ['idle'], walk_f: ['walk_f', 'walk_f2'], walk_b: ['idle'], dash: ['run_a', 'run_b'], backdash: ['dodge'],
       jump: ['jump'], fall: ['jump'], land: ['c_block'], crouch: ['c_block'],
       block: ['block'], c_block: ['c_block'], hit_l: ['stun'], hit_h: ['stun'], launch: ['hit_air'],
       ground: ['ground'], getup: ['getup'], stun: ['stun'],
@@ -118,7 +118,7 @@ const FIGHTERS = {
     name: 'DREW', tag: 'Air Capital Property Maintenance. The possum stays.', color: '#ff9a3c', color2: '#7fd6ff',
     hp: 1060, walk: 4.3, back: 3.3, jump: 18.5, jumpX: 5, dash: 12.5,
     anim: {
-      idle: ['idle', 'ready'], walk_f: ['walk_f', 'run_a', 'walk_f2', 'run_b'], walk_b: ['walk_f2', 'walk_f'], dash: ['run_a', 'run_b'], backdash: ['dodge'],
+      idle: ['idle', 'ready'], walk_f: ['walk_f', 'walk_f2'], walk_b: ['idle'], dash: ['run_a', 'run_b'], backdash: ['dodge'],
       jump: ['jump'], fall: ['fall'], land: ['land'], crouch: ['crouch'],
       block: ['block'], c_block: ['c_block'], hit_l: ['hit_l'], hit_h: ['hit_h'], launch: ['hit_air'],
       ground: ['ground'], getup: ['getup'], stun: ['stun', 'stun_2'],

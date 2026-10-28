@@ -155,8 +155,8 @@ const AU = {
 // ─────────────────────────────── input
 const KEYS = new Set(), PRESSED = new Set();
 const BIND = [
-  { l: ['KeyA'], r: ['KeyD'], u: ['KeyW'], d: ['KeyS'], lp: ['KeyJ'], hp: ['KeyU'], lk: ['KeyK'], hk: ['KeyI'], s1: ['KeyL'], s2: ['KeyO'], s3: ['KeyH'], su: ['Space'] },
-  { l: ['ArrowLeft'], r: ['ArrowRight'], u: ['ArrowUp'], d: ['ArrowDown'], lp: ['Numpad1', 'Comma'], lk: ['Numpad2', 'Period'], hp: ['Numpad4', 'Semicolon'], hk: ['Numpad5', 'Quote'], s1: ['Numpad3', 'Slash'], s2: ['Numpad6', 'BracketRight'], s3: ['Numpad9', 'BracketLeft'], su: ['Numpad0', 'Enter', 'NumpadEnter'] },
+  { l: ['KeyA'], r: ['KeyD'], u: ['KeyW'], d: ['KeyS'], lp: ['KeyJ'], hp: ['KeyK'], lk: ['KeyL'], hk: ['Semicolon'], s1: ['KeyN'], s2: ['KeyM'], s3: ['Comma'], su: ['Period', 'KeyI', 'Space'] },
+  { l: ['ArrowLeft'], r: ['ArrowRight'], u: ['ArrowUp'], d: ['ArrowDown'], lp: ['Numpad1'], hp: ['Numpad2'], lk: ['Numpad3'], hk: ['NumpadAdd'], s1: ['Numpad4'], s2: ['Numpad5'], s3: ['Numpad6'], su: ['Numpad0', 'Enter', 'NumpadEnter'] },
 ];
 const BTNS = ['lp', 'hp', 'lk', 'hk', 's1', 's2', 's3', 'su'];
 const PAD = { lp: 2, hp: 3, lk: 0, hk: 1, s1: 5, s2: 4, s3: 6, su: 7, start: 9 };
@@ -1809,7 +1809,7 @@ function renderFight() {
 let DEBUG = false, acc = 0, last = performance.now();
 function step() {
   const m = menuInput();
-  if (PRESSED.has('KeyM')) AU.setMuted(!AU.muted);
+  if (PRESSED.has('KeyX')) AU.setMuted(!AU.muted);
   if (PRESSED.has('KeyF')) { try { document.fullscreenElement ? document.exitFullscreen() : document.getElementById('stage').requestFullscreen(); } catch (e) {} }
   if (PRESSED.has('Backquote')) DEBUG = !DEBUG;
   G.t++;

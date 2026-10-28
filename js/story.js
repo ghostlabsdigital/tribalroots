@@ -79,7 +79,7 @@ function poseTable(id) {
     pipe: NEW5.has(id) ? F(A.crouch[0]) : st('pipe'), ledge: NEW5.has(id) ? F('climb_a') : st('ledge'),
     hit: F(A.hit_l[0]), down: F(A.ground[0]), getup: F(A.getup[0]),
     lp: F(M.lp.pose), lk: F(M.lk.pose), hp: F(M.hp.pose), hk: F(M.hk.pose), air: F(M.air.pose), c_atk: F(M.c_light.pose),
-    wind: F(has('w_lp') ? 'w_lp' : A.idle[0]), sp: F(M.s1.pose), sp2: F((M.s2 || M.s1).pose), su: F(M.su.pose), victory: F(A.victory[0]), block: F(A.block[0]),
+    wind: F(has('w_lp') ? 'w_lp' : A.idle[0]), sp: F(M.s1.pose), sp2: F((M.s2 || M.s1).pose), sp3: F((M.s3 || M.s2 || M.s1).pose), su: F(M.su.pose), victory: F(A.victory[0]), block: F(A.block[0]),
     name: d.short || d.name, color: d.color, proj: id,
   };
 }
@@ -125,7 +125,7 @@ class Body {
         if (s.gone) continue;
         if (this.x > s.x - 6 && this.x < s.x + s.w + 6 && oy <= s.y + 1 + Math.max(0, s.dy || 0) && this.y >= s.y) {
           this.y = s.y; this.plat = s;
-          if (s.bounce && this instanceof Hero) { this.vy = -s.bounce; this.noDamp = true; s.boing = 10; AU.sfx('jump'); AU.sfx('land'); ring(this.x, s.y, '#ff4fd8', 20, 7, 14); this.dj = false; break; }
+          if (s.bounce && this instanceof Hero && !['down', 'hurt', 'dead', 'getup'].includes(this.state)) { this.vy = -s.bounce; this.noDamp = true; s.boing = 10; AU.sfx('jump'); AU.sfx('land'); ring(this.x, s.y, '#ff4fd8', 20, 7, 14); this.dj = false; break; }
           this.vy = 0; this.onGround = true; if (s.crumble && !s.crT && this instanceof Hero) s.crT = 1; break; }
       }
     }
@@ -165,13 +165,25 @@ class Hero extends Body {
     if (this.meter < cost && !this.buddy) { S.popText(this.x, this.y - 190, 'NEED ENERGY', '#bfb2c8'); return; }
     if (!this.buddy) this.meter -= cost;
     if (kind === 'su') return storySuper(this);
-    this.set('attack'); this.atk = { kind, s: 10, a: 2, r: 18, dmg: 0, reach: 0, hit: new Set(), t: 0, special: true }; AU.sfx('cast');
+    const mv = FIGHTERS[this.id] && FIGHTERS[this.id].moves[kind];
+    if (!this.buddy && mv && mv.name) S.popText(this.x, this.y - 210, mv.name.toUpperCase(), this.P.color);
+    this.set('attack'); this.atk = { kind, s: 10, a: 2, r: kind === 's3' ? 26 : 18, dmg: 0, reach: 0, hit: new Set(), t: 0, special: true }; AU.sfx('cast');
   }
   fireSpecial(kind) {
     const fx = IMG[this.P.proj] || {}, col = this.P.color, dir = this.face;
     if (kind === 's1') {
       S.ents.push(new Shot({ owner: this, x: this.x + dir * 70, y: this.y - 100, vx: 11 * dir, dmg: 34, color: col,
         imgs: [fx.fxm_travel, fx.fxm_travel_b, fx.fxm_travel_c, fx.fx_proj].filter(Boolean), scale: 0.3, friendly: true }));
+    } else if (kind === 's3') {
+      const mv = FIGHTERS[this.id] && FIGHTERS[this.id].moves.s3, img = fx.fxm_hit_burst || fx.fx_s1 || fx.fx_impact || fx.fxm_release;
+      if (mv && mv.special === 'rush') { // dash strike: blink forward through everything in the way
+        const x0 = this.x; this.inv = Math.max(this.inv, 22); this.vx = 26 * dir;
+        for (let i = 1; i <= 3; i++) S.blast({ x: x0 + dir * 90 * i, y: this.y - 90, r: 110, dmg: 22, owner: this, color: col, img: i === 3 ? img : null, kb: 12 });
+        spark(this.x, this.y - 80, col, 14, 8);
+      } else { // 360 burst: hits both sides, launches harder
+        S.blast({ x: this.x, y: this.y - 90, r: 230, dmg: 36, owner: this, color: col, img, kb: 16 });
+        ring(this.x, this.y - 80, col, 40, 10, 22);
+      }
     } else {
       const img = fx.fx_s1 || fx.fxm_hit_burst || fx.fx_impact || fx.fxm_release;
       S.blast({ x: this.x + dir * 120, y: this.y - 90, r: 150, dmg: 40, owner: this, color: col, img, kb: 10 });
@@ -185,7 +197,7 @@ class Hero extends Body {
     if (s === 'script') { this.vx = 0; this.physics(); return; }
     if (s === 'pipe') { this.vx = 0; return; }
     if (s === 'hurt') { this.vx *= 0.85; this.physics(); if (this.st > 16) this.set('idle'); return; }
-    if (s === 'down') { this.vx *= 0.88; this.physics(); if (this.st > 34 && this.onGround) this.set('getup'); return; }
+    if (s === 'down') { this.vx *= 0.88; this.physics(); if ((this.st > 34 && this.onGround) || this.st > 120) this.set('getup'); return; }
     if (s === 'getup') { this.vx = 0; this.physics(); if (this.st > 16) this.set('idle'); return; }
     if (s === 'super') { this.vx = 0; return; }
     if (s === 'climb') return this.updClimb(inp);
@@ -225,7 +237,8 @@ class Hero extends Body {
     // attacks
     const P = inp.press;
     if (P.su) { CTRL[0].consume('su'); return this.special('su'); }
-    if (P.s1 || P.s3) { CTRL[0].consume('s1'); CTRL[0].consume('s3'); return this.special('s1'); }
+    if (P.s1) { CTRL[0].consume('s1'); return this.special('s1'); }
+    if (P.s3) { CTRL[0].consume('s3'); return this.special('s3'); }
     if (P.s2) { CTRL[0].consume('s2'); return this.special('s2'); }
     if (!this.onGround && (P.lp || P.lk || P.hp || P.hk)) { ['lp', 'lk', 'hp', 'hk'].forEach(k => CTRL[0].consume(k)); return this.attack('air'); }
     if (crouch && (P.lp || P.lk || P.hp || P.hk)) { ['lp', 'lk', 'hp', 'hk'].forEach(k => CTRL[0].consume(k)); return this.attack('c_atk'); }
@@ -249,7 +262,7 @@ class Hero extends Body {
     const P = this.P, s = this.state, cyc = (arr, r) => arr[Math.floor(this.st / r) % arr.length];
     if (s === 'attack') {
       const a = this.atk;
-      if (a.special) return a.t < a.s ? P.wind : a.kind === 's1' ? P.sp : P.sp2;
+      if (a.special) return a.t < a.s ? P.wind : a.kind === 's1' ? P.sp : a.kind === 's3' ? P.sp3 : P.sp2;
       if (a.t < a.s) return a.kind === 'air' ? P.air : a.kind === 'c_atk' ? P.crouch : P.wind;
       return P[a.kind] || P.lp;
     }
@@ -985,7 +998,14 @@ function drawHUD_S() {
   const hpW = 300; ctx.fillStyle = '#2b2233'; ctx.fillRect(110, 50, hpW, 16); ctx.fillStyle = pl.hp < 30 ? (S.t % 20 < 10 ? '#ff2a3d' : '#ff7a1a') : '#2ef0b0'; ctx.fillRect(110, 50, hpW * pl.hp / pl.maxHp, 16);
   ctx.fillStyle = '#2b2233'; ctx.fillRect(110, 72, hpW, 9); const full = pl.meter >= 100; ctx.fillStyle = full ? (S.t % 16 < 8 ? '#ffcf3f' : '#ff7a1a') : '#9b5cff'; ctx.fillRect(110, 72, hpW * pl.meter / 100, 9);
   for (let i = 25; i < 100; i += 25) { ctx.fillStyle = '#07050a'; ctx.fillRect(110 + hpW * i / 100 - 1, 72, 2, 9); }
-  if (full) txt('SPACE: SUPER', 420, 77, 14, '#ffcf3f', 'left', FONT_H, '800', 3);
+  const touch = document.body.classList.contains('touch');
+  if (full) txt(touch ? 'SUP: SUPER' : '. / SPACE: SUPER', 420, 77, 14, '#ffcf3f', 'left', FONT_H, '800', 3);
+  // move list: which key does which special, lit when you can afford it
+  const mv = (FIGHTERS[pl.id] || {}).moves || {}, keys = touch ? ['S1', 'S2', 'S3', 'SUP'] : ['N', 'M', ',', '.'];
+  ctx.fillStyle = 'rgba(7,5,10,0.6)'; ctx.fillRect(14, 110, 300, 90);
+  ['s1', 's2', 's3', 'su'].forEach((k, i) => { const m = mv[k]; if (!m) return; const ok = pl.meter >= (k === 'su' ? 100 : 15), y = 128 + i * 21;
+    ctx.fillStyle = ok ? P.color : '#3a2f44'; ctx.fillRect(22, y - 9, 30, 18); txt(keys[i], 37, y + 1, 14, ok ? '#07050a' : '#8d7f99', 'center', FONT_H, '800', 0);
+    txt((m.name || k).toUpperCase(), 60, y + 1, 16, ok ? '#fff4e6' : '#6f6379', 'left', FONT_H, '800', 0); });
   txt('x' + Math.max(0, pl.lives), 420, 58, 22, '#fff4e6', 'left', FONT_H, '800', 4);
   // right: collectibles
   const gi = P_('glow_g'), vi = P_('vinyl');
@@ -1121,7 +1141,7 @@ function drawStoryPause(m) {
     AU.sfx('confirm'); S.paused = false;
     if (i === 1) STORY.startLevel(S.level); else if (i === 2) { S.phase = 'chapters'; S.menuI = S.level; } else if (i === 3) { S.on = false; G.scene = 'title'; }
   }, 42, 68);
-  txt('J/K/U/I attack · L/O specials · SPACE super · W jump · S+J drop · ▼ pipes · ▲ ladders', W / 2, 640, 18, '#7d6f88', 'center', FONT_H, '800', 0);
+  txt('J K L ; attacks · N M , specials · . super · W jump · S+J drop · ▼ pipes · ▲ ladders', W / 2, 640, 18, '#7d6f88', 'center', FONT_H, '800', 0);
   if (m.back && !m.ok) S.paused = false;
 }
 function rank() { const s = S.stats, v = s.vinyl * 400 + s.glow * 20 + s.kills * 30 - Math.floor(s.time / 60) * 2; return v > 2400 ? 'S' : v > 1600 ? 'A' : v > 900 ? 'B' : 'C'; }

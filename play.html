@@ -72,6 +72,8 @@
   /* sideways: controls float over the edges of the screen, see-through */
   body.touch:not(.portrait) #touch .btns { opacity: 0.85; }
   body.touch .bar .keys { display: none; }
+  /* sideways: hide stick + buttons in menus so they don't cover what you're tapping */
+  body.touch:not(.portrait).menu #touch .stick, body.touch:not(.portrait).menu #touch .btns, body.touch.menu #pause-btn { display: none; }
 </style>
 </head>
 <body>

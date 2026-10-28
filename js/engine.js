@@ -1943,6 +1943,9 @@ function frame(now) {
   const steps = Math.min(4, Math.floor(acc / (1000 / 60)));
   for (let n = 0; n < steps; n++) { acc -= 1000 / 60; G.drawFrame = n === steps - 1; if (G.scene !== 'loading') step(); }
   if (acc > 1000 / 60 * 4) acc = 0;
+  // touch controls only while actually playing (menus stay tappable underneath)
+  const playing = (G.scene === 'fight' && !G.paused && !(G.ko && G.ko.t > 200)) || (G.scene === 'story' && typeof S !== 'undefined' && S.phase === 'play' && !S.paused);
+  if (playing !== G.wasPlaying) { G.wasPlaying = playing; document.body.classList.toggle('menu', !playing); }
   requestAnimationFrame(frame);
 }
 

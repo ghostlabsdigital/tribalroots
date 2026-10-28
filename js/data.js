@@ -28,7 +28,14 @@ const STAGES = [
     lights: [[470, 300, '#9b5cff', 200], [560, 150, '#ff7a1a', 240], [175, 290, '#3a7bff', 120], [1100, 320, '#9b5cff', 120]] },
   { id: 'bridge', name: 'UNDER THE BRIDGE', img: 'assets/stages/bridge.webp', thumb: 'assets/stages/bridge_thumb.webp',
     lights: [[140, 280, '#c25cff', 180], [480, 360, '#c25cff', 160], [930, 340, '#ffae3d', 260]] },
-  { id: 'underground', name: 'THE UNDERGROUND', img: null, thumb: null },
+  { id: 'rave', name: 'RAVE FLOOR', img: 'assets/stages/rave.webp', thumb: 'assets/stages/rave_thumb.webp', story: true, crashers: ['vamp_raver', 'vamp_vip', 'vamp_bouncer'], lights: [[160, 120, '#ff2a4d', 200], [1120, 120, '#2ef0d8', 200], [640, 260, '#9b5cff', 260]] },
+  { id: 'transmitter', name: 'THE TRANSMITTER', img: 'assets/stages/transmitter.webp', thumb: 'assets/stages/transmitter_thumb.webp', story: true, crashers: ['vamp_raver', 'vamp_vip', 'vamp_bouncer'], lights: [[640, 300, '#2ef0d8', 300]] },
+  { id: 'alley', name: 'OLD TOWN ALLEY', img: 'assets/stages/alley.webp', thumb: 'assets/stages/alley_thumb.webp', story: true, crashers: ['mib', 'vamp_vip', 'vamp_raver'], lights: [[230, 150, '#ffb347', 140], [1000, 150, '#ffb347', 140]] },
+  { id: 'oldtown', name: 'OLD TOWN STAGE', img: 'assets/stages/oldtown.webp', thumb: 'assets/stages/oldtown_thumb.webp', story: true, crashers: ['mib', 'vamp_vip'], lights: [[440, 160, '#9b5cff', 200], [840, 160, '#2ef0d8', 200]] },
+  { id: 'hangar', name: 'THE HANGAR', img: 'assets/stages/hangar.webp', thumb: 'assets/stages/hangar_thumb.webp', story: true, crashers: ['grey'], lights: [[300, 160, '#ffb347', 160], [880, 160, '#ffb347', 160]] },
+  { id: 'elfvillage', name: 'ELF VILLAGE', img: 'assets/stages/elfvillage.webp', thumb: 'assets/stages/elfvillage_thumb.webp', story: true, crashers: ['elf_spear', 'elf_bomber'], lights: [[900, 260, '#2ef0d8', 200], [250, 300, '#ff4fd8', 160]] },
+  { id: 'dome', name: 'INSIDE THE DOME', img: 'assets/stages/dome.webp', thumb: 'assets/stages/dome_thumb.webp', story: true, crashers: ['mib', 'grey', 'vamp_vip'], lights: [[640, 260, '#9b5cff', 240]] },
+  { id: 'riverbank', name: 'THE RIVERBANK', img: 'assets/stages/riverbank.webp', thumb: 'assets/stages/riverbank_thumb.webp', story: true, crashers: ['vamp_raver', 'mib', 'grey'], lights: [[360, 220, '#9b5cff', 260], [1000, 220, '#2ef0d8', 220]] },
 ];
 
 const FIGHTERS = {

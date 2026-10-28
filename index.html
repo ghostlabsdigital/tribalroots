@@ -464,6 +464,8 @@
   addEventListener('message', e => {
     const d = e.data || {}; if (!d.tru) return;
     if (d.tru === 'start') track('game_start');
+    if (/^story_/.test(d.tru)) track(d.tru, { p1: d.p, level: d.level, mode: 'story' });
+    if (d.tru === 'ticket_click') track('ticket_click', { url: d.url, path: 'game' });
     if (d.tru === 'match_start') track('match_start', { p1: d.p1, p2: d.p2, stage: d.stage, mode: d.mode });
     if (d.tru === 'match_end') {
       track('match_end', { p1: d.p1, p2: d.p2, winner: d.winner, p1won: d.p1won, secs: d.secs, mode: d.mode, score: d.score });
@@ -476,20 +478,21 @@
       }
     }
   });
-  const closeWin = () => { $('win').hidden = true; pending = null; try { game.contentWindow.focus(); } catch (e) {} };
+  const reenable = () => { const b = $('win-form').querySelector('button[type=submit], button:not([type])'); if (b) b.disabled = false; };
+  const closeWin = () => { $('win').hidden = true; pending = null; reenable(); try { game.contentWindow.focus(); } catch (e) {} };
   $('win-skip').onclick = closeWin;
   $('win-form').addEventListener('submit', e => {
-    e.preventDefault(); if (!pending) return;
+    e.preventDefault(); if (!pending || pending.sending) return;
     const name = $('win-name').value.trim(); if (!name) return;
     try { localStorage.setItem('tru_name', name); } catch (e) {}
-    $('win-note').textContent = 'Submitting…';
+    $('win-note').textContent = 'Submitting…'; pending.sending = true; $('win-form').querySelector('button[type=submit], button:not([type])') && ($('win-form').querySelector('button[type=submit], button:not([type])').disabled = true);
     api('/api/scores', { method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, fighter: pending.p1, opponent: pending.p2, score: pending.score, secs: pending.secs, flawless: pending.flawless }) })
       .then(({ ok, j }) => {
-        if (!ok) { $('win-note').textContent = j.error || 'Could not submit.'; return; }
+        if (!ok) { $('win-note').textContent = j.error || 'Could not submit.'; pending.sending = false; reenable(); return; }
         $('win-note').textContent = j.rank ? `You're #${j.rank}!` : 'Saved!'; track('score_post', { score: pending.score });
-        loadLB(); setTimeout(closeWin, 1400);
-      }).catch(() => { $('win-note').textContent = 'Could not submit.'; });
+        pending.done = true; loadLB(); setTimeout(closeWin, 1400);
+      }).catch(() => { $('win-note').textContent = 'Could not submit.'; if (pending) pending.sending = false; reenable(); });
   });
 
   // ── GhostLabs

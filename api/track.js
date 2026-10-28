@@ -1,7 +1,7 @@
 // First-party analytics. POST {event, ...data} from the site. Stores a rolling log plus daily counters.
 import { ready, redis, pipe, who, today, send, body } from './_lib.js';
 
-const EVENTS = new Set(['page_view', 'game_start', 'match_start', 'match_end', 'music_play', 'ticket_click', 'ad_click', 'card_click', 'ghostlabs_click', 'message_post', 'score_post']);
+const EVENTS = new Set(['page_view', 'game_start', 'match_start', 'match_end', 'music_play', 'ticket_click', 'ad_click', 'card_click', 'ghostlabs_click', 'message_post', 'score_post', 'story_start', 'story_clear', 'story_complete']);
 
 export default async function handler(req, res) {
   if (!ready || req.method !== 'POST') return send(res, 204, {});
@@ -10,7 +10,7 @@ export default async function handler(req, res) {
   const d = today(), ref = String(b.ref || '').slice(0, 200);
   let refHost = ''; try { refHost = ref ? new URL(ref).hostname.replace(/^www\./, '') : ''; } catch {}
   const data = {};
-  for (const k of ['p1', 'p2', 'winner', 'stage', 'mode', 'dj', 'url', 'path', 'screen', 'lang', 'tz']) if (b[k] != null) data[k] = String(b[k]).slice(0, 120);
+  for (const k of ['p1', 'p2', 'winner', 'stage', 'mode', 'dj', 'url', 'path', 'screen', 'lang', 'tz', 'level']) if (b[k] != null) data[k] = String(b[k]).slice(0, 120);
   for (const k of ['secs', 'score']) if (b[k] != null) data[k] = +b[k] || 0;
   if (b.p1won != null) data.p1won = !!b.p1won;
 
@@ -31,7 +31,8 @@ export default async function handler(req, res) {
   if (ev === 'match_start' && data.p1) cmds.push(['HINCRBY', 'c:pick', data.p1, 1], ['HINCRBY', 'c:stage', data.stage || '?', 1]);
   if (ev === 'match_end' && data.winner) cmds.push(['HINCRBY', 'c:win', data.winner, 1]);
   if (ev === 'music_play' && data.dj) cmds.push(['HINCRBY', 'c:dj', data.dj, 1]);
-  if (ev === 'ticket_click') cmds.push(['HINCRBY', 'c:tickets', data.url || '?', 1]);
+  if (ev === 'ticket_click') cmds.push(['HINCRBY', 'c:tickets', (data.url || '?') + (data.path === 'game' ? '  · in game' : ''), 1]);
+  if (ev.startsWith('story_')) cmds.push(['HINCRBY', 'c:story', ev === 'story_complete' ? 'beat the game' : `L${data.level || '?'} ${ev === 'story_start' ? 'started' : 'cleared'}`, 1]);
   await pipe(cmds);
   return send(res, 204, {});
 }

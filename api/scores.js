@@ -20,6 +20,8 @@ export default async function handler(req, res) {
   if (flagged(name)) return send(res, 400, { error: 'Pick a different name.' });
   // sanity limits: 2 rounds max ≈ 2×(1100 hp + 99s×15 + 500) + 1000 flawless
   if (!FIGHTERS.includes(b.fighter) || score <= 0 || score > 7500 || secs < 15) return send(res, 400, { error: 'Score rejected.' });
+  // same run submitted twice (double tap, resend) → keep one
+  if (await redis('SET', `lbdup:${w.ip}:${name.toLowerCase()}:${score}:${secs}`, 1, 'NX', 'EX', 3600) === null) return send(res, 200, { ok: true, rank: null, dup: true });
   const entry = { id: w.vid + Date.now().toString(36), name, fighter: b.fighter, opponent: FIGHTERS.includes(b.opponent) ? b.opponent : '', flawless: !!b.flawless, secs, t: Date.now(), vid: w.vid, ip: w.ip, country: w.country, city: w.city };
   await redis('ZADD', 'lb', score, JSON.stringify(entry));
   await redis('ZREMRANGEBYRANK', 'lb', 0, -501);   // keep the top 500

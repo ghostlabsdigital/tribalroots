@@ -42,13 +42,13 @@ export default async function handler(req, res) {
   const days = [...Array(14)].map((_, i) => new Date(Date.now() - i * 864e5).toISOString().slice(0, 10)).reverse();
   const cmds = [];
   days.forEach(d => { cmds.push(['PFCOUNT', 'uv:' + d], ['HGETALL', 'c:ev:' + d]); });
-  for (const k of ['country', 'city', 'device', 'browser', 'os', 'ref', 'pick', 'win', 'stage', 'dj', 'tickets']) cmds.push(['HGETALL', 'c:' + k]);
+  for (const k of ['country', 'city', 'device', 'browser', 'os', 'ref', 'pick', 'win', 'stage', 'dj', 'tickets', 'story']) cmds.push(['HGETALL', 'c:' + k]);
   cmds.push(['LRANGE', 'ev', 0, 299], ['LRANGE', 'msgs', 0, 199], ['SMEMBERS', 'bans'], ['ZREVRANGE', 'lb', 0, 49, 'WITHSCORES'], ['ZREVRANGE', 'visitors', 0, 99]);
   const r = await pipe(cmds);
   let i = 0;
   const daily = days.map(d => ({ d, uv: r[i++] || 0, ev: hobj(r[i++]) }));
   const counts = {};
-  for (const k of ['country', 'city', 'device', 'browser', 'os', 'ref', 'pick', 'win', 'stage', 'dj', 'tickets']) counts[k] = hobj(r[i++]);
+  for (const k of ['country', 'city', 'device', 'browser', 'os', 'ref', 'pick', 'win', 'stage', 'dj', 'tickets', 'story']) counts[k] = hobj(r[i++]);
   const events = parse(r[i++]), messages = parse(r[i++]), bans = r[i++] || [], lbRaw = r[i++] || [], visIds = r[i++] || [];
   const scores = []; for (let k = 0; k < lbRaw.length; k += 2) { try { scores.push({ ...JSON.parse(lbRaw[k]), score: +lbRaw[k + 1] }); } catch {} }
   const vis = await pipe(visIds.map(v => ['HGETALL', 'vis:' + v]));

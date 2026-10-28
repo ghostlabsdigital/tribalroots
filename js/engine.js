@@ -222,7 +222,39 @@ cv.addEventListener('pointerdown', e => {
   AU.init();
   const r = cv.getBoundingClientRect();
   CLICK = { x: (e.clientX - r.left) / r.width * W, y: (e.clientY - r.top) / r.height * H };
+  // ticket card: open right inside the tap so the browser allows the new tab
+  const R = SHOW.rect; if (R && performance.now() - SHOW.at < 120 && CLICK.x >= R.x && CLICK.x <= R.x + R.w && CLICK.y >= R.y && CLICK.y <= R.y + R.h) { openShow(); CLICK = null; }
 });
+addEventListener('keydown', e => { if (e.code === 'KeyT' && SHOW.rect && performance.now() - SHOW.at < 120) openShow(); });
+
+// ─────────────────────────────── next show card (reads the site's config.js)
+const SHOW = { rect: null, at: 0, img: null, src: null };
+function nextShow() {
+  const F = window.TRU && window.TRU.featured, list = Array.isArray(F) ? F : F ? [F] : [];
+  const d = new Date(), today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  return list.find(s => s && s.url && (!s.until || s.until >= today)) || null;
+}
+function openShow() { const s = nextShow(); if (!s) return; try { window.open(s.url, '_blank', 'noopener'); } catch (e) {} tell('ticket_click', { url: s.url }); AU.sfx('confirm'); }
+function drawShowCard(x, y, w, h) {
+  const s = nextShow(); if (!s) { SHOW.rect = null; return; }
+  if (s.img && SHOW.src !== s.img) { SHOW.src = s.img; SHOW.img = null; loadImage(s.img).then(i => (SHOW.img = i)).catch(() => {}); }
+  const pulse = 0.5 + 0.5 * Math.sin(G.t * 0.12);
+  ctx.save();
+  ctx.fillStyle = 'rgba(7,5,10,0.88)'; ctx.fillRect(x, y, w, h);
+  ctx.strokeStyle = `rgba(255,42,61,${0.55 + 0.45 * pulse})`; ctx.lineWidth = 3; ctx.strokeRect(x + 1.5, y + 1.5, w - 3, h - 3);
+  let tx = x + 18;
+  if (SHOW.img) { const ih = h - 20, iw = ih * SHOW.img.width / SHOW.img.height; ctx.drawImage(SHOW.img, x + 10, y + 10, iw, ih); tx = x + 22 + iw; }
+  txt('NEXT SHOW' + (s.kicker && !/next/i.test(s.kicker) ? ' · ' + s.kicker.toUpperCase() : ''), tx, y + 22, 15, '#ffcf3f', 'left', FONT_H, '800', 0);
+  txt((s.title || '').toUpperCase(), tx, y + 50, 32, '#fff4e6', 'left', FONT_D, '400', 4);
+  if (s.sub) txt(s.sub, tx, y + 78, 16, '#bfb2c8', 'left', FONT_H, '800', 0);
+  if (s.when) txt(s.when, tx, y + 98, 15, '#bfb2c8', 'left', FONT_H, '700', 0);
+  const bw = Math.min(200, x + w - tx - 14), bx = x + w - bw - 12, by = y + h - 42;
+  ctx.fillStyle = '#ff2a3d'; ctx.fillRect(bx, by, bw, 32);
+  txt((s.button || 'GET TICKETS').toUpperCase() + '  ▸', bx + bw / 2, by + 17, 17, '#fff4e6', 'center', FONT_H, '800', 0);
+  if (!document.body.classList.contains('touch')) txt('or press T', bx - 10, by + 17, 13, '#8d7f99', 'right', FONT_H, '700', 0);
+  ctx.restore();
+  SHOW.rect = { x, y, w, h }; SHOW.at = performance.now();
+}
 const hitBtn = (b) => CLICK && CLICK.x >= b.x && CLICK.x <= b.x + b.w && CLICK.y >= b.y && CLICK.y <= b.y + b.h;
 
 // ─────────────────────────────── particles & fx
@@ -1748,7 +1780,8 @@ function drawResults(m) {
   txt('WINS', 900, 240, 64, '#fff4e6', 'center', FONT_D, '400', 10);
   G.menuI = clamp(G.menuI, 0, 2);
   const items = ['REMATCH', 'CHARACTER SELECT', 'TITLE'];
-  menuList(items, 380, m, i => { AU.sfx('confirm'); if (i === 0) startMatch(); else if (i === 1) { G.scene = 'select'; G.selDone = [false, false]; G.chooser = 0; } else G.scene = 'title'; }, 40, 64, 900);
+  menuList(items, 330, m, i => { AU.sfx('confirm'); if (i === 0) startMatch(); else if (i === 1) { G.scene = 'select'; G.selDone = [false, false]; G.chooser = 0; } else G.scene = 'title'; }, 40, 60, 900);
+  drawShowCard(660, 530, 560, 150);
 }
 function drawPause(m) {
   ctx.fillStyle = 'rgba(7,5,10,0.75)'; ctx.fillRect(0, 0, W, H);
@@ -1758,6 +1791,7 @@ function drawPause(m) {
     AU.sfx('confirm');
     if (i === 0) G.paused = false; else if (i === 1) G.showMoves = true; else { G.paused = false; G.scene = 'title'; }
   }, 46, 72);
+  drawShowCard(W / 2 - 280, 548, 560, 150);
   if (m.back && !m.ok) G.paused = false;
 }
 function drawLoading(p) {

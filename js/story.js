@@ -1141,7 +1141,8 @@ function drawStoryPause(m) {
     AU.sfx('confirm'); S.paused = false;
     if (i === 1) STORY.startLevel(S.level); else if (i === 2) { S.phase = 'chapters'; S.menuI = S.level; } else if (i === 3) { S.on = false; G.scene = 'title'; }
   }, 42, 68);
-  txt('J K L ; attacks · N M , specials · . super · W jump · S+J drop · ▼ pipes · ▲ ladders', W / 2, 640, 18, '#7d6f88', 'center', FONT_H, '800', 0);
+  drawShowCard(W / 2 - 280, 530, 560, 150);
+  txt('J K L ; attacks · N M , specials · . super · W jump · S+J drop · ▼ pipes · ▲ ladders', W / 2, 702, 16, '#7d6f88', 'center', FONT_H, '800', 0);
   if (m.back && !m.ok) S.paused = false;
 }
 function rank() { const s = S.stats, v = s.vinyl * 400 + s.glow * 20 + s.kills * 30 - Math.floor(s.time / 60) * 2; return v > 2400 ? 'S' : v > 1600 ? 'A' : v > 900 ? 'B' : 'C'; }
@@ -1151,10 +1152,11 @@ function drawStoryResults(m) {
   txt('LEVEL CLEAR', 860, 120, 72, '#ffcf3f', 'center', FONT_D, '400', 10);
   txt(LEVELS[S.level].name, 860, 180, 32, '#fff4e6', 'center', FONT_H, '800', 4);
   const s = S.stats, rows = [['GLOWSTICKS', s.glow], ['VINYLS', `${s.vinyl}/3`], ['TAKEDOWNS', s.kills], ['TIME', `${Math.floor(s.time / 3600)}:${String(Math.floor(s.time / 60) % 60).padStart(2, '0')}`]];
-  rows.forEach(([k, v], i) => { txt(k, 700, 250 + i * 44, 26, '#bfb2c8', 'left', FONT_H, '800', 0); txt(String(v), 1020, 250 + i * 44, 30, '#fff4e6', 'right', FONT_H, '800', 0); });
-  txt('RANK ' + rank(), 860, 450, 54, '#ff2a3d', 'center', FONT_D, '400', 8);
+  rows.forEach(([k, v], i) => { txt(k, 700, 232 + i * 40, 26, '#bfb2c8', 'left', FONT_H, '800', 0); txt(String(v), 1020, 232 + i * 40, 30, '#fff4e6', 'right', FONT_H, '800', 0); });
+  txt('RANK ' + rank(), 860, 412, 54, '#ff2a3d', 'center', FONT_D, '400', 8);
   const last = S.level >= LEVELS.length - 1;
-  menuList([last ? 'ROLL CREDITS' : 'NEXT LEVEL', 'CHAPTER SELECT'], 540, m, i => { AU.sfx('confirm'); if (i === 0) { if (last) { S.phase = 'credits'; S.creditT = 0; } else STORY.startLevel(S.level + 1); } else { S.phase = 'chapters'; S.menuI = Math.min(S.level + 1, LEVELS.length - 1); } }, 34, 58, 860);
+  menuList([last ? 'ROLL CREDITS' : 'NEXT LEVEL', 'CHAPTER SELECT'], 478, m, i => { AU.sfx('confirm'); if (i === 0) { if (last) { S.phase = 'credits'; S.creditT = 0; } else STORY.startLevel(S.level + 1); } else { S.phase = 'chapters'; S.menuI = Math.min(S.level + 1, LEVELS.length - 1); } }, 34, 52, 860);
+  drawShowCard(600, 562, 520, 140);
 }
 function drawGameOver(m) {
   storyRenderWorld(); ctx.fillStyle = 'rgba(7,5,10,0.8)'; ctx.fillRect(0, 0, W, H);

@@ -72,6 +72,7 @@
     <div class="card"><h2>Most picked fighters</h2><div class="bars" id="c-pick"></div></div>
     <div class="card"><h2>Match winners</h2><div class="bars" id="c-win"></div></div>
     <div class="card"><h2>Stages</h2><div class="bars" id="c-stage"></div></div>
+    <div class="card"><h2>Story mode</h2><div class="bars" id="c-story"></div></div>
     <div class="card"><h2>Ticket clicks · music plays</h2><div class="bars" id="c-tickets"></div><br><div class="bars" id="c-dj"></div></div>
 
     <div class="card wide"><h2>Message wall</h2>
@@ -132,13 +133,13 @@
     $('kpis').innerHTML = kp.map(([l, v]) => `<div class="kpi"><b>${(+v).toLocaleString()}</b><span>${l}</span></div>`).join('');
     const max = Math.max(1, ...d.daily.map(x => x.uv));
     $('chart').innerHTML = d.daily.map(x => `<div title="${x.d}: ${x.uv} visitors"><em>${x.uv || ''}</em><span class="c" style="height:${(x.uv / max) * 100}%"></span><small>${x.d.slice(5)}</small></div>`).join('');
-    for (const k of ['country', 'city', 'ref', 'device', 'browser', 'os', 'pick', 'win', 'stage', 'tickets', 'dj']) bars('c-' + k, d.counts[k]);
+    for (const k of ['country', 'city', 'ref', 'device', 'browser', 'os', 'pick', 'win', 'stage', 'tickets', 'dj', 'story']) bars('c-' + k, d.counts[k]);
     renderMsgs();
     $('scores').innerHTML = d.scores.map((s, i) => `<tr><td>${i + 1}</td><td>${esc(s.name)}</td><td><b>${s.score}</b></td><td>${esc(s.fighter)} vs ${esc(s.opponent)}${s.flawless ? ' ★' : ''}</td><td>${s.secs}s · ${when(s.t)}</td><td>${esc(place(s))}</td><td class="mono">${esc(s.ip)}</td>
       <td><div class="acts"><button data-act="delete_score" data-id="${esc(s.id)}">Delete</button>${banBtn(s.ip)}</div></td></tr>`).join('') || '<tr><td colspan="8" class="dim">No scores yet</td></tr>';
     $('visitors').innerHTML = d.visitors.map(v => `<tr><td>${when(v.last)}</td><td>${esc(place(v))}</td><td>${esc([v.device, v.browser, v.os].filter(Boolean).join(' · '))}</td>
       <td>${v.page_view || 0}</td><td>${v.match_start || 0}</td><td>${v.message_post || 0}</td><td class="mono">${esc(v.ip)}</td><td>${banBtn(v.ip)}</td></tr>`).join('') || '<tr><td colspan="8" class="dim">No visitors yet</td></tr>';
-    const det = e => ({ match_start: `${e.p1} vs ${e.p2} · ${e.stage || ''}`, match_end: `${e.winner} won · ${e.secs}s${e.score ? ' · ' + e.score + ' pts' : ''}`, music_play: e.dj, ticket_click: e.url, ad_click: e.url, page_view: e.screen ? e.screen + ' · ' + (e.tz || '') : '' }[e.ev] || '');
+    const det = e => ({ match_start: `${e.p1} vs ${e.p2} · ${e.stage || ''}`, match_end: `${e.winner} won · ${e.secs}s${e.score ? ' · ' + e.score + ' pts' : ''}`, music_play: e.dj, story_start: `${e.p1 || ''} · level ${e.level || '?'}`, story_clear: `${e.p1 || ''} cleared level ${e.level || '?'}`, story_complete: `${e.p1 || ''} beat story mode`, ticket_click: e.url + (e.path === 'game' ? ' · in game' : ''), ad_click: e.url, page_view: e.screen ? e.screen + ' · ' + (e.tz || '') : '' }[e.ev] || '');
     $('events').innerHTML = d.events.map(e => `<tr><td>${when(e.t)}</td><td>${esc(e.ev.replace('_', ' '))}</td><td class="t">${esc(det(e))}</td><td>${esc(place(e))}</td><td>${esc([e.device, e.browser].join(' · '))}</td><td>${esc(e.ref || 'direct')}</td></tr>`).join('') || '<tr><td colspan="6" class="dim">No activity yet</td></tr>';
     $('bans').innerHTML = d.bans.length ? d.bans.map(ip => `<button data-act="unban" data-ip="${esc(ip)}" title="Unban">${esc(ip)} ✕</button>`).join('') : '<span class="dim">Nobody banned</span>';
   }

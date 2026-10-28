@@ -1663,6 +1663,14 @@ function drawHelp(m, fromPause = false) {
   if (!fromPause && (m.back || m.ok || CLICK)) { G.scene = 'mode'; CLICK = null; }
 }
 function slotRect(i) { const per = Math.ceil(ROSTER.length / 2), row = i < per ? 0 : 1, n = row ? ROSTER.length - per : per, k = row ? i - per : i, sw = 88, gap = 8, total = n * sw + (n - 1) * gap; return { x: (W - total) / 2 + k * (sw + gap), y: 486 + row * 108, w: sw, h: 98 }; }
+// on-screen back button (tap / click), top-left
+function backBtn() {
+  const b = { x: 14, y: 14, w: 120, h: 46 };
+  ctx.fillStyle = 'rgba(7,5,10,0.85)'; ctx.fillRect(b.x, b.y, b.w, b.h); ctx.strokeStyle = '#fff4e6'; ctx.lineWidth = 2; ctx.strokeRect(b.x + 1, b.y + 1, b.w - 2, b.h - 2);
+  txt('◀ BACK', b.x + b.w / 2, b.y + b.h / 2 + 1, 22, '#fff4e6', 'center', FONT_H, '800', 0);
+  if (hitBtn(b)) { CLICK = null; return true; } return false;
+}
+function unpick(p) { G.selDone[p] = false; if (G.mode !== 'vs') G.chooser = p; AU.sfx('select'); }
 function drawSelect(m) {
   drawBackdropPoster(0.86, true);
   txt('CHOOSE YOUR FIGHTER', W / 2, 60, 52, '#fff4e6', 'center', FONT_D, '400', 10);
@@ -1677,6 +1685,8 @@ function drawSelect(m) {
     const label = p === 0 ? 'P1' : G.mode === 'cpu' ? 'CPU' : G.mode === 'training' ? 'DUMMY' : 'P2';
     ctx.fillStyle = done ? '#ffcf3f' : '#07050a'; ctx.fillRect(left ? px : px + pw - 110, py + ph - 10, 110, 36);
     txt(label + (done ? ' ✓' : ''), left ? px + 55 : px + pw - 55, py + ph + 8, 24, done ? '#07050a' : '#fff4e6', 'center', FONT_H, '800', 0);
+    if (done) txt('tap to change', px + pw / 2, py + 22, 16, '#fff4e6', 'center', FONT_H, '800', 4);
+    if (done && hitBtn({ x: px, y: py, w: pw, h: ph })) { CLICK = null; unpick(p); }
     if (d) {
       const cy = left ? 210 : 370;
       txt(d.name, W / 2, cy, d.name.length > 10 ? 38 : 48, col, 'center', FONT_D, '400', 8);
@@ -1705,8 +1715,10 @@ function drawSelect(m) {
   } else {
     const c = G.chooser; if (m.left) move(c, -1); if (m.right) move(c, 1); if (m.ok) confirmPick(c);
   }
-  if (m.back) { if (G.selDone[0] && G.mode !== 'vs') { G.selDone[0] = false; G.chooser = 0; } else G.scene = 'mode'; }
-  txt(G.mode === 'vs' ? 'P1: A/D + J   ·   P2: arrows + Enter' : G.chooser === 0 ? 'Pick your fighter' : 'Pick your opponent', W / 2, 708, 20, '#bfb2c8', 'center', FONT_H, '600', 0);
+  // back: undo the last pick first, then leave the screen
+  if (m.back || backBtn()) { if (G.selDone[1]) unpick(1); else if (G.selDone[0]) unpick(0); else G.scene = 'mode'; }
+  if (G.mode === 'vs') { const c0 = CTRL[0].read(), c1 = CTRL[1].read(); if (G.selDone[0] && !G.selDone[1] && c0.edge.hp) unpick(0); if (G.selDone[1] && c1.edge.hp) unpick(1); }
+  txt(G.mode === 'vs' ? 'P1: A/D + J pick · K undo   ·   P2: arrows + Enter · Numpad 2 undo   ·   Esc back' : G.chooser === 0 ? 'Pick your fighter' : 'Pick your opponent', W / 2, 708, 20, '#bfb2c8', 'center', FONT_H, '600', 0);
 }
 function confirmPick(p) {
   G.selDone[p] = true; AU.sfx('confirm'); ensureFighters([ROSTER[G.sel[p]].id]);
@@ -1742,7 +1754,7 @@ function drawStageSelect(m) {
     if (hitBtn(b)) { if (G.stageI === i) m.ok = true; G.stageI = i; CLICK = null; }
   });
   txt('Arrows to pick · Enter / tap again to fight', W / 2, 708, 16, '#bfb2c8', 'center', FONT_H, '600', 0);
-  if (m.back) { G.scene = 'select'; G.selDone = [false, false]; G.chooser = 0; return; }
+  if (m.back || backBtn()) { G.scene = 'select'; G.selDone[1] = false; G.chooser = G.mode === 'vs' ? 0 : 1; return; }
   if (m.ok) { AU.sfx('confirm'); G.scene = 'vs'; G.t = 0; AU.say(`${FIGHTERS[ROSTER[G.sel[0]].id].name} versus ${FIGHTERS[ROSTER[G.sel[1]].id].name}`); }
 }
 function drawVS() {

@@ -174,7 +174,7 @@ const CHAOS = (() => {
   function entOnCrashers(e, r) {
     for (const c of C) {
       if (c.dead || !overlap(r, c.rect())) continue;
-      if (e.isProj) { if (c.takeHit((e.hit && e.hit.dmg) || 60, Math.sign(e.vx) || 1, e.owner)) { e.dead = true; return true; } }
+      if (e.isProj) { if (c.takeHit((e.hit && e.hit.dmg) || 60, Math.sign(e.vx) || 1, e.owner)) { if (e.pierce > 0) e.pierce--; else e.dead = true; if (e.onHit) e.onHit(e); return true; } }
       else if (e.active && e.active()) { const h = e.hitFn ? e.hitFn(e) : e.hit; c.takeHit((h && h.dmg) || 60, c.x >= (e.x || e.owner.x) ? 1 : -1, e.owner); }
     }
     return false;

@@ -628,7 +628,7 @@ class Projectile {
   constructor(o) { Object.assign(this, { life: 200, dead: false, hit: null, w: 90, h: 70, isProj: true, t: 0 }, o); }
   rect() { return { x: this.x - this.w / 2, y: GY - this.y - this.h / 2, w: this.w, h: this.h }; }
   update(g) {
-    this.t++; this.x += this.vx; this.life--;
+    this.t++; this.x += this.vx; if (this.vy) this.y += this.vy; if (this.cool > 0) this.cool--; this.life--;
     if (this.trail) this.trail(this);
     if (this.x < -100 || this.x > W + 100 || this.life <= 0) this.dead = true;
   }
@@ -1103,6 +1103,29 @@ const SPECIALS = {
       drawFn() {},
     }));
   },
+  // SHOT: any FX image flies out as a projectile (optionally several, piercing, along the floor), splashes on impact
+  shot(f, g) {
+    const P = f.move.p || {}, col = f.def.color, dir = f.facing, n = P.n || 1;
+    for (let i = 0; i < n; i++) {
+      const img = f.img[Array.isArray(P.fx) ? P.fx[i % P.fx.length] : P.fx], hitImg = f.img[P.hitFx];
+      const spread = n > 1 ? (i - (n - 1) / 2) : 0;
+      g.ents.push(new Projectile({
+        owner: f, x: f.x + dir * (P.ox || 150), y: (P.y || 200) + spread * (P.dy || 0), vx: (P.speed || 11) * dir * (1 + i * (P.stagger || 0)), vy: spread * (P.vy || 0),
+        w: P.w || 130, h: P.h || 100, pierce: P.pierce || 0, life: P.life || 200,
+        hit: { dmg: P.dmg || 60, hs: 18, bs: 13, kb: P.kb || 10, lvl: P.lvl || 'mid', stop: 8, chip: 8, sfx: 'heavy', special: true, color: col, kd: P.kd, launch: P.launch || 12 },
+        trail(p) {
+          if (p.t % 2 === 0) FX.push({ kind: 'spark', x: p.x - p.vx * 3 + rnd(-10, 10), y: GY - p.y + rnd(-p.h / 3, p.h / 3), vx: -p.vx * 0.15 + rnd(-1, 1), vy: rnd(-2, 2.5), life: 18, max: 18, color: Math.random() < 0.6 ? col : f.def.color2, size: rnd(3, 7) });
+          if (P.trailFx && p.t % 7 === 0 && f.img[P.trailFx]) sprite(f.img[P.trailFx], p.x - p.vx * 5, GY - p.y + rnd(-20, 20), (P.trailScale || 0.12), 16, Math.sign(p.vx), 0.004);
+        },
+        onHit(p) { if (hitImg) sprite(hitImg, p.x, GY - p.y, P.hitScale || 0.4, 20, Math.sign(p.vx), 0.01); ring(p.x, GY - p.y, col, 24, 10, 16); spark(p.x, GY - p.y, col, 18, 12); },
+        drawFn(p) {
+          if (!img) return; const k = Math.min(1, 0.4 + p.t * 0.08), sc = (P.scale || 0.4) * k * (1 + 0.04 * Math.sin(p.t * 0.5));
+          ctx.save(); ctx.translate(p.x, GY - p.y); ctx.scale(Math.sign(p.vx) * sc, sc); if (P.spin) ctx.rotate(p.t * P.spin);
+          ctx.drawImage(img, -img.width / 2, -img.height / 2); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = 0.3; ctx.drawImage(img, -img.width / 2, -img.height / 2); ctx.restore();
+        },
+      }));
+    }
+  },
   // FXBURST: hit zone in front / around / under the opponent, drawn with one FX image
   fxBurst(f, g) {
     const P = f.move.p, col = f.def.color, o = f.opp, img = f.img[P.fx], dir = f.facing;
@@ -1246,7 +1269,7 @@ class CPU {
   }
   plan(me, op, dist, g) {
     const r = Math.random(), L = this.lvl; this.cool = Math.floor(rnd(4, 22) / (0.4 + L));
-    const hasProj = ['lotusBloom', 'glitchCast', 'bassRelease', 'greenWarning', 'bassPush', 'cowprintCannon', 'stacheShot', 'butterflyKiss', 'proj'].includes(me.def.moves.s1.special);
+    const hasProj = ['lotusBloom', 'glitchCast', 'bassRelease', 'greenWarning', 'bassPush', 'cowprintCannon', 'stacheShot', 'butterflyKiss', 'proj', 'shot'].includes(me.def.moves.s1.special);
     if (me.meter >= 100 && dist < 520 && r < 0.5) { this.q = [{ p: 'su' }]; return; }
     if (op.state === 'ground' || op.state === 'getup') { this.q = [{ h: ['f'], n: 12 }]; return; }
     if (dist > 520) {
@@ -1456,7 +1479,7 @@ function updateFight() {
     let def = e.owner.opp, hu = def.hurtbox();
     if (G.ally) for (const o of foesOf(e.owner)) { const h2 = o.hurtbox(); if (h2 && overlap(r, h2)) { def = o; hu = h2; break; } }
     if (!hu) continue;
-    if (e.isProj) { if (overlap(r, hu)) { e.dead = true; resolveHit(e.hit, e.owner, def, { x: e.x + e.vx * 2, y: GY - e.y }, Math.sign(e.vx)); } continue; }
+    if (e.isProj) { if (overlap(r, hu) && !(e.cool > 0)) { if (e.pierce > 0) { e.pierce--; e.cool = 12; } else e.dead = true; resolveHit(e.hit, e.owner, def, { x: e.x + e.vx * 2, y: GY - e.y }, Math.sign(e.vx)); if (e.onHit) e.onHit(e, def); } continue; }
     if (e.active && e.active() && overlap(r, hu)) {
       const h = e.hitFn ? e.hitFn(e) : e.hit;
       if (def.state === 'launch' && def.y > 30 && !h.juggle && !e.juggle) continue;

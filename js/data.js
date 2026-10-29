@@ -22,6 +22,7 @@ const ROSTER = [
   { id: 'josh', playable: true },
   { id: 'nate', playable: true },
   { id: 'chance', playable: true },
+  { id: 'tony', playable: true },
 ];
 
 const STAGES = [
@@ -89,6 +90,31 @@ const FIGHTERS = {
       s2: { name: 'Juice Charge', pose: 'juice_charge', wind: 'juice_sip', s: 10, a: 2, r: 22, special: 'shot', p: { fx: ['fx_juice_jar_a', 'fx_juice_jar_b', 'fx_juice_jar_a'], n: 3, scale: 0.26, spin: 0.1, speed: 12, stagger: 0.12, y: 190, dy: 70, vy: 0.6, dmg: 34, kb: 8, hitFx: 'jx_splat', hitScale: 0.35 }, sfx: 'cast' },
       s3: { name: 'Flow State', pose: 'flow_state', wind: 'around_world', s: 9, a: 2, r: 24, special: 'shot', p: { fx: 'jx_wave', scale: 0.55, speed: 8, y: 70, w: 230, h: 140, pierce: 2, dmg: 45, kb: 10, lvl: 'low', kd: true, hitFx: 'jx_burst', hitScale: 0.4, trailFx: 'jx_drop', trailScale: 0.07 }, sfx: 'cast' },
       su: { name: '100% Natural', pose: 'su_nate_rel', winds: ['su_nate_wind'], wind: 'su_nate_wind', s: 8, a: 2, r: 50, special: 'ultimate', p: { fx: 'fx_vitamin_blast', fxs: 1.05 }, super: true, sfx: 'super' },
+    },
+  },
+  tony: {
+    name: 'GABAGOOL TONY', short: 'TONY', tag: 'Cold cuts. Hot temper. Big appetite.', color: '#e0303a', color2: '#f2d6a2',
+    hp: 1120, walk: 4.3, back: 3.5, jump: 17, jumpX: 4.6, dash: 12,
+    impact: 'fx_slice_burst',
+    anim: {
+      idle: ['idle'], walk_f: ['w34_1', 'w34_2', 'w34_3', 'w34_4'], walk_b: ['w34_4', 'w34_3', 'w34_2', 'w34_1'], dash: ['w34_1', 'w34_2', 'w34_3', 'w34_4'], backdash: ['hp_rec'],
+      jump: ['lk_wind'], fall: ['lk_rec'], land: ['block_hit'], crouch: ['block_hit'],
+      block: ['block'], c_block: ['block_g'], hit_l: ['hit_h'], hit_h: ['hit_h'], launch: ['hit_air'],
+      ground: ['ground'], getup: ['block_hit'], stun: ['hit_h'],
+      entrance: ['beckon'], victory: ['cigar'], defeat: ['ground'],
+    },
+    moves: {
+      lp: { pose: 'lp', winds: ['guard_c'], recov: 'lp_rec', s: 4, a: 3, r: 8, dmg: 44, hs: 14, bs: 9, kb: 7, lvl: 'mid', stop: 6, sfx: 'light' },
+      lk: { pose: 'sweep', winds: ['stance_g'], s: 6, a: 3, r: 11, dmg: 52, hs: 15, bs: 10, kb: 8, lvl: 'mid', stop: 7, sfx: 'light' },
+      hp: { pose: 'hp_b', winds: ['hp_b_wind'], recov: 'hp_rec', s: 10, a: 4, r: 17, dmg: 100, hs: 21, bs: 14, kb: 16, lvl: 'mid', stop: 11, sfx: 'heavy', heavy: true, lunge: 6 },
+      hk: { pose: 'lk', winds: ['lk_wind'], recov: 'lk_rec', s: 12, a: 4, r: 19, dmg: 110, hs: 22, bs: 15, kb: 18, lvl: 'mid', stop: 12, sfx: 'heavy', heavy: true },
+      c_light: { pose: 'sweep', s: 5, a: 3, r: 10, dmg: 38, hs: 13, bs: 9, kb: 6, lvl: 'low', stop: 6, sfx: 'light', crouch: true },
+      sweep: { pose: 'sweep', winds: ['stance_g'], s: 9, a: 4, r: 22, dmg: 84, hs: 0, bs: 14, kb: 10, lvl: 'low', stop: 10, sfx: 'heavy', kd: true, heavy: true, crouch: true },
+      air: { pose: 'lk', s: 5, a: 10, r: 4, dmg: 72, hs: 17, bs: 11, kb: 7, lvl: 'high', stop: 8, sfx: 'heavy', air: true },
+      s1: { name: 'Gabagool Toss', pose: 's1_throw', winds: ['s1_reach', 's1_wind'], s: 12, a: 2, r: 20, special: 'shot', p: { frames: ['fx_slice', 'fx_slice_big'], fx: 'fx_slice', scale: 0.3, spin: 0.3, speed: 13, y: 230, w: 140, h: 110, dmg: 70, kb: 12, spawnFx: 'fx_slices', spawnScale: 0.4, hitFx: 'fx_slice_burst', hitScale: 0.45, trailFx: 'fx_slices', trailScale: 0.18 }, sfx: 'cast' },
+      s2: { name: 'Hero Sandwich', pose: 's3_point', winds: ['s3_ready', 's3_wind'], s: 14, a: 2, r: 24, special: 'shot', p: { fx: 'fx_sandwich', scale: 0.36, spin: 0.18, speed: 10, y: 250, w: 160, h: 120, dmg: 92, kb: 16, kd: true, launch: 13, hitFx: 'fx_pepper_burst', hitScale: 0.5, trailFx: 'fx_wrap', trailScale: 0.1 }, sfx: 'cast' },
+      s3: { name: 'Call Paulie', pose: 'phone_point', winds: ['phone_call'], s: 14, a: 2, r: 24, special: 'fxBurst', p: { at: 'opp', frames: ['fx_rings', 'fx_spiral', 'fx_pepper_burst'], seq: true, fx: 'fx_spiral', fxs: 0.75, cy: 220, w: 300, h: 400, delay: 18, hits: 4, every: 6, dur: 24, dmg: 84, chipDmg: 24, kb: 9, kd: true }, sfx: 'cast' },
+      su: { name: 'Cold Cut Cyclone', pose: 's2_throw', winds: ['s2_reach', 's2_hold'], wind: 's2_hold', s: 10, a: 2, r: 50, special: 'ultimate', p: { frames: ['fx_slices', 'fx_vortex', 'fx_salami_vortex'], fx: 'fx_salami_vortex', fxs: 1.05 }, super: true, sfx: 'super' },
     },
   },
   chance: {
@@ -472,3 +498,8 @@ const MOVE_LIST = [
   ['Crouch attack', 'S + punch or kick', ''], ['Sweep', 'S + heavy', ''], ['Dash', 'double-tap forward', ''],
   ['Block', 'hold back (crouch to block lows)', ''],
 ];
+
+// voice clips (assets/voice/<name>.mp3), played on specials / intro / win / pick
+const VOICE = {
+  tony: { pick: ['tony_g1', 'tony_g2'], intro: 'tony_intro', s1: 'tony_slice', s2: ['tony_g2', 'tony_g5'], s3: ['tony_g4', 'tony_g6'], su: 'tony_g1', hit: ['tony_g2', 'tony_g4', 'tony_g5', 'tony_g6'], win: ['tony_win', 'tony_mobile'] },
+};

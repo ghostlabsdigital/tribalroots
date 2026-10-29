@@ -419,7 +419,7 @@
   });
   const api = (path, opt) => fetch(path, opt).then(async r => ({ ok: r.ok, status: r.status, j: await r.json().catch(() => ({})) }));
   const ago = t => { const s = (Date.now() - t) / 1000; return s < 60 ? 'now' : s < 3600 ? Math.floor(s / 60) + 'm' : s < 86400 ? Math.floor(s / 3600) + 'h' : Math.floor(s / 86400) + 'd'; };
-  const FN = { lotusflow: 'lotusflow', ghostlabs: 'GhostLabs', goaty: 'Goaty', sunshine: 'Sunshine', rochelle: 'Rochelle', shea: 'Shea', djmoo: 'DJ Moo', sara: 'Sara', pixie: 'Pixie', starlena: 'Star Lena', tommy: 'Just Tommy', bearflame: 'Bearflame', brenda: 'Brenda', drew: 'Drew', josh: 'Josh Breen', nate: 'Natty Nate', chance: 'Chance' };
+  const FN = { lotusflow: 'lotusflow', ghostlabs: 'GhostLabs', goaty: 'Goaty', sunshine: 'Sunshine', rochelle: 'Rochelle', shea: 'Shea', djmoo: 'DJ Moo', sara: 'Sara', pixie: 'Pixie', starlena: 'Star Lena', tommy: 'Just Tommy', bearflame: 'Bearflame', brenda: 'Brenda', drew: 'Drew', josh: 'Josh Breen', nate: 'Natty Nate', chance: 'Chance' , tony: 'Gabagool Tony' };
 
   // ── leaderboard
   let backend = true;

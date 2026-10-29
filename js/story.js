@@ -61,7 +61,7 @@ function drawFrame(ref, x, y, face, sc = PS, alpha = 1, flash = 0, shade = 0) {
 // ─────────────────────────────── characters: pose tables
 // new-style FX art named in a move (frames or fx), for story specials
 function mvFx(id, k) { const m = FIGHTERS[id] && FIGHTERS[id].moves[k], p = m && m.p, I = IMG[id] || {}; if (!p) return []; return (p.frames || (Array.isArray(p.fx) ? p.fx : [p.fx])).map(n => I[n]).filter(Boolean); }
-const NEW5 = new Set(['pixie', 'starlena', 'tommy', 'bearflame', 'brenda', 'josh', 'nate', 'chance']);
+const NEW5 = new Set(['pixie', 'starlena', 'tommy', 'bearflame', 'brenda', 'josh', 'nate', 'chance', 'tony']);
 function poseTable(id) {
   if (id === 'drew') {
     const mv = n => 'drew_move__' + n, cb = n => 'drew_combat__' + n;
@@ -166,6 +166,7 @@ class Hero extends Body {
     const cost = kind === 'su' ? 100 : 15;
     if (this.meter < cost && !this.buddy) { S.popText(this.x, this.y - 190, 'NEED ENERGY', '#bfb2c8'); return; }
     if (!this.buddy) this.meter -= cost;
+    if (!this.buddy) { AU.loadVoice(this.id); AU.voice(this.id, kind, kind === 'su'); }
     if (kind === 'su') return storySuper(this);
     const mv = FIGHTERS[this.id] && FIGHTERS[this.id].moves[kind];
     if (!this.buddy && mv && mv.name) S.popText(this.x, this.y - 210, mv.name.toUpperCase(), this.P.color);

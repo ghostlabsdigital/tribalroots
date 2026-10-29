@@ -117,6 +117,26 @@ const AU = {
       case 'confirm': this.osc('square', 520, 1040, t, 0.14, 0.15); this.osc('square', 780, 1560, t + 0.07, 0.14, 0.12); break;
     }
   },
+  // sampled voice lines per fighter (VOICE in data.js); lazy-loaded, never overlapping each other
+  clips: {}, clipT: 0,
+  loadVoice(id) {
+    const V = typeof VOICE !== 'undefined' && VOICE[id]; if (!V || !this.ctx) return;
+    for (const n of new Set([].concat(...Object.values(V)))) if (!this.clips[n]) {
+      this.clips[n] = 'loading';
+      fetch(`assets/voice/${n}.mp3`).then(r => r.arrayBuffer()).then(b => new Promise((ok, no) => this.ctx.decodeAudioData(b, ok, no))).then(buf => { this.clips[n] = buf; const q = this.pend; if (q && q.id === id && performance.now() - q.at < 1500) { this.pend = null; this.voice(q.id, q.kind, true); } }).catch(() => { delete this.clips[n]; });
+    }
+  },
+  voice(id, kind, force) {
+    const V = typeof VOICE !== 'undefined' && VOICE[id]; if (!V || !V[kind] || !this.ctx || this.muted) return;
+    const now = this.ctx.currentTime; if (!force && now < this.clipT) return;
+    const l = [].concat(V[kind]), b = this.clips[l[(Math.random() * l.length) | 0]];
+    if (!b || b === 'loading') { if (force) this.pend = { id, kind, at: performance.now() }; this.loadVoice(id); return; }
+    try {
+      const src = this.ctx.createBufferSource(), g = this.ctx.createGain(); src.buffer = b; g.gain.value = 1.15;
+      if (kind === 'hit') src.playbackRate.value = 0.94 + Math.random() * 0.16;
+      src.connect(g); g.connect(this.fx); src.start(); this.clipT = now + b.duration / src.playbackRate.value * 0.85;
+    } catch (e) {}
+  },
   say(text) {
     if (this.muted) return;
     try {
@@ -486,7 +506,7 @@ class Fighter {
       if (this.mt === 1 && m.key === 's1' && this.img.fxm_spawn && m.special !== 'shot') { const d = Math.max(3, Math.floor((m.s - 1) / 2)); fxSeq(this, ['spawn', 'charge'], hx, hy, 0.38, [d, d + 2], this.facing); }
       if (this.mt === m.s) { this.smear = m.special ? 5 : 7; this.sx = 1.1; this.sy = 0.94; const n0 = this.g.ents.length; if (m.special) SPECIALS[m.special](this, this.g);
         if (m.super && this.img.fxm_super_release) { const o = this.opp, mx = (this.x + o.x) / 2 + this.facing * 60; fxSeq(this, ['super_release', 'super_peak', 'super_fade'], mx, GY - 230, 0.8, [14, 26, 22], this.facing, { grow: 0.0025 }); }
-        if (m.key === 's1' && this.img.fxm_travel && m.special !== 'shot') { fxSeq(this, ['release'], hx, hy, 0.45, 9, this.facing); for (const e of this.g.ents.slice(n0)) if (e.isProj) e.fxm = this; } if (m.sfx && m.special) AU.sfx(m.sfx); }
+        if (m.key === 's1' && this.img.fxm_travel && m.special !== 'shot') { fxSeq(this, ['release'], hx, hy, 0.45, 9, this.facing); for (const e of this.g.ents.slice(n0)) if (e.isProj) e.fxm = this; } if (m.sfx && m.special) AU.sfx(m.sfx); if (m.special) AU.voice(this.id, m.key, m.key === 'su'); }
       if (!m.air && this.grounded) this.vx *= 0.82;
       // cancels: on hit, normals cancel into specials; lights chain into anything
       if (this.moveHit && !m.special && this.mt >= m.s + 1) {
@@ -1532,7 +1552,7 @@ function updateFight() {
     G.ko.t++;
     if (G.ko.t === 110) {
       const w = G.ko.winner;
-      if (w) { w.set('victory'); w.vx = 0; w.facing = w.opp.x >= w.x ? 1 : -1; G.announce(`${w.def.name} WINS`, w.def.color, 120); }
+      if (w) { AU.voice(w.id, 'win', true); w.set('victory'); w.vx = 0; w.facing = w.opp.x >= w.x ? 1 : -1; G.announce(`${w.def.name} WINS`, w.def.color, 120); }
       else G.announce('DRAW', '#fff4e6', 120);
       for (const f of allF()) if (f !== w && f.state !== 'launch' && !(w && f.side === w.side && f.hp > 0)) { f.set(w ? 'defeat' : 'idle'); f.vx = 0; }
     }
@@ -1568,6 +1588,7 @@ function resolveHit(h, att, def, at, dir) {
     else if (h.special && att.img.fxm_hit_contact) { const big = h.kd || (h.stop || 0) >= 12; fxSeq(att, ['hit_contact', 'hit_burst', 'hit_dissolve'], at.x, at.y, big ? 0.62 : 0.46, [3, 6, 12], att.facing); }
     else if (att.id === 'lotusflow' && (h.heavy || h.special)) sprite(att.img.fx_impact, at.x, at.y, 0.16, 16, 1, 0.012);
     AU.sfx(h.sfx || 'light');
+    if ((h.kd || h.heavy) && !h.special && Math.random() < 0.45) AU.voice(att.id, 'hit');
   }
 }
 
@@ -1773,7 +1794,7 @@ function drawSelect(m) {
   txt(G.mode === 'vs' ? 'P1: A/D + J pick · K undo   ·   P2: arrows + Enter · Numpad 2 undo   ·   Esc back' : G.chooser === 0 ? 'Pick your fighter' : 'Pick your opponent', W / 2, 708, 20, '#bfb2c8', 'center', FONT_H, '600', 0);
 }
 function confirmPick(p) {
-  G.selDone[p] = true; AU.sfx('confirm'); ensureFighters([ROSTER[G.sel[p]].id]);
+  G.selDone[p] = true; AU.sfx('confirm'); ensureFighters([ROSTER[G.sel[p]].id]); AU.loadVoice(ROSTER[G.sel[p]].id); AU.voice(ROSTER[G.sel[p]].id, 'pick', true);
   if (G.mode === 'story') { STORY.begin(ROSTER[G.sel[0]].id); return; }
   if (G.mode !== 'vs' && p === 0) { G.chooser = 1; }
   if (G.selDone[0] && G.selDone[1]) { G.scene = 'stage'; G.t = 0; G.stageI = G.stageI || 0; return; }
@@ -1832,6 +1853,8 @@ function drawVS() {
   ctx.save(); ctx.translate(W / 2, H / 2); const s = G.t < 20 ? 3 - 2 * (G.t / 20) : 1 + 0.03 * Math.sin(G.t * 0.3); ctx.scale(s, s);
   txt('VS', 0, 0, 170, '#ffcf3f', 'center', FONT_D, '400', 14); ctx.restore();
   if (G.t > 150 && G.f0ready) startMatch();
+  if (G.t === 1) [0, 1].forEach(p => AU.loadVoice(ROSTER[G.sel[p]].id));
+  if (G.t === 105) { const ids = [...new Set([0, 1].map(p => ROSTER[G.sel[p]].id))].filter(i => typeof VOICE !== 'undefined' && VOICE[i]); if (ids.length) AU.voice(ids[(Math.random() * ids.length) | 0], 'intro', true); }
   if (G.t === 1) { G.f0ready = false; ensureFighters([ROSTER[G.sel[0]].id, ROSTER[G.sel[1]].id]).then(() => (G.f0ready = true)); }
   if (G.t > 150 && !G.f0ready) txt('LOADING…', W / 2, H - 40, 22, '#bfb2c8', 'center', FONT_H, '800', 4);
 }

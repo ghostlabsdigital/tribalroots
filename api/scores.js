@@ -1,7 +1,7 @@
 // Leaderboard. GET → top scores. POST {name, fighter, opponent, score, secs, flawless} → submit.
 import { ready, redis, who, banned, limited, clean, flagged, send, body } from './_lib.js';
 
-const FIGHTERS = ['lotusflow', 'ghostlabs', 'goaty', 'sunshine', 'rochelle', 'shea', 'djmoo', 'sara', 'pixie', 'starlena', 'tommy', 'bearflame', 'brenda', 'drew', 'josh', 'nate', 'chance'];
+const FIGHTERS = ['lotusflow', 'ghostlabs', 'goaty', 'sunshine', 'rochelle', 'shea', 'djmoo', 'sara', 'pixie', 'starlena', 'tommy', 'bearflame', 'brenda', 'drew', 'josh', 'nate', 'chance', 'tony'];
 
 export default async function handler(req, res) {
   if (!ready) return send(res, 503, { setup: true });

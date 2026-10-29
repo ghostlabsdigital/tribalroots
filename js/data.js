@@ -23,7 +23,7 @@ const ROSTER = [
   { id: 'nate', playable: true },
   { id: 'chance', playable: true },
   { id: 'tony', playable: true },
-  { id: 'oof', playable: true, secret: true },
+  { id: 'oof', playable: true },
 ];
 
 const STAGES = [
@@ -119,7 +119,7 @@ const FIGHTERS = {
     },
   },
   oof: {
-    name: 'OOF TO YOU', short: 'OOF', tag: 'The Curse. Secret fighter.', color: '#ff3355', color2: '#5b8cff',
+    name: 'OOF TO YOU', short: 'OOF', tag: 'The Curse. Respect your elders.', color: '#ff3355', color2: '#5b8cff',
     hp: 940, walk: 4.6, back: 3.8, jump: 18, jumpX: 5, dash: 13,
     impact: 'fx_glitch_ring', dizzyFx: 'fx_eye',
     anim: {

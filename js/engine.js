@@ -474,10 +474,10 @@ class Fighter {
     } else if (s === 'attack') {
       const m = this.move; this.mt++;
       const hx = this.x + this.facing * 150, hy = GY - this.y - 230;
-      if (this.mt === 1 && m.key === 's1' && this.img.fxm_spawn) { const d = Math.max(3, Math.floor((m.s - 1) / 2)); fxSeq(this, ['spawn', 'charge'], hx, hy, 0.38, [d, d + 2], this.facing); }
+      if (this.mt === 1 && m.key === 's1' && this.img.fxm_spawn && m.special !== 'shot') { const d = Math.max(3, Math.floor((m.s - 1) / 2)); fxSeq(this, ['spawn', 'charge'], hx, hy, 0.38, [d, d + 2], this.facing); }
       if (this.mt === m.s) { this.smear = m.special ? 5 : 7; this.sx = 1.1; this.sy = 0.94; const n0 = this.g.ents.length; if (m.special) SPECIALS[m.special](this, this.g);
         if (m.super && this.img.fxm_super_release) { const o = this.opp, mx = (this.x + o.x) / 2 + this.facing * 60; fxSeq(this, ['super_release', 'super_peak', 'super_fade'], mx, GY - 230, 0.8, [14, 26, 22], this.facing, { grow: 0.0025 }); }
-        if (m.key === 's1' && this.img.fxm_travel) { fxSeq(this, ['release'], hx, hy, 0.45, 9, this.facing); for (const e of this.g.ents.slice(n0)) if (e.isProj) e.fxm = this; } if (m.sfx && m.special) AU.sfx(m.sfx); }
+        if (m.key === 's1' && this.img.fxm_travel && m.special !== 'shot') { fxSeq(this, ['release'], hx, hy, 0.45, 9, this.facing); for (const e of this.g.ents.slice(n0)) if (e.isProj) e.fxm = this; } if (m.sfx && m.special) AU.sfx(m.sfx); }
       if (!m.air && this.grounded) this.vx *= 0.82;
       // cancels: on hit, normals cancel into specials; lights chain into anything
       if (this.moveHit && !m.special && this.mt >= m.s + 1) {
@@ -1109,6 +1109,7 @@ const SPECIALS = {
   // SHOT: any FX image flies out as a projectile (optionally several, piercing, along the floor), splashes on impact
   shot(f, g) {
     const P = f.move.p || {}, col = f.def.color, dir = f.facing, n = P.n || 1;
+    if (P.spawnFx && f.img[P.spawnFx]) sprite(f.img[P.spawnFx], f.x + dir * 130, GY - (P.y || 200), P.spawnScale || 0.3, 18, dir, 0.006);
     for (let i = 0; i < n; i++) {
       const img = f.img[Array.isArray(P.fx) ? P.fx[i % P.fx.length] : P.fx], hitImg = f.img[P.hitFx];
       const spread = n > 1 ? (i - (n - 1) / 2) : 0;
@@ -1122,16 +1123,16 @@ const SPECIALS = {
         },
         onHit(p) { if (hitImg) sprite(hitImg, p.x, GY - p.y, P.hitScale || 0.4, 20, Math.sign(p.vx), 0.01); ring(p.x, GY - p.y, col, 24, 10, 16); spark(p.x, GY - p.y, col, 18, 12); },
         drawFn(p) {
-          if (!img) return; const k = Math.min(1, 0.4 + p.t * 0.08), sc = (P.scale || 0.4) * k * (1 + 0.04 * Math.sin(p.t * 0.5));
+          const fr = P.frames ? f.img[P.frames[(p.t >> 2) % P.frames.length]] : img; if (!fr) return; const img2 = fr; const k = Math.min(1, 0.4 + p.t * 0.08), sc = (P.scale || 0.4) * k * (1 + 0.04 * Math.sin(p.t * 0.5));
           ctx.save(); ctx.translate(p.x, GY - p.y); ctx.scale(Math.sign(p.vx) * sc, sc); if (P.spin) ctx.rotate(p.t * P.spin);
-          ctx.drawImage(img, -img.width / 2, -img.height / 2); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = 0.3; ctx.drawImage(img, -img.width / 2, -img.height / 2); ctx.restore();
+          ctx.drawImage(img2, -img2.width / 2, -img2.height / 2); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = 0.3; ctx.drawImage(img2, -img2.width / 2, -img2.height / 2); ctx.restore();
         },
       }));
     }
   },
   // FXBURST: hit zone in front / around / under the opponent, drawn with one FX image
   fxBurst(f, g) {
-    const P = f.move.p, col = f.def.color, o = f.opp, img = f.img[P.fx], dir = f.facing;
+    const P = f.move.p, col = f.def.color, o = f.opp, img0 = f.img[P.fx], dir = f.facing;
     const x = P.at === 'opp' ? clamp(o.x, f.x - 760, f.x + 760) : P.at === 'self' ? f.x + dir * (P.reach || 0) : f.x + dir * (P.reach || 180);
     const delay = P.delay || 0, last = (P.hits || 1) - 1;
     if (P.inv) f.inv = P.inv;
@@ -1144,6 +1145,7 @@ const SPECIALS = {
         if (z.t < delay && z.t % 3 === 0) spark(x + rnd(-70, 70), GY - 6, col, 2, 4);
       },
       drawFn(z) {
+        const img = P.frames ? f.img[P.frames[(z.t >> 2) % P.frames.length]] : img0;
         if (!img) return;
         const life = z.delay + z.dur + 16, k = z.t - z.delay;
         const a = z.t < z.delay ? 0.25 + 0.5 * (z.t / Math.max(1, z.delay)) : clamp((life - z.t) / 14, 0, 1);

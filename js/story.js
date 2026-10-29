@@ -59,6 +59,8 @@ function drawFrame(ref, x, y, face, sc = PS, alpha = 1, flash = 0, shade = 0) {
 }
 
 // ─────────────────────────────── characters: pose tables
+// new-style FX art named in a move (frames or fx), for story specials
+function mvFx(id, k) { const m = FIGHTERS[id] && FIGHTERS[id].moves[k], p = m && m.p, I = IMG[id] || {}; if (!p) return []; return (p.frames || (Array.isArray(p.fx) ? p.fx : [p.fx])).map(n => I[n]).filter(Boolean); }
 const NEW5 = new Set(['pixie', 'starlena', 'tommy', 'bearflame', 'brenda', 'josh', 'nate', 'chance']);
 function poseTable(id) {
   if (id === 'drew') {
@@ -173,9 +175,9 @@ class Hero extends Body {
     const fx = IMG[this.P.proj] || {}, col = this.P.color, dir = this.face;
     if (kind === 's1') {
       S.ents.push(new Shot({ owner: this, x: this.x + dir * 70, y: this.y - 100, vx: 11 * dir, dmg: 34, color: col,
-        imgs: [fx.fxm_travel, fx.fxm_travel_b, fx.fxm_travel_c, fx.fx_proj].filter(Boolean), scale: 0.3, friendly: true }));
+        imgs: mvFx(this.id, 's1').length ? mvFx(this.id, 's1') : [fx.fxm_travel, fx.fxm_travel_b, fx.fxm_travel_c, fx.fx_proj].filter(Boolean), scale: 0.3, friendly: true }));
     } else if (kind === 's3') {
-      const mv = FIGHTERS[this.id] && FIGHTERS[this.id].moves.s3, img = fx.fxm_hit_burst || fx.fx_s1 || fx.fx_impact || fx.fxm_release;
+      const mv = FIGHTERS[this.id] && FIGHTERS[this.id].moves.s3, img = mvFx(this.id, 's3')[0] || fx.fxm_hit_burst || fx.fx_s1 || fx.fx_impact || fx.fxm_release;
       if (mv && mv.special === 'rush') { // dash strike: blink forward through everything in the way
         const x0 = this.x; this.inv = Math.max(this.inv, 22); this.vx = 26 * dir;
         for (let i = 1; i <= 3; i++) S.blast({ x: x0 + dir * 90 * i, y: this.y - 90, r: 110, dmg: 22, owner: this, color: col, img: i === 3 ? img : null, kb: 12 });
@@ -185,7 +187,7 @@ class Hero extends Body {
         ring(this.x, this.y - 80, col, 40, 10, 22);
       }
     } else {
-      const img = fx.fx_s1 || fx.fxm_hit_burst || fx.fx_impact || fx.fxm_release;
+      const img = mvFx(this.id, 's2')[0] || fx.fx_s1 || fx.fxm_hit_burst || fx.fx_impact || fx.fxm_release;
       S.blast({ x: this.x + dir * 120, y: this.y - 90, r: 150, dmg: 40, owner: this, color: col, img, kb: 10 });
     }
   }
@@ -659,7 +661,7 @@ S.run = beats => { S.queue.push(...beats.map(b => Object.assign({}, b))); };
 // ─────────────────────────────── super move (cut-in, everything on screen eats it)
 function storySuper(h) {
   h.set('super'); S.superT = 80; S.superBy = h; AU.sfx('super'); S.shake = 8; S.flashT = 10;
-  const im = IMG[h.P.proj] || {}; S.superImg = im.fx_super || im.fxm_super_peak || im.fx_ult || im.fxm_super_release || null;
+  const im = IMG[h.P.proj] || {}; S.superImg = mvFx(h.id, 'su')[0] || im.fx_super || im.fxm_super_peak || im.fx_ult || im.fxm_super_release || null;
 }
 function updateSuper() {
   const h = S.superBy; S.superT--;

@@ -343,7 +343,13 @@ class Fighter {
     const cyc = (k, rate = 10) => { const l = A[k] || A.idle; return l[Math.floor(this.t / rate) % l.length]; };
     if (s === 'attack') {
       // <pose>_w = windup frame (startup), <pose>_r = recovery frame. Fall back to move.wind / the strike pose.
-      const m = this.move;
+      const m = this.move, HALF = { lp: ['lp_half_a', 'lp_half_b'], hp: ['hp_half'], hk: ['hk_half'] }[m.key], hf = HALF && HALF.filter(n => this.man[n]);
+      // in-between frames: second half of the wind-up eases into the strike, first part of recovery eases back out
+      if (hf && hf.length && !m.special) {
+        if (this.mt < m.s && this.mt >= Math.floor(m.s / 2)) return hf[Math.min(hf.length - 1, Math.floor((this.mt - Math.floor(m.s / 2)) / Math.max(1, Math.ceil(m.s / 2) / hf.length)))];
+        const rt = this.mt - m.s - m.a; if (rt >= 0 && rt < Math.ceil(m.r * 0.35)) return hf[hf.length - 1 - Math.min(hf.length - 1, Math.floor(rt / Math.max(1, Math.ceil(m.r * 0.35) / hf.length)))];
+      }
+      if (m.key === 'sweep' && this.man.sweep_recover && this.mt >= m.s + m.a + Math.floor(m.r * 0.3)) return 'sweep_recover';
       if (this.mt < m.s) {
         // windup frame: w_<move> from the in-betweens B sheet (crouch light borrows the sweep windup)
         const wk = 'w_' + (m.key === 'c_light' ? 'sweep' : m.key);
@@ -367,7 +373,7 @@ class Fighter {
       return this.vy < -2 ? A.jump[0] : A.fall[0];
     }
     if (s === 'hitstun') return this.hitPose;
-    if (s === 'blockstun') return this.crouchBlock ? A.c_block[0] : (this.t < 6 && this.man.block_hit ? 'block_hit' : A.block[0]);
+    if (s === 'blockstun') return this.crouchBlock ? A.c_block[0] : (this.t < 6 && this.man.block_hit ? 'block_hit' : this.man.block_recover && this.t >= this.hsDur * 0.6 ? 'block_recover' : A.block[0]);
     if (s === 'launch' && this.bounced && this.man.bounce) return 'bounce';
     const map = { idle: 'idle', crouch: 'crouch', dash: 'dash', backdash: 'backdash', land: 'land', launch: 'launch', ground: 'ground', getup: 'getup', stun: 'stun', intro: 'entrance', victory: 'victory', defeat: 'defeat' };
     return cyc(map[s] || 'idle', 14);
@@ -1116,7 +1122,7 @@ const SPECIALS = {
       g.ents.push(new Projectile({
         owner: f, x: f.x + dir * (P.ox || 150), y: (P.y || 200) + spread * (P.dy || 0), vx: (P.speed || 11) * dir * (1 + i * (P.stagger || 0)), vy: spread * (P.vy || 0),
         w: P.w || 130, h: P.h || 100, pierce: P.pierce || 0, life: P.life || 200,
-        hit: { dmg: P.dmg || 60, hs: 18, bs: 13, kb: P.kb || 10, lvl: P.lvl || 'mid', stop: 8, chip: 8, sfx: 'heavy', special: true, color: col, kd: P.kd, launch: P.launch || 12 },
+        hit: { dmg: P.dmg || 60, hs: 18, bs: 13, kb: P.kb || 10, lvl: P.lvl || 'mid', stop: 8, chip: 8, sfx: 'heavy', special: true, color: col, kd: P.kd, launch: P.launch || 12, noImpact: true },
         trail(p) {
           if (p.t % 2 === 0) FX.push({ kind: 'spark', x: p.x - p.vx * 3 + rnd(-10, 10), y: GY - p.y + rnd(-p.h / 3, p.h / 3), vx: -p.vx * 0.15 + rnd(-1, 1), vy: rnd(-2, 2.5), life: 18, max: 18, color: Math.random() < 0.6 ? col : f.def.color2, size: rnd(3, 7) });
           if (P.trailFx && p.t % 7 === 0 && f.img[P.trailFx]) sprite(f.img[P.trailFx], p.x - p.vx * 5, GY - p.y + rnd(-20, 20), (P.trailScale || 0.12), 16, Math.sign(p.vx), 0.004);
@@ -1541,7 +1547,8 @@ function resolveHit(h, att, def, at, dir) {
     spark(at.x, at.y, '#fff8e8', h.heavy || h.kd ? 22 : 12, h.heavy || h.kd ? 15 : 10); spark(at.x, at.y, col, 10, 9);
     ring(at.x, at.y, col, 16, h.heavy ? 10 : 6, 12);
     if (h.glitch || att.id === 'ghostlabs') glitchBurst(at.x, at.y, col, h.heavy || h.special ? 12 : 5, 30);
-    if (h.special && att.img.fxm_hit_contact) { const big = h.kd || (h.stop || 0) >= 12; fxSeq(att, ['hit_contact', 'hit_burst', 'hit_dissolve'], at.x, at.y, big ? 0.62 : 0.46, [3, 6, 12], att.facing); }
+    if (h.special && att.def && att.def.impact && att.img[att.def.impact]) { if (!h.noImpact) sprite(att.img[att.def.impact], at.x, at.y, h.kd || (h.stop || 0) >= 12 ? 0.38 : 0.28, 18, att.facing, 0.008); }
+    else if (h.special && att.img.fxm_hit_contact) { const big = h.kd || (h.stop || 0) >= 12; fxSeq(att, ['hit_contact', 'hit_burst', 'hit_dissolve'], at.x, at.y, big ? 0.62 : 0.46, [3, 6, 12], att.facing); }
     else if (att.id === 'lotusflow' && (h.heavy || h.special)) sprite(att.img.fx_impact, at.x, at.y, 0.16, 16, 1, 0.012);
     AU.sfx(h.sfx || 'light');
   }

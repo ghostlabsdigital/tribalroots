@@ -69,6 +69,7 @@ const FIGHTERS = {
   nate: {
     name: 'NATTY NATE', tag: 'The Juicer. 100% natural. Probably.', color: '#ffb21a', color2: '#7dff6b',
     hp: 980, walk: 4.8, back: 3.8, jump: 18.5, jumpX: 5, dash: 12.5,
+    impact: 'fx_citrus_splash',
     anim: {
       idle: ['idle'], walk_f: ['walk_f', 'walk_f2'], walk_b: ['idle'], dash: ['run_a', 'run_b'], backdash: ['dodge'],
       jump: ['jump'], fall: ['jump'], land: ['c_block'], crouch: ['c_block'],
@@ -85,14 +86,15 @@ const FIGHTERS = {
       sweep: { pose: 'c_atk', s: 9, a: 4, r: 22, dmg: 80, hs: 0, bs: 14, kb: 10, lvl: 'low', stop: 10, sfx: 'heavy', kd: true, heavy: true, crouch: true },
       air: { pose: 'air_atk', s: 5, a: 10, r: 4, dmg: 70, hs: 17, bs: 11, kb: 7, lvl: 'high', stop: 8, sfx: 'heavy', air: true },
       s1: { name: 'Sack Meteor', pose: 'sack_meteor', wind: 'toe_pop', s: 11, a: 2, r: 20, special: 'shot', p: { frames: ['fx_hackysack_a', 'fx_hackysack_b'], fx: 'fx_hackysack_a', scale: 0.22, spin: 0.25, speed: 13, y: 200, dmg: 72, kb: 12, hitFx: 'fx_vitamin_blast', hitScale: 0.4, trailFx: 'jx_drop', trailScale: 0.08 }, sfx: 'cast' },
-      s2: { name: 'Juice Charge', pose: 'juice_charge', wind: 'juice_sip', s: 10, a: 2, r: 22, special: 'shot', p: { fx: ['fx_juice_jar_a', 'fx_juice_jar_b', 'fx_juice_jar_a'], n: 3, scale: 0.26, spin: 0.1, speed: 12, stagger: 0.12, y: 190, dy: 70, vy: 0.6, dmg: 34, kb: 8, hitFx: 'fx_citrus_splash', hitScale: 0.35 }, sfx: 'cast' },
+      s2: { name: 'Juice Charge', pose: 'juice_charge', wind: 'juice_sip', s: 10, a: 2, r: 22, special: 'shot', p: { fx: ['fx_juice_jar_a', 'fx_juice_jar_b', 'fx_juice_jar_a'], n: 3, scale: 0.26, spin: 0.1, speed: 12, stagger: 0.12, y: 190, dy: 70, vy: 0.6, dmg: 34, kb: 8, hitFx: 'jx_splat', hitScale: 0.35 }, sfx: 'cast' },
       s3: { name: 'Flow State', pose: 'flow_state', wind: 'around_world', s: 9, a: 2, r: 24, special: 'shot', p: { fx: 'jx_wave', scale: 0.55, speed: 8, y: 70, w: 230, h: 140, pierce: 2, dmg: 45, kb: 10, lvl: 'low', kd: true, hitFx: 'jx_burst', hitScale: 0.4, trailFx: 'jx_drop', trailScale: 0.07 }, sfx: 'cast' },
-      su: { name: '100% Natural', pose: 'natural', wind: 'juice_charge', s: 8, a: 2, r: 50, special: 'ultimate', p: { fx: 'jx_geyser', fxs: 1.05 }, super: true, sfx: 'super' },
+      su: { name: '100% Natural', pose: 'natural', wind: 'juice_charge', s: 8, a: 2, r: 50, special: 'ultimate', p: { fx: 'fx_vitamin_blast', fxs: 1.05 }, super: true, sfx: 'super' },
     },
   },
   chance: {
     name: 'CHANCE', tag: 'Resident Wild Man. Fire poi, no brakes.', color: '#ff5a1a', color2: '#ffd23f',
     hp: 1040, walk: 4.4, back: 3.4, jump: 18.5, jumpX: 5, dash: 12.5,
+    impact: 'fx_wildfire_burst',
     anim: {
       idle: ['idle'], walk_f: ['walk_f', 'walk_f2'], walk_b: ['idle'], dash: ['run_a', 'run_b'], backdash: ['dodge'],
       jump: ['jump'], fall: ['jump'], land: ['c_block'], crouch: ['c_block'],
@@ -109,14 +111,15 @@ const FIGHTERS = {
       sweep: { pose: 'c_atk', s: 9, a: 4, r: 22, dmg: 80, hs: 0, bs: 14, kb: 10, lvl: 'low', stop: 10, sfx: 'heavy', kd: true, heavy: true, crouch: true },
       air: { pose: 'air_atk', s: 5, a: 10, r: 4, dmg: 70, hs: 17, bs: 11, kb: 7, lvl: 'high', stop: 8, sfx: 'heavy', air: true },
       s1: { name: 'Ember Wake', pose: 'double_poi', wind: 'ember_wake', s: 12, a: 2, r: 22, special: 'shot', p: { frames: ['fx_fire_poi_a', 'fx_fire_poi_b'], fx: 'fx_fire_poi_a', scale: 0.34, speed: 10.5, y: 200, dmg: 74, kb: 12, spawnFx: 'fx_fire_ring_a', spawnScale: 0.25, hitFx: 'fx_wildfire_burst', hitScale: 0.4, trailFx: 'fx_spark_embers', trailScale: 0.1 }, sfx: 'cast' },
-      s2: { name: 'Phoenix Step', pose: 'phoenix_step', wind: 'ember_wake', s: 10, a: 2, r: 26, special: 'fxBurst', p: { at: 'front', reach: 180, fx: 'fx_s2', fxs: 0.8, cy: 230, w: 300, h: 400, dmg: 112, kb: 22, kd: true, launch: 16, dur: 8 }, sfx: 'cast' },
+      s2: { name: 'Phoenix Step', pose: 'phoenix_step', wind: 'ember_wake', s: 10, a: 2, r: 26, special: 'fxBurst', p: { at: 'front', reach: 180, fx: 'fx_fire_ring_a', fxs: 0.7, cy: 230, w: 300, h: 400, dmg: 112, kb: 22, kd: true, launch: 16, dur: 8 }, sfx: 'cast' },
       s3: { name: 'Wildfire Trap', pose: 'wildfire_trap', wind: 'dragon_sweep', s: 11, a: 2, r: 26, special: 'fxBurst', p: { at: 'opp', fx: 'fx_wildfire_burst', fxs: 0.7, cy: 150, w: 300, h: 300, delay: 22, dmg: 95, kb: 6, kd: true, launch: 15, lvl: 'low', dur: 10 }, sfx: 'cast' },
-      su: { name: 'Inferno Spiral', pose: 'inferno_spiral', wind: 'fire_halo', s: 8, a: 2, r: 50, special: 'ultimate', p: { fx: 'fx_super', fxs: 1.05 }, super: true, sfx: 'super' },
+      su: { name: 'Inferno Spiral', pose: 'inferno_spiral', wind: 'fire_halo', s: 8, a: 2, r: 50, special: 'ultimate', p: { fx: 'fx_fire_ring_b', fxs: 1.05 }, super: true, sfx: 'super' },
     },
   },
   drew: {
     name: 'DREW', tag: 'Air Capital Property Maintenance. The possum stays.', color: '#ff9a3c', color2: '#7fd6ff',
     hp: 1060, walk: 4.3, back: 3.3, jump: 18.5, jumpX: 5, dash: 12.5,
+    impact: 'fx_gutter_impact',
     anim: {
       idle: ['idle', 'ready'], walk_f: ['walk_f', 'walk_f2'], walk_b: ['idle'], dash: ['run_a', 'run_b'], backdash: ['dodge'],
       jump: ['jump'], fall: ['fall'], land: ['land'], crouch: ['crouch'],
@@ -135,12 +138,13 @@ const FIGHTERS = {
       s1: { name: 'Possum Dash', pose: 'sp1', wind: 'sp_startup', s: 12, a: 2, r: 22, special: 'shot', p: { frames: ['fx_possum_leap_a', 'fx_possum_leap_b'], fx: 'fx_possum_leap_a', scale: 0.32, speed: 11, y: 150, dmg: 72, kb: 12, hitFx: 'fx_gutter_impact', hitScale: 0.4, trailFx: 'fx_gutter_leaves', trailScale: 0.1 }, sfx: 'cast' },
       s2: { name: 'Leaf Blast', pose: 'sp_release', wind: 'sp_startup', s: 11, a: 2, r: 26, special: 'fxBurst', p: { at: 'front', reach: 220, fx: 'fx_broom_arc', fxs: 0.7, cy: 220, w: 320, h: 360, hits: 3, every: 6, dur: 18, dmg: 72, chipDmg: 24, kb: 14, kd: true }, sfx: 'cast' },
       s3: { name: 'Fall Barrage', pose: 'sp2', wind: 'sp_charge', s: 12, a: 2, r: 26, special: 'fxBurst', p: { at: 'opp', fx: 'fx_tool_storm', fxs: 0.7, cy: 220, w: 300, h: 400, delay: 16, hits: 4, every: 6, dur: 26, dmg: 75, chipDmg: 24, kb: 10, kd: true }, sfx: 'cast' },
-      su: { name: 'Gutter Clean', pose: 'su_release', wind: 'su_startup', s: 8, a: 2, r: 50, special: 'ultimate', p: { fx: 'fx_super', fxs: 1.05 }, super: true, sfx: 'super' },
+      su: { name: 'Gutter Clean', pose: 'su_release', wind: 'su_startup', s: 8, a: 2, r: 50, special: 'ultimate', p: { fx: 'fx_gutter_leaves', fxs: 1.05 }, super: true, sfx: 'super' },
     },
   },
   pixie: {
     name: 'PIXIE', tag: 'Fire fans and faerie dust. Smiles while you burn.', color: '#ff5fa2', color2: '#ffb347',
     hp: 940, walk: 4.8, back: 3.8, jump: 19, jumpX: 5.2, dash: 13,
+    impact: 'fx_pixie_impact',
     anim: {
       idle: ['idle'], walk_f: ['walk_f', 'walk_f3', 'walk_f2', 'walk_f4'], walk_b: ['walk_b', 'walk_b2'], dash: ['dash', 'run_c'], backdash: ['dodge'],
       jump: ['jump'], fall: ['fall'], land: ['land'], crouch: ['crouch'],
@@ -159,12 +163,13 @@ const FIGHTERS = {
       s1: { name: 'Faerie Dart', pose: 'sp_release', wind: 'sp_startup', s: 12, a: 2, r: 22, special: 'shot', p: { frames: ['fx_pixie_flight_a', 'fx_pixie_flight_b'], fx: 'fx_pixie_flight_a', scale: 0.34, speed: 12, y: 215, dmg: 68, kb: 10, hitFx: 'fx_pixie_impact', hitScale: 0.4 }, sfx: 'cast' },
       s2: { name: 'Faerie Swarm', pose: 'sp1', wind: 'sp_charge', s: 11, a: 2, r: 26, special: 'fxBurst', p: { at: 'front', reach: 250, fx: 'fx_pixie_spawn', fxs: 0.65, cy: 220, w: 300, h: 340, hits: 3, every: 6, dur: 18, dmg: 70, chipDmg: 26, kb: 12 }, sfx: 'cast' },
       s3: { name: 'Ring of Fire', pose: 'sp2', wind: 'sp_charge', s: 11, a: 2, r: 26, special: 'fxBurst', p: { at: 'self', reach: 40, frames: ['fx_fire_spin_a', 'fx_fire_spin_b'], fx: 'fx_fire_spin_a', fxs: 0.75, cy: 200, w: 340, h: 420, hits: 2, every: 7, dur: 12, dmg: 85, chipDmg: 30, kb: 16, kd: true, launch: 16, inv: 8 }, sfx: 'cast' },
-      su: { name: 'Pixie Inferno', pose: 'su_release', wind: 'su_startup', s: 8, a: 2, r: 50, special: 'ultimate', p: { fx: 'fx_super', fxs: 1.05 }, super: true, sfx: 'super' },
+      su: { name: 'Pixie Inferno', pose: 'su_release', wind: 'su_startup', s: 8, a: 2, r: 50, special: 'ultimate', p: { fx: 'fx_fire_spin_b', fxs: 1.05 }, super: true, sfx: 'super' },
     },
   },
   starlena: {
     name: 'STAR LENA', tag: 'Dark stars, chains and a nail bat. Do not test her.', color: '#b65cff', color2: '#ffcf3f',
     hp: 1020, walk: 4.3, back: 3.3, jump: 19, jumpX: 5.2, dash: 13,
+    impact: 'fx_hex_impact',
     anim: {
       idle: ['idle'], walk_f: ['walk_f', 'walk_f3', 'walk_f2', 'walk_f4'], walk_b: ['walk_b', 'walk_b2'], dash: ['dash', 'run_c'], backdash: ['dodge'],
       jump: ['jump'], fall: ['fall'], land: ['land'], crouch: ['crouch'],
@@ -183,12 +188,13 @@ const FIGHTERS = {
       s1: { name: 'Dark Star', pose: 'sp_release', wind: 'sp_startup', s: 12, a: 2, r: 22, special: 'shot', p: { frames: ['fx_dark_rune_a', 'fx_dark_rune_b'], fx: 'fx_dark_rune_a', scale: 0.3, spin: 0.12, speed: 12.5, y: 220, dmg: 68, kb: 10, hitFx: 'fx_hex_impact', hitScale: 0.4 }, sfx: 'cast' },
       s2: { name: 'Midnight Swing', pose: 'sp1', wind: 'sp_charge', s: 11, a: 2, r: 26, special: 'fxBurst', p: { at: 'front', reach: 170, frames: ['fx_nail_bat_trail_a', 'fx_nail_bat_trail_b'], fx: 'fx_nail_bat_trail_a', fxs: 0.65, cy: 210, w: 300, h: 360, dmg: 110, kb: 20, kd: true, dur: 8 }, sfx: 'cast' },
       s3: { name: 'Pentagram Trap', pose: 'sp2', wind: 'sp_charge', s: 11, a: 2, r: 26, special: 'fxBurst', p: { at: 'opp', fx: 'fx_hex_impact', fxs: 0.7, cy: 150, w: 260, h: 300, delay: 22, dmg: 95, kb: 6, kd: true, launch: 15, lvl: 'low', dur: 10 }, sfx: 'cast' },
-      su: { name: 'Fallen Star', pose: 'su_release', wind: 'su_startup', s: 8, a: 2, r: 50, special: 'ultimate', p: { fx: 'fx_super', fxs: 1.0, drop: true }, super: true, sfx: 'super' },
+      su: { name: 'Fallen Star', pose: 'su_release', wind: 'su_startup', s: 8, a: 2, r: 50, special: 'ultimate', p: { fx: 'fx_shadow_claw', fxs: 1.0, drop: true }, super: true, sfx: 'super' },
     },
   },
   tommy: {
     name: 'JUST TOMMY', tag: 'Suns out, guns out. LED whip in hand.', color: '#2ef0b0', color2: '#ffcf3f',
     hp: 1000, walk: 4.5, back: 3.5, jump: 19, jumpX: 5.2, dash: 13,
+    impact: 'fx_slow_impact',
     anim: {
       idle: ['idle'], walk_f: ['walk_f', 'walk_f3', 'walk_f2', 'walk_f4'], walk_b: ['walk_b', 'walk_b2'], dash: ['dash', 'run_c'], backdash: ['dodge'],
       jump: ['jump'], fall: ['fall'], land: ['land'], crouch: ['crouch'],
@@ -213,6 +219,7 @@ const FIGHTERS = {
   bearflame: {
     name: 'BEARFLAME', tag: 'Fire poi, bear spirit. Hug at your own risk.', color: '#ff8a1a', color2: '#ffd23f',
     hp: 1080, walk: 4.1, back: 3.1, jump: 19, jumpX: 5.2, dash: 13,
+    impact: 'fx_fire_burst',
     anim: {
       idle: ['idle'], walk_f: ['walk_f', 'walk_f3', 'walk_f2', 'walk_f4'], walk_b: ['walk_b', 'walk_b2'], dash: ['dash', 'run_c'], backdash: ['dodge'],
       jump: ['jump'], fall: ['fall'], land: ['land'], crouch: ['crouch'],
@@ -228,15 +235,16 @@ const FIGHTERS = {
       c_light: { pose: 'c_atk', s: 5, a: 3, r: 10, dmg: 35, hs: 13, bs: 9, kb: 6, lvl: 'low', stop: 6, sfx: 'light', crouch: true },
       sweep: { pose: 'c_atk', s: 9, a: 4, r: 22, dmg: 80, hs: 0, bs: 14, kb: 10, lvl: 'low', stop: 10, sfx: 'heavy', kd: true, heavy: true, crouch: true },
       air: { pose: 'air_atk', s: 5, a: 10, r: 4, dmg: 70, hs: 17, bs: 11, kb: 7, lvl: 'high', stop: 8, sfx: 'heavy', air: true },
-      s1: { name: 'Ember Bear', pose: 'sp_release', wind: 'sp_startup', s: 12, a: 2, r: 22, special: 'shot', p: { fx: 'fx_bear_lunge', scale: 0.4, speed: 10, y: 210, w: 160, h: 140, dmg: 78, kb: 14, kd: true, hitFx: 'fx_fire_burst', hitScale: 0.45, trailFx: 'fx_ember_disperse', trailScale: 0.12 }, sfx: 'cast' },
-      s2: { name: 'Bear Claw', pose: 'sp1', wind: 'sp_charge', s: 11, a: 2, r: 26, special: 'fxBurst', p: { at: 'front', reach: 160, fx: 'fx_bear_emerge', fxs: 0.7, cy: 220, w: 280, h: 380, dmg: 115, kb: 22, kd: true, dur: 8 }, sfx: 'cast' },
+      s1: { name: 'Ember Bear', pose: 'sp_release', wind: 'sp_startup', s: 12, a: 2, r: 22, special: 'shot', p: { frames: ['fx_fire_spin_a', 'fx_fire_spin_b'], fx: 'fx_fire_spin_a', scale: 0.3, spin: 0.15, speed: 10.5, y: 210, dmg: 76, kb: 12, hitFx: 'fx_fire_burst', hitScale: 0.42, trailFx: 'fx_ember_disperse', trailScale: 0.1 }, sfx: 'cast' },
+      s2: { name: 'Bear Claw', pose: 'sp1', wind: 'sp_charge', s: 11, a: 2, r: 26, special: 'fxBurst', p: { at: 'front', reach: 160, fx: 'fx_bear_lunge', fxs: 0.7, cy: 220, w: 280, h: 380, dmg: 115, kb: 22, kd: true, dur: 8 }, sfx: 'cast' },
       s3: { name: 'Flame Wheel', pose: 'sp2', wind: 'sp_charge', s: 11, a: 2, r: 26, special: 'fxBurst', p: { at: 'self', reach: 60, frames: ['fx_fire_spin_a', 'fx_fire_spin_b'], fx: 'fx_fire_spin_a', fxs: 0.8, cy: 210, w: 360, h: 420, hits: 3, every: 6, dur: 18, dmg: 80, chipDmg: 28, kb: 16, kd: true, launch: 15, inv: 8 }, sfx: 'cast' },
-      su: { name: 'Inferno Grizzly', pose: 'su_release', wind: 'su_startup', s: 8, a: 2, r: 50, special: 'ultimate', p: { fx: 'fx_super', fxs: 1.1 }, super: true, sfx: 'super' },
+      su: { name: 'Inferno Grizzly', pose: 'su_release', wind: 'su_startup', s: 8, a: 2, r: 50, special: 'ultimate', p: { fx: 'fx_bear_emerge', fxs: 1.1 }, super: true, sfx: 'super' },
     },
   },
   brenda: {
     name: 'BRENDA', tag: 'Veggie Goddess. Pickle me this.', color: '#9be22b', color2: '#ff4fa0',
     hp: 980, walk: 4.6, back: 3.6, jump: 19, jumpX: 5.2, dash: 13,
+    impact: 'fx_veggie_impact',
     anim: {
       idle: ['idle'], walk_f: ['walk_f', 'walk_f3', 'walk_f2', 'walk_f4'], walk_b: ['walk_b', 'walk_b2'], dash: ['dash', 'run_c'], backdash: ['dodge'],
       jump: ['jump'], fall: ['fall'], land: ['land'], crouch: ['crouch'],
@@ -255,7 +263,7 @@ const FIGHTERS = {
       s1: { name: 'Cucumber Cannon', pose: 'sp_release', wind: 'sp_startup', s: 12, a: 2, r: 22, special: 'shot', p: { frames: ['fx_cucumber_a', 'fx_cucumber_b'], fx: 'fx_cucumber_a', scale: 0.34, speed: 12, y: 210, dmg: 72, kb: 12, hitFx: 'fx_veggie_impact', hitScale: 0.4 }, sfx: 'cast' },
       s2: { name: 'Pickle Me This', pose: 'sp1', wind: 'sp_charge', s: 11, a: 2, r: 26, special: 'pickle', p: {}, sfx: 'cast' },
       s3: { name: 'Veggie Storm', pose: 'sp2', wind: 'sp_charge', s: 11, a: 2, r: 26, special: 'fxBurst', p: { at: 'opp', fx: 'fx_greenhouse_b', fxs: 0.75, cy: 220, w: 300, h: 420, delay: 14, hits: 4, every: 6, dur: 26, dmg: 75, chipDmg: 24, kb: 10, kd: true }, sfx: 'cast' },
-      su: { name: 'The Final Harvest', pose: 'su_release', wind: 'su_startup', s: 8, a: 2, r: 50, special: 'ultimate', p: { fx: 'fx_super', fxs: 1.05 }, super: true, sfx: 'super' },
+      su: { name: 'The Final Harvest', pose: 'su_release', wind: 'su_startup', s: 8, a: 2, r: 50, special: 'ultimate', p: { fx: 'fx_cucumber_storm', fxs: 1.05 }, super: true, sfx: 'super' },
     },
   },
   lotusflow: {

@@ -1447,7 +1447,7 @@ for (const r of ROSTER) if (r.secret && !secretOpen(r.id)) r.playable = false;
 function unlockSecrets() {
   for (const r of ROSTER) if (r.secret && !r.playable) {
     r.playable = true; try { localStorage.setItem('tru_secret_' + r.id, '1'); } catch (e) {}
-    G.unlock = { id: r.id, t: 0 }; tell('secret_unlock', { fighter: r.id }); AU.sfx('super');
+    G.unlock = { id: r.id, t: 0 }; tell('secret_unlock', { fighter: r.id }); AU.sfx('super'); AU.loadVoice(r.id); AU.voice(r.id, 's2', true);
   }
 }
 function drawUnlock() {

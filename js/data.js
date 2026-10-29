@@ -527,5 +527,6 @@ const MOVE_LIST = [
 
 // voice clips (assets/voice/<name>.mp3), played on specials / intro / win / pick
 const VOICE = {
+  oof: { pick: 'oof_oof', intro: 'oof_oof', s1: 'oof_idiot', s2: 'oof_said', s3: 'oof_dilated', su: 'oof_eyes', hit: ['oof_oof', 'oof_idiot'], win: ['oof_said', 'oof_idiot', 'oof_dilated'] },
   tony: { pick: ['tony_g1', 'tony_g4'], intro: ['tony_g6', 'tony_g1'], s1: 'tony_slice', s2: 'tony_g5', s3: ['tony_g4', 'tony_g6'], su: 'tony_g1', hit: ['tony_g4', 'tony_g5', 'tony_g6'], win: ['tony_win', 'tony_mobile'] },
 };

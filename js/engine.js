@@ -1441,6 +1441,25 @@ const G = {
 };
 
 // tell the hosting page what happened (leaderboard + stats); harmless when played standalone
+// secret fighters: locked until you win a 1P vs CPU match or finish story mode (or ?unlock in the URL)
+function secretOpen(id) { try { return /[?&]unlock/.test(location.search) || localStorage.getItem('tru_secret_' + id) === '1'; } catch (e) { return false; } }
+for (const r of ROSTER) if (r.secret && !secretOpen(r.id)) r.playable = false;
+function unlockSecrets() {
+  for (const r of ROSTER) if (r.secret && !r.playable) {
+    r.playable = true; try { localStorage.setItem('tru_secret_' + r.id, '1'); } catch (e) {}
+    G.unlock = { id: r.id, t: 0 }; tell('secret_unlock', { fighter: r.id }); AU.sfx('super');
+  }
+}
+function drawUnlock() {
+  const u = G.unlock; if (!u) return; u.t++; if (u.t > 330) { G.unlock = null; return; }
+  const d = FIGHTERS[u.id], a = Math.min(1, u.t / 15, (330 - u.t) / 30), po = IMG.poster[u.id];
+  ctx.save(); ctx.globalAlpha = a; ctx.fillStyle = 'rgba(7,5,10,0.88)'; ctx.fillRect(0, H / 2 - 130, W, 260);
+  if (po) ctx.drawImage(po, W / 2 - 330, H / 2 - 120, 160, 240);
+  txt('SECRET FIGHTER UNLOCKED', W / 2 + 90, H / 2 - 40, 34, '#ffcf3f', 'center', FONT_H, '800', 6);
+  txt(d.name, W / 2 + 90, H / 2 + 30, 64, d.color, 'center', FONT_D, '400', 8);
+  txt(d.tag, W / 2 + 90, H / 2 + 80, 20, '#fff4e6', 'center', FONT_H, '600', 4);
+  ctx.restore();
+}
 function tell(ev, data) { try { if (parent !== window) parent.postMessage({ tru: ev, ...data }, '*'); } catch (e) {} }
 function startMatch() {
   G.runScore = 0; G.matchT0 = performance.now();
@@ -1561,6 +1580,7 @@ function updateFight() {
       if (champ) {
         G.lastWinner = champ; G.scene = 'results'; G.menuI = 0; G.t = 0;
         const won = champ === G.f[0];
+        if (won && G.mode === 'cpu') unlockSecrets();
         tell('match_end', { mode: G.mode, p1: G.f[0].id, p2: G.f[1].id, winner: champ.id, p1won: won, secs: Math.round((performance.now() - G.matchT0) / 1000),
           score: won && G.mode === 'cpu' ? G.runScore + (G.f[1].wins === 0 ? 1000 : 0) : 0, flawless: won && G.f[1].wins === 0 });
       }
@@ -1772,10 +1792,10 @@ function drawSelect(m) {
     const b = slotRect(i), p = IMG.portrait[r.id], col = FIGHTERS[r.id] ? FIGHTERS[r.id].color : r.color;
     ctx.fillStyle = '#07050a'; ctx.fillRect(b.x - 4, b.y - 4, b.w + 8, b.h + 8);
     const ih = b.h - 26;
-    if (p) { const sh = p.width * ih / b.w; ctx.drawImage(p, 0, Math.max(0, (p.height - sh) * 0.3), p.width, sh, b.x, b.y, b.w, ih); }
+    if (p) { const sh = p.width * ih / b.w; if (r.secret && !r.playable) ctx.filter = 'brightness(0)'; ctx.drawImage(p, 0, Math.max(0, (p.height - sh) * 0.3), p.width, sh, b.x, b.y, b.w, ih); ctx.filter = 'none'; if (r.secret && !r.playable) txt('?', b.x + b.w / 2, b.y + ih / 2, 46, '#ff3355', 'center', FONT_D, '400', 6); }
     else { const po = IMG.poster[r.id]; if (po) { const sw = po.width, sh = sw * ih / b.w; ctx.drawImage(po, 0, po.height * 0.17, sw, sh, b.x, b.y, b.w, ih); } }
     ctx.fillStyle = col; ctx.fillRect(b.x, b.y + b.h - 26, b.w, 26);
-    { const lb = r.playable ? (FIGHTERS[r.id].short || FIGHTERS[r.id].name.replace(' THE KID', '')) : 'SOON'; txt(lb, b.x + b.w / 2, b.y + b.h - 13, lb.length > 8 ? 13 : 16, '#07050a', 'center', FONT_H, '800', 0); }
+    { const lb = r.playable ? (FIGHTERS[r.id].short || FIGHTERS[r.id].name.replace(' THE KID', '')) : r.secret ? '???' : 'SOON'; txt(lb, b.x + b.w / 2, b.y + b.h - 13, lb.length > 8 ? 13 : 16, '#07050a', 'center', FONT_H, '800', 0); }
     [0, 1].forEach(pp => { if (G.sel[pp] === i) { ctx.strokeStyle = pp === 0 ? '#43f3d6' : '#ff2a3d'; ctx.lineWidth = 5; const o = pp ? 9 : 4; ctx.strokeRect(b.x - o, b.y - o, b.w + o * 2, b.h + o * 2); } });
     if (hitBtn(b) && r.playable) { const c = G.selDone[0] ? 1 : 0; G.sel[c] = i; confirmPick(c); CLICK = null; }
   });
@@ -1984,6 +2004,7 @@ function step() {
       break;
     }
   }
+  drawUnlock();
   PRESSED.clear(); CLICK = null;
 }
 function frame(now) {

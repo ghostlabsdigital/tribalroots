@@ -61,7 +61,7 @@ function drawFrame(ref, x, y, face, sc = PS, alpha = 1, flash = 0, shade = 0) {
 // ─────────────────────────────── characters: pose tables
 // new-style FX art named in a move (frames or fx), for story specials
 function mvFx(id, k) { const m = FIGHTERS[id] && FIGHTERS[id].moves[k], p = m && m.p, I = IMG[id] || {}; if (!p) return []; return (p.frames || (Array.isArray(p.fx) ? p.fx : [p.fx])).map(n => I[n]).filter(Boolean); }
-const NEW5 = new Set(['pixie', 'starlena', 'tommy', 'bearflame', 'brenda', 'josh', 'nate', 'chance', 'tony']);
+const NEW5 = new Set(['pixie', 'starlena', 'tommy', 'bearflame', 'brenda', 'josh', 'nate', 'chance', 'tony', 'oof']);
 function poseTable(id) {
   if (id === 'drew') {
     const mv = n => 'drew_move__' + n, cb = n => 'drew_combat__' + n;
@@ -1158,7 +1158,7 @@ function drawStoryResults(m) {
   rows.forEach(([k, v], i) => { txt(k, 700, 232 + i * 40, 26, '#bfb2c8', 'left', FONT_H, '800', 0); txt(String(v), 1020, 232 + i * 40, 30, '#fff4e6', 'right', FONT_H, '800', 0); });
   txt('RANK ' + rank(), 860, 412, 54, '#ff2a3d', 'center', FONT_D, '400', 8);
   const last = S.level >= LEVELS.length - 1;
-  menuList([last ? 'ROLL CREDITS' : 'NEXT LEVEL', 'CHAPTER SELECT'], 478, m, i => { AU.sfx('confirm'); if (i === 0) { if (last) { S.phase = 'credits'; S.creditT = 0; } else STORY.startLevel(S.level + 1); } else { S.phase = 'chapters'; S.menuI = Math.min(S.level + 1, LEVELS.length - 1); } }, 34, 52, 860);
+  menuList([last ? 'ROLL CREDITS' : 'NEXT LEVEL', 'CHAPTER SELECT'], 478, m, i => { AU.sfx('confirm'); if (i === 0) { if (last) { S.phase = 'credits'; S.creditT = 0; unlockSecrets(); } else STORY.startLevel(S.level + 1); } else { S.phase = 'chapters'; S.menuI = Math.min(S.level + 1, LEVELS.length - 1); } }, 34, 52, 860);
   drawShowCard(600, 562, 520, 140);
 }
 function drawGameOver(m) {

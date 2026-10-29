@@ -1,7 +1,7 @@
 // First-party analytics. POST {event, ...data} from the site. Stores a rolling log plus daily counters.
 import { ready, redis, pipe, who, today, send, body } from './_lib.js';
 
-const EVENTS = new Set(['page_view', 'game_start', 'match_start', 'match_end', 'music_play', 'ticket_click', 'ad_click', 'card_click', 'ghostlabs_click', 'message_post', 'score_post', 'story_start', 'story_clear', 'story_complete']);
+const EVENTS = new Set(['page_view', 'game_start', 'match_start', 'match_end', 'music_play', 'ticket_click', 'ad_click', 'card_click', 'ghostlabs_click', 'message_post', 'score_post', 'story_start', 'story_clear', 'story_complete', 'secret_unlock']);
 
 export default async function handler(req, res) {
   if (!ready || req.method !== 'POST') return send(res, 204, {});

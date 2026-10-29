@@ -23,6 +23,7 @@ const ROSTER = [
   { id: 'nate', playable: true },
   { id: 'chance', playable: true },
   { id: 'tony', playable: true },
+  { id: 'oof', playable: true, secret: true },
 ];
 
 const STAGES = [
@@ -93,7 +94,7 @@ const FIGHTERS = {
     },
   },
   tony: {
-    name: 'GABAGOOL TONY', short: 'TONY', tag: 'Cold cuts. Hot temper. Big appetite.', color: '#e0303a', color2: '#f2d6a2',
+    name: 'TONY SOPRANO', short: 'TONY', tag: 'The Boss. Gabagool on deck.', color: '#e0303a', color2: '#f2d6a2',
     hp: 1120, walk: 4.3, back: 3.5, jump: 17, jumpX: 4.6, dash: 12,
     impact: 'fx_slice_burst',
     anim: {
@@ -115,6 +116,31 @@ const FIGHTERS = {
       s2: { name: 'Hero Sandwich', pose: 's3_point', winds: ['s3_ready', 's3_wind'], s: 14, a: 2, r: 24, special: 'shot', p: { fx: 'fx_sandwich', scale: 0.36, spin: 0.18, speed: 10, y: 250, w: 160, h: 120, dmg: 92, kb: 16, kd: true, launch: 13, hitFx: 'fx_pepper_burst', hitScale: 0.5, trailFx: 'fx_wrap', trailScale: 0.1 }, sfx: 'cast' },
       s3: { name: 'Call Paulie', pose: 'phone_point', winds: ['phone_call'], s: 14, a: 2, r: 24, special: 'fxBurst', p: { at: 'opp', frames: ['fx_rings', 'fx_spiral', 'fx_pepper_burst'], seq: true, fx: 'fx_spiral', fxs: 0.75, cy: 220, w: 300, h: 400, delay: 18, hits: 4, every: 6, dur: 24, dmg: 84, chipDmg: 24, kb: 9, kd: true }, sfx: 'cast' },
       su: { name: 'Cold Cut Cyclone', pose: 's2_throw', winds: ['s2_reach', 's2_hold'], wind: 's2_hold', s: 10, a: 2, r: 50, special: 'ultimate', p: { frames: ['fx_slices', 'fx_vortex', 'fx_salami_vortex'], fx: 'fx_salami_vortex', fxs: 1.05 }, super: true, sfx: 'super' },
+    },
+  },
+  oof: {
+    name: 'OOF TO YOU', short: 'OOF', tag: 'The Curse. Secret fighter.', color: '#ff3355', color2: '#5b8cff',
+    hp: 940, walk: 4.6, back: 3.8, jump: 18, jumpX: 5, dash: 13,
+    impact: 'fx_glitch_ring', dizzyFx: 'fx_eye',
+    anim: {
+      idle: ['idle'], walk_f: ['walk_1', 'walk_2', 'walk_3', 'walk_4'], walk_b: ['walk_4', 'walk_3', 'walk_2', 'walk_1'], dash: ['run_a', 'leap_a', 'run_c', 'leap_b'], backdash: ['hunch'],
+      jump: ['jump_tuck'], fall: ['jump_fall'], land: ['crouch'], crouch: ['crouch'],
+      block: ['block_a'], c_block: ['c_block'], hit_l: ['hit_l'], hit_h: ['hit_h'], launch: ['hit_air'],
+      ground: ['ground'], getup: ['getup'], stun: ['stagger', 'stagger_b'],
+      entrance: ['wag'], victory: ['victory'], defeat: ['defeat_sit'],
+    },
+    moves: {
+      lp: { pose: 'jab', winds: ['p_idle'], recov: 'p_guard', s: 4, a: 3, r: 8, dmg: 40, hs: 14, bs: 9, kb: 6, lvl: 'mid', stop: 6, sfx: 'light' },
+      lk: { pose: 'lk', winds: ['lk_wind'], recov: 'lk_rec', s: 5, a: 3, r: 10, dmg: 50, hs: 15, bs: 10, kb: 8, lvl: 'mid', stop: 7, sfx: 'light' },
+      hp: { pose: 'hp', winds: ['hp_wind'], recov: 'p_guard2', s: 8, a: 4, r: 16, dmg: 88, hs: 20, bs: 14, kb: 14, lvl: 'mid', stop: 10, sfx: 'heavy', heavy: true, lunge: 5 },
+      hk: { pose: 'hk_high', winds: ['hk_wind'], recov: 'lk_rec', s: 10, a: 4, r: 18, dmg: 98, hs: 21, bs: 15, kb: 16, lvl: 'mid', stop: 11, sfx: 'heavy', heavy: true },
+      c_light: { pose: 'sweep', s: 5, a: 3, r: 10, dmg: 36, hs: 13, bs: 9, kb: 6, lvl: 'low', stop: 6, sfx: 'light', crouch: true },
+      sweep: { pose: 'sweep', winds: ['crouch'], s: 8, a: 4, r: 20, dmg: 80, hs: 0, bs: 14, kb: 10, lvl: 'low', stop: 10, sfx: 'heavy', kd: true, heavy: true, crouch: true },
+      air: { pose: 'hk', s: 5, a: 10, r: 4, dmg: 70, hs: 17, bs: 11, kb: 7, lvl: 'high', stop: 8, sfx: 'heavy', air: true },
+      s1: { name: 'Slipper Toss', pose: 'hp', winds: ['hp_wind'], s: 10, a: 2, r: 18, special: 'shot', p: { fx: 'fx_slipper', scale: 0.32, spin: 0.35, speed: 13.5, y: 210, w: 130, h: 100, dmg: 66, kb: 11, hitFx: 'fx_fluff', hitScale: 0.42, trailFx: 'fx_slippers', trailScale: 0.08 }, sfx: 'cast' },
+      s2: { name: 'Oof To You', pose: 'curse_cast', winds: ['curse_wind'], s: 12, a: 2, r: 24, special: 'shot', p: { frames: ['fx_cone', 'fx_eye_beam'], fx: 'fx_cone', scale: 0.5, speed: 9, y: 220, w: 220, h: 170, dmg: 88, kb: 15, kd: true, launch: 12, hitFx: 'fx_glitch_ring', hitScale: 0.5, trailFx: 'fx_wave', trailScale: 0.14 }, sfx: 'cast' },
+      s3: { name: 'Evil Eye', pose: 'point_a', winds: ['ear', 'shush'], s: 14, a: 2, r: 24, special: 'fxBurst', p: { at: 'opp', frames: ['fx_eye', 'fx_eyes3', 'fx_shatter'], seq: true, fx: 'fx_eye', fxs: 0.7, cy: 230, w: 280, h: 380, delay: 18, hits: 3, every: 7, dur: 22, dmg: 82, chipDmg: 22, kb: 9, kd: true }, sfx: 'cast' },
+      su: { name: 'The Curse', pose: 'curse_cast', winds: ['wag', 'crouch_reach'], wind: 'crouch_reach', s: 10, a: 2, r: 50, special: 'ultimate', p: { frames: ['fx_eyes3', 'fx_swirl', 'fx_ring', 'fx_shatter'], fx: 'fx_ring', fxs: 1.05 }, super: true, sfx: 'super' },
     },
   },
   chance: {

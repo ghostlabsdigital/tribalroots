@@ -419,7 +419,7 @@
   });
   const api = (path, opt) => fetch(path, opt).then(async r => ({ ok: r.ok, status: r.status, j: await r.json().catch(() => ({})) }));
   const ago = t => { const s = (Date.now() - t) / 1000; return s < 60 ? 'now' : s < 3600 ? Math.floor(s / 60) + 'm' : s < 86400 ? Math.floor(s / 3600) + 'h' : Math.floor(s / 86400) + 'd'; };
-  const FN = { lotusflow: 'lotusflow', ghostlabs: 'GhostLabs', goaty: 'Goaty', sunshine: 'Sunshine', rochelle: 'Rochelle', shea: 'Shea', djmoo: 'DJ Moo', sara: 'Sara', pixie: 'Pixie', starlena: 'Star Lena', tommy: 'Just Tommy', bearflame: 'Bearflame', brenda: 'Brenda', drew: 'Drew', josh: 'Josh Breen', nate: 'Natty Nate', chance: 'Chance' , tony: 'Gabagool Tony' };
+  const FN = { lotusflow: 'lotusflow', ghostlabs: 'GhostLabs', goaty: 'Goaty', sunshine: 'Sunshine', rochelle: 'Rochelle', shea: 'Shea', djmoo: 'DJ Moo', sara: 'Sara', pixie: 'Pixie', starlena: 'Star Lena', tommy: 'Just Tommy', bearflame: 'Bearflame', brenda: 'Brenda', drew: 'Drew', josh: 'Josh Breen', nate: 'Natty Nate', chance: 'Chance' , tony: 'Tony Soprano', oof: 'Oof To You' };
 
   // ── leaderboard
   let backend = true;
@@ -466,6 +466,7 @@
     if (d.tru === 'start') track('game_start');
     if (/^story_/.test(d.tru)) track(d.tru, { p1: d.p, level: d.level, mode: 'story' });
     if (d.tru === 'ticket_click') track('ticket_click', { url: d.url, path: 'game' });
+    if (d.tru === 'secret_unlock') track('secret_unlock', { p1: d.fighter });
     if (d.tru === 'match_start') track('match_start', { p1: d.p1, p2: d.p2, stage: d.stage, mode: d.mode });
     if (d.tru === 'match_end') {
       track('match_end', { p1: d.p1, p2: d.p2, winner: d.winner, p1won: d.p1won, secs: d.secs, mode: d.mode, score: d.score });

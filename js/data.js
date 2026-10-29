@@ -48,7 +48,7 @@ const FIGHTERS = {
     anim: {
       idle: ['idle'], walk_f: ['walk_f', 'walk_f2'], walk_b: ['idle'], dash: ['run_a', 'run_b'], backdash: ['dodge'],
       jump: ['jump'], fall: ['jump'], land: ['c_block'], crouch: ['c_block'],
-      block: ['block'], c_block: ['c_block'], hit_l: ['hit_l'], hit_h: ['hit_h'], launch: ['hit_air'],
+      block: ['block'], c_block: ['c_block'], hit_l: ['hit_h'], hit_h: ['hit_h'], launch: ['hit_air'],
       ground: ['ground'], getup: ['getup'], stun: ['stun'],
       entrance: ['talk_a', 'talk_b'], victory: ['talk_b'], defeat: ['ground'],
     },
@@ -88,7 +88,7 @@ const FIGHTERS = {
       s1: { name: 'Sack Meteor', pose: 'sack_meteor', wind: 'toe_pop', s: 11, a: 2, r: 20, special: 'shot', p: { frames: ['fx_hackysack_a', 'fx_hackysack_b'], fx: 'fx_hackysack_a', scale: 0.22, spin: 0.25, speed: 13, y: 200, dmg: 72, kb: 12, hitFx: 'fx_vitamin_blast', hitScale: 0.4, trailFx: 'jx_drop', trailScale: 0.08 }, sfx: 'cast' },
       s2: { name: 'Juice Charge', pose: 'juice_charge', wind: 'juice_sip', s: 10, a: 2, r: 22, special: 'shot', p: { fx: ['fx_juice_jar_a', 'fx_juice_jar_b', 'fx_juice_jar_a'], n: 3, scale: 0.26, spin: 0.1, speed: 12, stagger: 0.12, y: 190, dy: 70, vy: 0.6, dmg: 34, kb: 8, hitFx: 'jx_splat', hitScale: 0.35 }, sfx: 'cast' },
       s3: { name: 'Flow State', pose: 'flow_state', wind: 'around_world', s: 9, a: 2, r: 24, special: 'shot', p: { fx: 'jx_wave', scale: 0.55, speed: 8, y: 70, w: 230, h: 140, pierce: 2, dmg: 45, kb: 10, lvl: 'low', kd: true, hitFx: 'jx_burst', hitScale: 0.4, trailFx: 'jx_drop', trailScale: 0.07 }, sfx: 'cast' },
-      su: { name: '100% Natural', pose: 'natural', wind: 'juice_charge', s: 8, a: 2, r: 50, special: 'ultimate', p: { fx: 'fx_vitamin_blast', fxs: 1.05 }, super: true, sfx: 'super' },
+      su: { name: '100% Natural', pose: 'su_nate_rel', winds: ['su_nate_wind'], wind: 'su_nate_wind', s: 8, a: 2, r: 50, special: 'ultimate', p: { fx: 'fx_vitamin_blast', fxs: 1.05 }, super: true, sfx: 'super' },
     },
   },
   chance: {
@@ -151,7 +151,7 @@ const FIGHTERS = {
       jump: ['jump'], fall: ['fall'], land: ['land'], crouch: ['crouch'],
       block: ['block'], c_block: ['c_block'], hit_l: ['hit_l'], hit_h: ['hit_h'], launch: ['hit_air'],
       ground: ['ground'], getup: ['getup'], stun: ['stun', 'stun_2'],
-      entrance: ['entrance', 'taunt'], victory: ['victory'], defeat: ['defeat'],
+      entrance: ['entrance', 'taunt'], victory: ['victory', 'victory_b'], defeat: ['defeat'],
     },
     moves: {
       lp: { pose: 'lp', s: 4, a: 3, r: 8, dmg: 40, hs: 14, bs: 9, kb: 6, lvl: 'mid', stop: 6, sfx: 'light' },
@@ -214,7 +214,7 @@ const FIGHTERS = {
       s1: { name: 'Bucket Barrage', pose: 'whip_heavy', wind: 'whip_ready', s: 11, a: 2, r: 22, special: 'shot', p: { frames: ['fx_bucket_flight_a', 'fx_bucket_flight_b'], fx: 'fx_bucket_flight_a', scale: 0.36, speed: 13, y: 215, dmg: 68, kb: 10, spawnFx: 'fx_bucket_spawn', spawnScale: 0.28, hitFx: 'fx_slow_impact', hitScale: 0.38 }, sfx: 'cast' },
       s2: { name: 'Neon Snare', pose: 'whip_snare', wind: 'whip_ready', s: 12, a: 2, r: 26, special: 'fxBurst', p: { at: 'opp', frames: ['fx_bass_ring_a', 'fx_bass_ring_b'], fx: 'fx_bass_ring_a', fxs: 0.6, cy: 210, w: 260, h: 360, delay: 12, dmg: 60, hs: 46, kb: 4, dur: 10 }, sfx: 'cast' },
       s3: { name: 'Spiral Guard', pose: 'whip_spiral', wind: 'whip_ready', s: 9, a: 2, r: 24, special: 'fxBurst', p: { at: 'self', reach: 20, fx: 'fxw_spiral', fxs: 0.75, cy: 210, w: 360, h: 420, hits: 3, every: 6, dur: 18, dmg: 78, chipDmg: 26, kb: 16, kd: true, launch: 15, inv: 10 }, sfx: 'cast' },
-      su: { name: 'Ultra Whip', pose: 'whip_ultra', wind: 'whip_ready', s: 8, a: 2, r: 50, special: 'ultimate', p: { fx: 'fxw_ultra', fxs: 1.05 }, super: true, sfx: 'super' },
+      su: { name: 'Ultra Whip', pose: 'su_tommy_rel', winds: ['su_tommy_wind'], wind: 'su_tommy_wind', s: 8, a: 2, r: 50, special: 'ultimate', p: { fx: 'fxw_ultra', fxs: 1.05 }, super: true, sfx: 'super' },
     },
   },
   bearflame: {
@@ -226,7 +226,7 @@ const FIGHTERS = {
       jump: ['jump'], fall: ['fall'], land: ['land'], crouch: ['crouch'],
       block: ['block'], c_block: ['c_block'], hit_l: ['hit_l'], hit_h: ['hit_h'], launch: ['hit_air'],
       ground: ['ground'], getup: ['getup'], stun: ['stun', 'stun_2'],
-      entrance: ['entrance', 'taunt'], victory: ['victory'], defeat: ['defeat'],
+      entrance: ['entrance', 'taunt'], victory: ['victory', 'victory_b'], defeat: ['defeat'],
     },
     moves: {
       lp: { pose: 'lp', s: 4, a: 3, r: 8, dmg: 40, hs: 14, bs: 9, kb: 6, lvl: 'mid', stop: 6, sfx: 'light' },
@@ -251,7 +251,7 @@ const FIGHTERS = {
       jump: ['jump'], fall: ['fall'], land: ['land'], crouch: ['crouch'],
       block: ['block'], c_block: ['c_block'], hit_l: ['hit_l'], hit_h: ['hit_h'], launch: ['hit_air'],
       ground: ['ground'], getup: ['getup'], stun: ['stun', 'stun_2'],
-      entrance: ['entrance', 'taunt'], victory: ['victory'], defeat: ['defeat'],
+      entrance: ['entrance', 'taunt'], victory: ['victory'], defeat: ['defeat', 'defeat_b'],
     },
     moves: {
       lp: { pose: 'lp', s: 4, a: 3, r: 8, dmg: 40, hs: 14, bs: 9, kb: 6, lvl: 'mid', stop: 6, sfx: 'light' },
@@ -338,7 +338,7 @@ const FIGHTERS = {
       s1: { name: 'Bass Release', pose: 'gx_bass_cannon', wind: 'gx_bass_charge', s: 15, a: 2, r: 24, special: 'bassRelease', sfx: 'cast' },
       s2: { name: 'Bass Stomp', pose: 'gx_horn_blast', s: 12, a: 2, r: 26, special: 'bassStomp', sfx: 'boom' },
       s3: { name: 'Wave Ride', pose: 'gx_wave_ride', s: 9, a: 2, r: 30, special: 'rush', p: { speed: 15, dur: 22, w: 240, h: 280, hits: 3, every: 7, dmg: 70, chipDmg: 30, kd: true }, sfx: 'cast' },
-      su: { name: 'Goat Finale', pose: 'gx_goat_release', wind: 'gx_bass_charge', s: 8, a: 2, r: 46, special: 'goatFinale', super: true, sfx: 'super' },
+      su: { name: 'Goat Finale', pose: 'su_goaty_rel', winds: ['su_goaty_wind'], wind: 'su_goaty_wind', s: 8, a: 2, r: 46, special: 'goatFinale', super: true, sfx: 'super' },
     },
   },
   rochelle: {
@@ -397,7 +397,7 @@ const FIGHTERS = {
     anim: {
       idle: ['idle'], walk_f: ['walk_f', 'walk_f2'], walk_b: ['walk_b'], dash: ['dash'], backdash: ['walk_b'],
       jump: ['jump'], fall: ['jump'], land: ['land'], crouch: ['crouch'],
-      block: ['block'], c_block: ['crouch'], hit_l: ['hit_l', 'stagger'], hit_h: ['hit_h'], launch: ['hit_h'],
+      block: ['block'], c_block: ['c_block'], hit_l: ['hit_l', 'stagger'], hit_h: ['hit_h'], launch: ['hit_h'],
       ground: ['ground'], getup: ['getup'], stun: ['stun'],
       entrance: ['entrance', 'taunt', 'gx_bass_stomp'], victory: ['victory', 'gx_sonic_lasso'], defeat: ['defeat'],
     },
@@ -406,9 +406,9 @@ const FIGHTERS = {
       lk: { pose: 'lk', s: 6, a: 3, r: 10, dmg: 50, hs: 15, bs: 10, kb: 8, lvl: 'mid', stop: 7, sfx: 'light', hy: 290, hh: 90 },
       hp: { pose: 'hp', s: 8, a: 4, r: 16, dmg: 86, hs: 20, bs: 14, kb: 14, lvl: 'mid', stop: 10, sfx: 'heavy', heavy: true, hy: 285, hh: 80, lunge: 6 },
       hk: { pose: 'lk', s: 10, a: 4, r: 18, dmg: 96, hs: 21, bs: 15, kb: 17, lvl: 'mid', stop: 11, sfx: 'heavy', heavy: true, hy: 290, hh: 100, lunge: 7, name: 'Heel Drop' },
-      c_light: { pose: 'c_atk', s: 4, a: 3, r: 10, dmg: 34, hs: 13, bs: 9, kb: 6, lvl: 'low', stop: 6, sfx: 'light', crouch: true },
-      sweep: { pose: 'c_atk', s: 8, a: 4, r: 21, dmg: 78, hs: 0, bs: 14, kb: 10, lvl: 'low', stop: 10, sfx: 'heavy', kd: true, heavy: true, crouch: true },
-      air: { pose: 'air_atk', s: 5, a: 10, r: 4, dmg: 70, hs: 17, bs: 11, kb: 7, lvl: 'high', stop: 8, sfx: 'heavy', air: true },
+      c_light: { pose: 'c_atk', winds: ['moo_c_wind'], s: 4, a: 3, r: 10, dmg: 34, hs: 13, bs: 9, kb: 6, lvl: 'low', stop: 6, sfx: 'light', crouch: true },
+      sweep: { pose: 'c_atk', winds: ['moo_c_wind'], s: 8, a: 4, r: 21, dmg: 78, hs: 0, bs: 14, kb: 10, lvl: 'low', stop: 10, sfx: 'heavy', kd: true, heavy: true, crouch: true },
+      air: { pose: 'air_atk', winds: ['moo_air_wind'], recov: 'moo_air_rec', s: 5, a: 10, r: 4, dmg: 70, hs: 17, bs: 11, kb: 7, lvl: 'high', stop: 8, sfx: 'heavy', air: true },
       s1: { name: 'Cowprint Cannon', pose: 'moo_bell_thrust', winds: ['moo_bell_hold', 'moo_bell_raise'], recov: 'moo_bell_hold', s: 11, a: 2, r: 22, special: 'shot', p: { frames: ['mfx_bell_a', 'mfx_bell_b'], fx: 'mfx_bell_a', scale: 0.4, speed: 12, y: 220, w: 150, h: 120, dmg: 72, kb: 12, hitFx: 'mfx_burst', hitScale: 0.42, trailFx: 'mfx_hooves_a', trailScale: 0.1 }, sfx: 'cast' },
       s2: { name: 'Moo Drop', pose: 'gx_moo_drop', winds: ['moo_knee'], s: 8, a: 2, r: 44, special: 'mooDropLeap', onLand: 'mooDropLand', sfx: 'jump' },
       s3: { name: 'Cow Wave', pose: 'moo_push', winds: ['moo_crouch'], s: 9, a: 2, r: 26, special: 'shot', p: { frames: ['mfx_ring_a', 'mfx_ring_b', 'mfx_ring_c'], fx: 'mfx_ring_a', scale: 0.42, speed: 9, y: 215, w: 170, h: 200, pierce: 2, dmg: 40, kb: 10, kd: true, hitFx: 'mfx_arc_a', hitScale: 0.4, trailFx: 'mfx_hooves_b', trailScale: 0.1 }, sfx: 'cast' },

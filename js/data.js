@@ -48,7 +48,7 @@ const FIGHTERS = {
     anim: {
       idle: ['idle'], walk_f: ['walk_f', 'walk_f2'], walk_b: ['idle'], dash: ['run_a', 'run_b'], backdash: ['dodge'],
       jump: ['jump'], fall: ['jump'], land: ['c_block'], crouch: ['c_block'],
-      block: ['block'], c_block: ['c_block'], hit_l: ['hit_h'], hit_h: ['hit_h'], launch: ['hit_air'],
+      block: ['block'], c_block: ['c_block'], hit_l: ['hit_l'], hit_h: ['hit_h'], launch: ['hit_air'],
       ground: ['ground'], getup: ['getup'], stun: ['stun'],
       entrance: ['talk_a', 'talk_b'], victory: ['talk_b'], defeat: ['ground'],
     },

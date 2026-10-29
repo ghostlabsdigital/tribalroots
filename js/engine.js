@@ -44,9 +44,10 @@ function ensureFighters(ids) {
 }
 function fighterReady(id) { return !!(IMG[id] && IMG[id].idle); }
 const tintCache = new Map();
+const BLANK = document.createElement("canvas"); BLANK.width = BLANK.height = 1;
 function tinted(img, color) {
   // cache on the image itself (keying by img.src hashed the whole data URI every call = stutter on hits)
-  const m = img._tint || (img._tint = {});
+  if (!img) return BLANK; const m = img._tint || (img._tint = {});
   if (m[color]) return m[color];
   const c = document.createElement('canvas'); c.width = img.width; c.height = img.height;
   const x = c.getContext('2d'); x.drawImage(img, 0, 0); x.globalCompositeOperation = 'source-in'; x.fillStyle = color; x.fillRect(0, 0, c.width, c.height);
@@ -592,6 +593,7 @@ class Fighter {
     }
     // afterimages
     for (const gh of this.ghosts) {
+      if (!gh.img) continue;
       ctx.save(); ctx.globalAlpha = gh.a; ctx.translate(gh.x, gh.gy); ctx.scale(gh.f * SC, SC);
       ctx.drawImage(tinted(gh.img, this.def.color), -gh.ax, -gh.h); ctx.restore();
     }
@@ -629,7 +631,7 @@ class Fighter {
     const want = this.state === 'dash' || (this.state === 'attack' && (this.move.special || this.move.super)) || this.state === 'backdash';
     if (want && this.frames % 3 === 0) {
       const pose = this.pose(), info = this.man[pose];
-      if (info) this.ghosts.push({ x: this.x, gy: GY - this.y, f: this.facing, img: this.img[pose], ax: info.ax, h: info.h, a: 0.35 });
+      if (info && this.img[pose]) this.ghosts.push({ x: this.x, gy: GY - this.y, f: this.facing, img: this.img[pose], ax: info.ax, h: info.h, a: 0.35 });
     }
     for (const g of this.ghosts) g.a -= 0.04;
     this.ghosts = this.ghosts.filter(g => g.a > 0);

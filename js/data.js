@@ -442,12 +442,13 @@ const FIGHTERS = {
   sara: {
     name: 'SARA', tag: 'The Butterfly Princess. Unexpectedly dangerous.', color: '#ff8fc8', color2: '#d9ffe6',
     hp: 960, walk: 4.7, back: 3.7, jump: 19, jumpX: 5.4, dash: 13.5,
+    impact: 'sfx_thorn_burst_a',
     anim: {
       idle: ['idle'], walk_f: ['walk_f', 'walk_f2'], walk_b: ['walk_b'], dash: ['dash'], backdash: ['walk_b'],
       jump: ['jump'], fall: ['jump'], land: ['land'], crouch: ['crouch'],
       block: ['block'], c_block: ['c_block'], hit_l: ['hit_l', 'stagger'], hit_h: ['hit_h'], launch: ['hit_h'],
       ground: ['ground'], getup: ['getup'], stun: ['stun'],
-      entrance: ['idle', 'gx_butterfly_charge'], victory: ['jump', 'gx_petal_dance'], defeat: ['ground'],
+      entrance: ['sa_dance_ready', 'sa_twirl_b'], victory: ['sa_spread_b', 'sa_twirl_c'], defeat: ['ground'],
     },
     moves: {
       lp: { pose: 'lp', s: 4, a: 3, r: 8, dmg: 40, hs: 14, bs: 9, kb: 6, lvl: 'mid', stop: 6, sfx: 'light', hy: 300, hh: 70 },
@@ -457,10 +458,10 @@ const FIGHTERS = {
       c_light: { pose: 'c_atk', s: 5, a: 3, r: 10, dmg: 35, hs: 13, bs: 9, kb: 6, lvl: 'low', stop: 6, sfx: 'light', crouch: true },
       sweep: { pose: 'c_atk', s: 9, a: 4, r: 22, dmg: 80, hs: 0, bs: 14, kb: 10, lvl: 'low', stop: 10, sfx: 'heavy', kd: true, heavy: true, crouch: true },
       air: { pose: 'air_atk', s: 5, a: 10, r: 4, dmg: 70, hs: 17, bs: 11, kb: 7, lvl: 'high', stop: 8, sfx: 'heavy', air: true },
-      s1: { name: 'Butterfly Kiss', pose: 'gx_monarch_release', s: 11, a: 2, r: 22, special: 'butterflyKiss', sfx: 'cast' },
-      s2: { name: 'Vine Snare', pose: 'gx_vine_snare', s: 12, a: 2, r: 26, special: 'vineSnare', sfx: 'cast' },
-      s3: { name: 'Bloom Burst', pose: 'gx_bloom_burst', wind: 'gx_bloom_cast', s: 10, a: 2, r: 28, special: 'burst', p: { reach: 190, w: 280, h: 340, cy: 210, hits: 2, every: 7, dur: 12, dmg: 80, chipDmg: 30, kb: 18, kd: true }, sfx: 'cast' },
-      su: { name: 'Queen of Spring', pose: 'gx_monarch_super', wind: 'gx_super_windup', s: 8, a: 2, r: 50, special: 'queenOfSpring', super: true, sfx: 'super' },
+      s1: { name: 'Butterfly Kiss', pose: 'sa_palm', winds: ['sa_gather'], recov: 'sa_ready', s: 11, a: 2, r: 22, special: 'shot', p: { frames: ['sfx_fly_a', 'sfx_fly_big'], fx: 'sfx_fly_a', scale: 0.36, speed: 11.5, y: 215, w: 150, h: 120, dmg: 70, kb: 10, spawnFx: 'sfx_bud_b', spawnScale: 0.25, hitFx: 'sfx_bloom_burst', hitScale: 0.42, trailFx: 'sfx_petal_swirl', trailScale: 0.1 }, sfx: 'cast' },
+      s2: { name: 'Vine Snare', pose: 'sa_point', winds: ['sa_low'], recov: 'sa_ready', s: 12, a: 2, r: 26, special: 'fxBurst', p: { at: 'opp', frames: ['sfx_vine_a', 'sfx_vine_b', 'sfx_vine_c', 'sfx_vine_d', 'sfx_vine_wrap', 'sfx_vine_wrap'], seq: true, fx: 'sfx_vine_wrap', fxs: 0.7, cy: 200, w: 260, h: 360, delay: 12, dmg: 65, hs: 46, kb: 4, dur: 14 }, sfx: 'cast' },
+      s3: { name: 'Bloom Burst', pose: 'sa_spread_b', winds: ['sa_dance_ready', 'sa_spread_a'], recov: 'sa_ready', s: 10, a: 2, r: 28, special: 'fxBurst', p: { at: 'front', reach: 190, frames: ['sfx_bud_a', 'sfx_bud_b', 'sfx_bloom_a', 'sfx_bloom_b', 'sfx_bloom_burst', 'sfx_petal_swirl'], seq: true, fx: 'sfx_bloom_b', fxs: 0.7, cy: 210, w: 280, h: 340, hits: 2, every: 7, dur: 14, dmg: 82, chipDmg: 28, kb: 16, kd: true }, sfx: 'cast' },
+      su: { name: 'Queen of Spring', pose: 'sa_twirl_c', winds: ['sa_twirl_a', 'sa_twirl_b'], wind: 'sa_twirl_a', s: 8, a: 2, r: 50, special: 'ultimate', p: { frames: ['sfx_fly_swarm_a', 'sfx_thorn_burst_a', 'sfx_wing_slash_a', 'sfx_monarch_side', 'sfx_thorn_burst_b', 'sfx_monarch'], fx: 'sfx_monarch', fxs: 0.95, cy: 220, under: 'sfx_thorn_burst_b' }, super: true, sfx: 'super' },
     },
   },
 };

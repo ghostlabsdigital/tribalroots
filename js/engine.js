@@ -781,16 +781,26 @@ const SPECIALS = {
         if (this.x < -260 || this.x > W + 260) this.dead = true;
       },
       draw() {
-        let fr;
-        if (this.hitT) fr = frame('vgx_paw');
+        let fr; const NEW = !!I.vito_run_a;
+        if (NEW && this.t < 16 && I.vfx_paw_sigil) fxDraw(I.vfx_paw_sigil, this.x, GY - 120, 0.32 + this.t * 0.01, this.dir, clamp(1 - (this.t - 8) / 8, 0, 1), 0.5);
+        if (NEW && this.hitT && this.hitT < 18 && I.vfx_ground_burst) fxDraw(I.vfx_ground_burst, this.x + this.dir * 70, GY - 70, 0.42, this.dir, clamp(1 - this.hitT / 18, 0, 1), 0.4);
+        if (NEW && this.hitT && this.hitT < 12 && I.vfx_claw_slash) fxDraw(I.vfx_claw_slash, this.x + this.dir * 90, GY - 120, 0.38, this.dir, clamp(1 - this.hitT / 12, 0, 1), 0.4);
+        if (NEW && this.t > 14 && !this.done && this.t % 6 === 0 && I.vfx_paw_streak) sprite(I.vfx_paw_streak, this.x - this.dir * 90, GY - this.y - 70, 0.2, 10, this.dir, 0.004);
+        if (NEW) {
+          if (this.hitT) fr = frame(this.hitT < 14 ? 'vito_paw_slam' : 'vito_land_recover');
+          else if (this.t < 14) fr = frame('vito_land_recover');
+          else if (this.y > 0) fr = frame(I.vito_leap_big ? 'vito_leap_big' : 'vito_leap_apex');
+          else fr = frame(['vito_run_a', 'vito_run_pass', 'vito_run_b', 'vito_run_pass'][(this.t >> 2) % 4]);
+        }
+        else if (this.hitT) fr = frame('vgx_paw');
         else if (this.t < 10) fr = frame('vgx_portal');
         else if (this.t < 14) fr = frame(this.t < 12 ? 'vgx_bark' : 'vgx_growl');
         else if (this.y > 0) fr = frame('vgx_leap');
         else fr = frame((this.t >> 2) % 2 ? 'vgx_dash' : 'vgx_leap');
         if (!fr) return;
         const [img, info] = fr, a = this.hitT ? clamp(1 - (this.hitT - 16) / 10, 0, 1) : clamp(this.t / 4, 0, 1);
-        const sc = SC * 1.25;
-        ctx.save(); ctx.globalAlpha = a; ctx.translate(this.x, GY - this.y + (info.foot || 0) * sc + (this.y > 0 ? 0 : ((this.t >> 2) % 2) * 2)); ctx.scale(this.dir * sc, sc);
+        const sc = SC * 1.25 * (NEW ? 1.55 : 1);
+        ctx.save(); ctx.globalAlpha = a; ctx.translate(this.x, GY - this.y + (info.foot || 0) * sc + (this.y > 0 || NEW ? 0 : ((this.t >> 2) % 2) * 2)); ctx.scale(this.dir * sc, sc);
         ctx.drawImage(img, -info.ax, -info.h); ctx.restore();
       },
     });

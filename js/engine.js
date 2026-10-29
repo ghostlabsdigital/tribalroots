@@ -349,6 +349,8 @@ class Fighter {
         if (this.mt < m.s && this.mt >= Math.floor(m.s / 2)) return hf[Math.min(hf.length - 1, Math.floor((this.mt - Math.floor(m.s / 2)) / Math.max(1, Math.ceil(m.s / 2) / hf.length)))];
         const rt = this.mt - m.s - m.a; if (rt >= 0 && rt < Math.ceil(m.r * 0.35)) return hf[hf.length - 1 - Math.min(hf.length - 1, Math.floor(rt / Math.max(1, Math.ceil(m.r * 0.35) / hf.length)))];
       }
+      if (m.winds && this.mt < m.s) return m.winds[Math.min(m.winds.length - 1, Math.floor(this.mt * m.winds.length / m.s))];
+      if (m.recov && this.mt >= m.s + m.a + Math.floor(m.r * 0.4)) return m.recov;
       if (m.key === 'sweep' && this.man.sweep_recover && this.mt >= m.s + m.a + Math.floor(m.r * 0.3)) return 'sweep_recover';
       if (this.mt < m.s) {
         // windup frame: w_<move> from the in-betweens B sheet (crouch light borrows the sweep windup)
@@ -1151,7 +1153,7 @@ const SPECIALS = {
         if (z.t < delay && z.t % 3 === 0) spark(x + rnd(-70, 70), GY - 6, col, 2, 4);
       },
       drawFn(z) {
-        const img = P.frames ? f.img[P.frames[(z.t >> 2) % P.frames.length]] : img0;
+        const img = P.frames ? f.img[P.frames[P.seq ? Math.min(P.frames.length - 1, Math.floor(z.t * P.frames.length / (z.delay + z.dur + 16))) : (z.t >> 2) % P.frames.length]] : img0;
         if (!img) return;
         const life = z.delay + z.dur + 16, k = z.t - z.delay;
         const a = z.t < z.delay ? 0.25 + 0.5 * (z.t / Math.max(1, z.delay)) : clamp((life - z.t) / 14, 0, 1);
@@ -1162,7 +1164,7 @@ const SPECIALS = {
   },
   // ULTIMATE: the super-FX art lands on the opponent and hits six times
   ultimate(f, g) {
-    const P = f.move.p || {}, col = f.def.color, o = f.opp, img = f.img[P.fx || 'fx_super'], dir = f.facing;
+    const P = f.move.p || {}, col = f.def.color, o = f.opp, img0 = f.img[P.fx || 'fx_super'], dir = f.facing;
     g.ents.push(new HitZone({
       owner: f, x: o.x, w: 320, h: 500, delay: 10, dur: 50, max: 6, every: 8, linger: 30,
       hitFn: z => ({ dmg: z.hits === 5 ? 125 : 40, hs: 30, bs: 12, kb: z.hits === 5 ? 12 : 1, lvl: 'mid', stop: z.hits === 5 ? 18 : 5, chip: 12, kd: z.hits === 5, launch: 16, sfx: 'heavy', special: true, color: col, juggle: true }),
@@ -1172,12 +1174,13 @@ const SPECIALS = {
         if (z.t > z.delay && z.t % 3 === 0) FX.push({ kind: 'spark', x: z.x + rnd(-160, 160), y: GY - rnd(0, 420), vx: rnd(-3, 3), vy: rnd(-4, 0), life: 26, max: 26, color: Math.random() < 0.5 ? col : f.def.color2, size: rnd(3, 7) });
       },
       drawFn(z) {
-        if (!img || z.t < 2) return;
         const life = z.delay + z.dur + 30;
+        const img = P.frames ? f.img[P.frames[Math.min(P.frames.length - 1, Math.floor(z.t * P.frames.length / life))]] : img0;
+        if (!img || z.t < 2) return;
         const a = clamp(Math.min(z.t / 8, (life - z.t) / 20), 0, 1);
         const drop = P.drop ? Math.max(0, 1 - z.t / (z.delay + 2)) * 420 : 0;
         const s = (P.fxs || 1) * (0.7 + 0.3 * Math.min(1, z.t / 18)) + 0.03 * Math.sin(z.t * 0.4);
-        fxDraw(img, z.x, GY - 230 - drop, s, dir, a, 0.45);
+        fxDraw(img, z.x, GY - (P.cy || 230) - drop, s, dir, a, 0.45); if (P.under && f.img[P.under] && z.t > z.delay) fxDraw(f.img[P.under], z.x, GY - 60, (P.fxs || 1) * 0.9, dir, a, 0.5);
       },
     }));
   },

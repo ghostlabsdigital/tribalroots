@@ -367,12 +367,13 @@ const FIGHTERS = {
   shea: {
     name: 'SHEA WEST', short: 'SHEA', tag: 'Element 5. Loud on purpose.', color: '#3aa8ff', color2: '#ffd36b',
     hp: 1100, walk: 3.8, back: 3.0, jump: 17.5, jumpX: 4.6, dash: 11,
+    impact: 'e5_pulse_04',
     anim: {
       idle: ['idle'], walk_f: ['walk_f', 'walk_f2'], walk_b: ['walk_b'], dash: ['dash'], backdash: ['walk_b'],
       jump: ['jump'], fall: ['jump'], land: ['land'], crouch: ['crouch'],
       block: ['block'], c_block: ['c_block'], hit_l: ['hit_l', 'stagger'], hit_h: ['hit_h'], launch: ['knockdown'],
       ground: ['ground'], getup: ['getup'], stun: ['stun'],
-      entrance: ['entrance', 'taunt', 'gx_sub_charge'], victory: ['victory', 'gx_sound_wall'], defeat: ['defeat'],
+      entrance: ['entrance', 'e5_summon_a'], victory: ['victory', 'gx_sound_wall'], defeat: ['defeat'],
     },
     moves: {
       lp: { pose: 'lp', s: 5, a: 3, r: 9, dmg: 46, hs: 14, bs: 9, kb: 7, lvl: 'mid', stop: 7, sfx: 'light' },
@@ -382,10 +383,10 @@ const FIGHTERS = {
       c_light: { pose: 'c_atk', s: 6, a: 3, r: 11, dmg: 40, hs: 13, bs: 9, kb: 6, lvl: 'low', stop: 7, sfx: 'light', crouch: true },
       sweep: { pose: 'c_atk', s: 10, a: 4, r: 23, dmg: 88, hs: 0, bs: 14, kb: 10, lvl: 'low', stop: 11, sfx: 'heavy', kd: true, heavy: true, crouch: true },
       air: { pose: 'air_atk', s: 6, a: 10, r: 4, dmg: 78, hs: 17, bs: 11, kb: 8, lvl: 'high', stop: 9, sfx: 'heavy', air: true },
-      s1: { name: 'Bass Push', pose: 'gx_bass_launch', wind: 'gx_sub_charge', s: 14, a: 2, r: 24, special: 'bassPush', sfx: 'cast' },
-      s2: { name: 'Sub Slam', pose: 'gx_speaker_slam', s: 14, a: 2, r: 30, special: 'subSlam', sfx: 'boom' },
-      s3: { name: 'Pressure Wave', pose: 'gx_pressure_wave', wind: 'gx_sound_check', s: 12, a: 2, r: 30, special: 'burst', p: { reach: 200, w: 300, h: 360, cy: 210, dmg: 95, kb: 30, kd: true, launch: 9 }, sfx: 'cast' },
-      su: { name: 'Element Five', pose: 'gx_element5', wind: 'gx_super_windup', s: 8, a: 2, r: 52, special: 'elementFive', super: true, sfx: 'super' },
+      s1: { name: 'Bass Push', pose: 'e5_feedback_b', winds: ['e5_feedback_a'], s: 12, a: 2, r: 22, special: 'shot', p: { frames: ['e5_pulse_02', 'e5_pulse_03', 'e5_pulse_04', 'e5_pulse_05'], fx: 'e5_pulse_02', scale: 0.42, speed: 9, y: 220, w: 150, h: 170, dmg: 80, kb: 22, spawnFx: 'e5_pulse_01', spawnScale: 0.35, hitFx: 'e5_pulse_04', hitScale: 0.4, trailFx: 'e5_pulse_06', trailScale: 0.14 }, sfx: 'cast' },
+      s2: { name: 'Sub Slam', pose: 'e5_feedback_b', winds: ['e5_summon_a', 'e5_summon_b', 'e5_hoist_a', 'e5_hoist_b', 'e5_slam_a'], s: 20, a: 2, r: 28, special: 'shot', p: { frames: ['e5_throw_spin_a', 'e5_throw_spin_b'], fx: 'e5_throw_spin_a', scale: 0.38, speed: 10, y: 170, w: 170, h: 170, dmg: 95, kb: 14, kd: true, launch: 14, spawnFx: 'e5_throw_ready', spawnScale: 0.3, hitFx: 'e5_throw_impact', hitScale: 0.42 }, sfx: 'boom' },
+      s3: { name: 'Pressure Wave', pose: 'e5_sub_stomp_b', winds: ['e5_sub_stomp_a'], s: 12, a: 2, r: 28, special: 'fxBurst', p: { at: 'front', reach: 210, frames: ['e5_slam_fx_01', 'e5_slam_fx_02', 'e5_slam_fx_03', 'e5_slam_fx_04', 'e5_slam_fx_05', 'e5_slam_fx_06'], seq: true, fx: 'e5_slam_fx_04', fxs: 0.75, cy: 90, w: 320, h: 300, hits: 2, every: 6, dur: 14, dmg: 95, chipDmg: 30, kb: 26, kd: true, launch: 10, lvl: 'low' }, sfx: 'boom' },
+      su: { name: 'Element Five', pose: 'e5_mix_drop_b', winds: ['e5_mix_drop_a'], wind: 'e5_mix_drop_a', s: 8, a: 2, r: 52, special: 'ultimate', p: { frames: ['e5_wall_01', 'e5_wall_02', 'e5_wall_03', 'e5_wall_04', 'e5_wall_05', 'e5_wall_05', 'e5_wall_06'], fx: 'e5_wall_04', fxs: 0.95, cy: 150, under: 'e5_slam_fx_04' }, super: true, sfx: 'super' },
     },
   },
   djmoo: {

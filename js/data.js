@@ -392,6 +392,7 @@ const FIGHTERS = {
   djmoo: {
     name: 'DJ MOO', tag: 'Udderly unbothered.', color: '#ff3fa4', color2: '#ffd6ee',
     hp: 950, walk: 4.9, back: 3.8, jump: 19, jumpX: 5.4, dash: 14,
+    impact: 'mfx_burst',
     anim: {
       idle: ['idle'], walk_f: ['walk_f', 'walk_f2'], walk_b: ['walk_b'], dash: ['dash'], backdash: ['walk_b'],
       jump: ['jump'], fall: ['jump'], land: ['land'], crouch: ['crouch'],
@@ -407,10 +408,10 @@ const FIGHTERS = {
       c_light: { pose: 'c_atk', s: 4, a: 3, r: 10, dmg: 34, hs: 13, bs: 9, kb: 6, lvl: 'low', stop: 6, sfx: 'light', crouch: true },
       sweep: { pose: 'c_atk', s: 8, a: 4, r: 21, dmg: 78, hs: 0, bs: 14, kb: 10, lvl: 'low', stop: 10, sfx: 'heavy', kd: true, heavy: true, crouch: true },
       air: { pose: 'air_atk', s: 5, a: 10, r: 4, dmg: 70, hs: 17, bs: 11, kb: 7, lvl: 'high', stop: 8, sfx: 'heavy', air: true },
-      s1: { name: 'Cowprint Cannon', pose: 'gx_cowbell_cannon', s: 12, a: 2, r: 22, special: 'cowprintCannon', sfx: 'cast' },
+      s1: { name: 'Cowprint Cannon', pose: 'hp', winds: ['w_hp'], recov: 'r_hp', s: 11, a: 2, r: 22, special: 'shot', p: { frames: ['mfx_bell_a', 'mfx_bell_b'], fx: 'mfx_bell_a', scale: 0.4, speed: 12, y: 220, w: 150, h: 120, dmg: 72, kb: 12, spawnFx: 'mfx_cowbell_b', spawnScale: 0.22, hitFx: 'mfx_burst', hitScale: 0.42, trailFx: 'mfx_hooves_a', trailScale: 0.1 }, sfx: 'cast' },
       s2: { name: 'Moo Drop', pose: 'gx_moo_drop', s: 8, a: 2, r: 44, special: 'mooDropLeap', onLand: 'mooDropLand', sfx: 'jump' },
-      s3: { name: 'Cow Wave', pose: 'gx_cow_wave', wind: 'gx_moo_charge', s: 9, a: 2, r: 28, special: 'burst', p: { reach: 210, w: 340, h: 380, cy: 200, hits: 3, every: 6, dur: 18, dmg: 70, chipDmg: 28, kd: true }, sfx: 'cast' },
-      su: { name: 'Holy Moo', pose: 'gx_stampede', wind: 'gx_super_windup', s: 8, a: 2, r: 48, special: 'holyMoo', super: true, sfx: 'super' },
+      s3: { name: 'Cow Wave', pose: 'lp', winds: ['w_lp'], recov: 'r_lp', s: 9, a: 2, r: 26, special: 'shot', p: { frames: ['mfx_ring_a', 'mfx_ring_b', 'mfx_ring_c'], fx: 'mfx_ring_a', scale: 0.42, speed: 9, y: 215, w: 170, h: 200, pierce: 2, dmg: 40, kb: 10, kd: true, hitFx: 'mfx_arc_a', hitScale: 0.4, trailFx: 'mfx_hooves_b', trailScale: 0.1 }, sfx: 'cast' },
+      su: { name: 'Holy Moo', pose: 'gx_stampede', wind: 'gx_super_windup', s: 8, a: 2, r: 48, special: 'ultimate', p: { frames: ['mfx_speaker_a', 'mfx_vinyl', 'mfx_speaker_b', 'mfx_headphones', 'mfx_stomp_b', 'mfx_burst'], fx: 'mfx_burst', fxs: 0.9, cy: 220, under: 'mfx_stomp_a' }, super: true, sfx: 'super' },
     },
   },
   sunshine: {

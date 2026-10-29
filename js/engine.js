@@ -358,7 +358,7 @@ class Fighter {
       }
       return m.pose;
     }
-    if (s === 'walk') { const k = this.walkDir > 0 ? 'walk_f' : 'walk_b'; return cyc(k, (this.anim[k] || []).length <= 2 ? 13 : 9); }
+    if (s === 'walk') { const k = this.walkDir > 0 ? 'walk_f' : 'walk_b', n = (this.anim[k] || []).length; return cyc(k, n >= 4 ? 8 : n <= 2 ? 13 : 9); }
     if (s === 'dash') return cyc('dash', 7);
     if (s === 'jsquat') return A.crouch[0];
     if (s === 'jump') {

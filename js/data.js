@@ -142,7 +142,7 @@ const FIGHTERS = {
     name: 'PIXIE', tag: 'Fire fans and faerie dust. Smiles while you burn.', color: '#ff5fa2', color2: '#ffb347',
     hp: 940, walk: 4.8, back: 3.8, jump: 19, jumpX: 5.2, dash: 13,
     anim: {
-      idle: ['idle'], walk_f: ['walk_f', 'walk_f3', 'walk_f2', 'walk_f4'], walk_b: ['walk_f4', 'walk_f2', 'walk_f3', 'walk_f'], dash: ['dash', 'run_c'], backdash: ['dodge'],
+      idle: ['idle'], walk_f: ['walk_f', 'walk_f3', 'walk_f2', 'walk_f4'], walk_b: ['walk_b', 'walk_b2'], dash: ['dash', 'run_c'], backdash: ['dodge'],
       jump: ['jump'], fall: ['fall'], land: ['land'], crouch: ['crouch'],
       block: ['block'], c_block: ['c_block'], hit_l: ['hit_l'], hit_h: ['hit_h'], launch: ['hit_air'],
       ground: ['ground'], getup: ['getup'], stun: ['stun', 'stun_2'],
@@ -166,7 +166,7 @@ const FIGHTERS = {
     name: 'STAR LENA', tag: 'Dark stars, chains and a nail bat. Do not test her.', color: '#b65cff', color2: '#ffcf3f',
     hp: 1020, walk: 4.3, back: 3.3, jump: 19, jumpX: 5.2, dash: 13,
     anim: {
-      idle: ['idle'], walk_f: ['walk_f', 'walk_f3', 'walk_f2', 'walk_f4'], walk_b: ['walk_f4', 'walk_f2', 'walk_f3', 'walk_f'], dash: ['dash', 'run_c'], backdash: ['dodge'],
+      idle: ['idle'], walk_f: ['walk_f', 'walk_f3', 'walk_f2', 'walk_f4'], walk_b: ['walk_b', 'walk_b2'], dash: ['dash', 'run_c'], backdash: ['dodge'],
       jump: ['jump'], fall: ['fall'], land: ['land'], crouch: ['crouch'],
       block: ['block'], c_block: ['c_block'], hit_l: ['hit_l'], hit_h: ['hit_h'], launch: ['hit_air'],
       ground: ['ground'], getup: ['getup'], stun: ['stun', 'stun_2'],
@@ -190,7 +190,7 @@ const FIGHTERS = {
     name: 'JUST TOMMY', tag: 'Suns out, guns out. LED whip in hand.', color: '#2ef0b0', color2: '#ffcf3f',
     hp: 1000, walk: 4.5, back: 3.5, jump: 19, jumpX: 5.2, dash: 13,
     anim: {
-      idle: ['idle'], walk_f: ['walk_f', 'walk_f3', 'walk_f2', 'walk_f4'], walk_b: ['walk_f4', 'walk_f2', 'walk_f3', 'walk_f'], dash: ['dash', 'run_c'], backdash: ['dodge'],
+      idle: ['idle'], walk_f: ['walk_f', 'walk_f3', 'walk_f2', 'walk_f4'], walk_b: ['walk_b', 'walk_b2'], dash: ['dash', 'run_c'], backdash: ['dodge'],
       jump: ['jump'], fall: ['fall'], land: ['land'], crouch: ['crouch'],
       block: ['block'], c_block: ['c_block'], hit_l: ['hit_l'], hit_h: ['hit_h'], launch: ['hit_air'],
       ground: ['ground'], getup: ['getup'], stun: ['stun', 'stun_2'],
@@ -214,7 +214,7 @@ const FIGHTERS = {
     name: 'BEARFLAME', tag: 'Fire poi, bear spirit. Hug at your own risk.', color: '#ff8a1a', color2: '#ffd23f',
     hp: 1080, walk: 4.1, back: 3.1, jump: 19, jumpX: 5.2, dash: 13,
     anim: {
-      idle: ['idle'], walk_f: ['walk_f', 'walk_f3', 'walk_f2', 'walk_f4'], walk_b: ['walk_f4', 'walk_f2', 'walk_f3', 'walk_f'], dash: ['dash', 'run_c'], backdash: ['dodge'],
+      idle: ['idle'], walk_f: ['walk_f', 'walk_f3', 'walk_f2', 'walk_f4'], walk_b: ['walk_b', 'walk_b2'], dash: ['dash', 'run_c'], backdash: ['dodge'],
       jump: ['jump'], fall: ['fall'], land: ['land'], crouch: ['crouch'],
       block: ['block'], c_block: ['c_block'], hit_l: ['hit_l'], hit_h: ['hit_h'], launch: ['hit_air'],
       ground: ['ground'], getup: ['getup'], stun: ['stun', 'stun_2'],
@@ -238,7 +238,7 @@ const FIGHTERS = {
     name: 'BRENDA', tag: 'Veggie Goddess. Pickle me this.', color: '#9be22b', color2: '#ff4fa0',
     hp: 980, walk: 4.6, back: 3.6, jump: 19, jumpX: 5.2, dash: 13,
     anim: {
-      idle: ['idle'], walk_f: ['walk_f', 'walk_f3', 'walk_f2', 'walk_f4'], walk_b: ['walk_f4', 'walk_f2', 'walk_f3', 'walk_f'], dash: ['dash', 'run_c'], backdash: ['dodge'],
+      idle: ['idle'], walk_f: ['walk_f', 'walk_f3', 'walk_f2', 'walk_f4'], walk_b: ['walk_b', 'walk_b2'], dash: ['dash', 'run_c'], backdash: ['dodge'],
       jump: ['jump'], fall: ['fall'], land: ['land'], crouch: ['crouch'],
       block: ['block'], c_block: ['c_block'], hit_l: ['hit_l'], hit_h: ['hit_h'], launch: ['hit_air'],
       ground: ['ground'], getup: ['getup'], stun: ['stun', 'stun_2'],

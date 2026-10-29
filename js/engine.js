@@ -622,6 +622,8 @@ class Fighter {
     if (this.flash > 0) { ctx.globalAlpha = 0.85; ctx.drawImage(tinted(img, '#ffffff'), -info.ax, -info.h); }
     else if (this.state === 'stun') { ctx.globalAlpha = 0.25 + 0.2 * Math.sin(this.t * 0.3); ctx.drawImage(tinted(img, '#ffe066'), -info.ax, -info.h); }
     ctx.restore();
+    // dizzy halo spinning over the head
+    if (s === 'stun' && this.def.dizzyFx) { const D = this.def.dizzyFx, im = this.img[D[(this.t >> 3) % D.length]]; if (im) { const hy = GY - this.y - info.h * SC * 0.98; ctx.save(); ctx.translate(this.x, hy); ctx.scale(0.34, 0.34); ctx.drawImage(im, -im.width / 2, -im.height / 2); ctx.restore(); } }
   }
   recordGhost() {
     const want = this.state === 'dash' || (this.state === 'attack' && (this.move.special || this.move.super)) || this.state === 'backdash';

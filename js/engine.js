@@ -460,24 +460,36 @@ class Fighter {
     if (this.inv > 0) this.inv--;
     if (this.flash > 0) this.flash--;
     this.sx = lerp(this.sx, 1, 0.22); this.sy = lerp(this.sy, 1, 0.22);
-    const o = this.opp; let tx = o.x;
-    // face whoever is closest: the opponent or a bad guy that crashed the fight
-    if (window.CHAOS) for (const c of CHAOS.list()) if (!c.dead && c.hp > 0 && c.state !== 'leave' && Math.abs(c.x - this.x) < Math.abs(tx - this.x)) tx = c.x;
-    const toOpp = tx >= this.x ? 1 : -1, human = !!ctl;
-    // players turn with the stick (press left = face left); the CPU still auto-faces. Holding away from the nearest foe still blocks.
-    const canTurn = (NEUTRAL.has(this.state) || this.state === 'land') && this.grounded && !inp.d;
-    if (human && canTurn) { if (inp.r && !inp.l) this.facing = 1; else if (inp.l && !inp.r) this.facing = -1; }
-    const fwdHeld = human ? (this.facing > 0 ? inp.r : inp.l) : toOpp > 0 ? inp.r : inp.l, backHeld = human ? false : toOpp > 0 ? inp.l : inp.r;
-    this.block = (toOpp > 0 ? inp.l : inp.r) && !inp.u;
+    // FACING (hybrid): face the nearest foe (fighter or crasher). A player who pushes toward a foe on the
+    // other side (for ~8 frames, or presses an attack while pushing) locks onto that foe until they push toward another.
+    const human = !!ctl, foes = foesOf(this);
+    if (window.CHAOS) for (const c of CHAOS.list()) if (!c.dead && c.hp > 0 && c.state !== 'leave') foes.push(c);
+    const dist = f => Math.abs(f.x - this.x);
+    const nearest = foes.length ? foes.reduce((m, f) => (dist(f) < dist(m) ? f : m)) : this.opp;
+    if (this.lockT && !foes.includes(this.lockT)) this.lockT = null;
+    const holdDir = inp.r && !inp.l ? 1 : inp.l && !inp.r ? -1 : 0; this.holdDir = holdDir; this.upHeld = inp.u;
+    let target = this.lockT || nearest;
+    if (human) {
+      const curDir = target.x >= this.x ? 1 : -1;
+      if (holdDir && holdDir !== curDir) {
+        const side = foes.filter(f => (f.x >= this.x ? 1 : -1) === holdDir);
+        const pick = side.length ? side.reduce((m, f) => (dist(f) < dist(m) ? f : m)) : null;
+        this.turnHold = (this.turnHold || 0) + 1;
+        if (pick && (this.turnHold >= 8 || BTNS.some(k => inp.edge[k]))) { this.lockT = pick; target = pick; this.turnHold = 0; }
+      } else this.turnHold = 0;
+    }
+    const tx = target.x, toOpp = tx >= this.x ? 1 : -1;
+    const fwdHeld = toOpp > 0 ? inp.r : inp.l, backHeld = toOpp > 0 ? inp.l : inp.r;
+    this.block = backHeld && !inp.u;
     this.crouchBlockHeld = inp.d;
     if (this.lastHitT > 60) this.stunMeter = Math.max(0, this.stunMeter - 2);
     if (NEUTRAL.has(this.state) || this.state === 'blockstun' || this.state === 'getup') this.combo = 0;
 
-    // facing
-    if (!human && (NEUTRAL.has(this.state) || this.state === 'land') && this.grounded) this.facing = toOpp;
+    // facing (a fresh lock-on also turns you at the start of an attack)
+    if ((NEUTRAL.has(this.state) || this.state === 'land') && this.grounded) this.facing = toOpp;
 
-    // edge taps for dash (players: double-tap either way dashes that way)
-    const fEdge = human ? (this.facing > 0 ? inp.edge.r : inp.edge.l) : toOpp > 0 ? inp.edge.r : inp.edge.l, bEdge = human ? false : toOpp > 0 ? inp.edge.l : inp.edge.r;
+    // edge taps for dash
+    const fEdge = toOpp > 0 ? inp.edge.r : inp.edge.l, bEdge = toOpp > 0 ? inp.edge.l : inp.edge.r;
     let dash = 0;
     if (fEdge) { if (this.frames - this.tapF < 14) dash = 1; this.tapF = this.frames; }
     if (bEdge) { if (this.frames - this.tapB < 14) dash = -1; this.tapB = this.frames; }
@@ -560,7 +572,8 @@ class Fighter {
     // returns 'hit' | 'block' | null
     const canBlock = (NEUTRAL.has(this.state) || this.state === 'blockstun' || this.state === 'land') && this.grounded;
     const goodLevel = h.lvl === 'low' ? this.crouchBlockHeld : h.lvl === 'high' ? !this.crouchBlockHeld : true;
-    if (canBlock && this.block && goodLevel && !h.unblockable) {
+    const holdingAway = dir ? !!this.holdDir && this.holdDir === Math.sign(dir) && !this.upHeld : this.block;
+    if (canBlock && (holdingAway || this.block && !dir) && goodLevel && !h.unblockable) {
       this.crouchBlock = this.crouchBlockHeld; this.set('blockstun'); this.hsDur = h.bs || 12; if (dir) this.facing = -Math.sign(dir);
       this.vx = dir * (h.kb || 6) * 0.7; this.hp = Math.max(1, this.hp - (h.chip || 0));
       this.meter = Math.min(100, this.meter + 3); this.lastHitT = 0;

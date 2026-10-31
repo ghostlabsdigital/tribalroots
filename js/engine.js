@@ -2035,6 +2035,7 @@ function setupTouch() {
     const up = e => { e.preventDefault(); b.classList.remove('on'); CTRL[0].virt.delete(k); };
     b.addEventListener('pointerdown', down); b.addEventListener('pointerup', up); b.addEventListener('pointercancel', up); b.addEventListener('pointerleave', up);
   });
+  addEventListener('touchend', e => { if (e.touches.length) return; pad.querySelectorAll('[data-k].on').forEach(b => { b.classList.remove('on'); CTRL[0].virt.delete(b.dataset.k); }); }, { passive: true });
   // joystick: locked in place. Touch anywhere = direction from the stick's centre, so the arrows work as buttons too.
   const st = document.getElementById('stick');
   if (st) {
@@ -2050,13 +2051,24 @@ function setupTouch() {
       set('r', !dead && nx > 0.38); set('l', !dead && nx < -0.38); set('u', !dead && ny < -0.5); set('d', !dead && ny > 0.55 && Math.abs(nx) < 0.8);
     };
     st.addEventListener('pointerdown', e => {
-      e.preventDefault(); AU.init(); if (id !== null) return; id = e.pointerId; st.setPointerCapture(id); st.classList.add('on');
+      e.preventDefault(); AU.init(); if (id !== null && id !== e.pointerId) release(); id = e.pointerId; try { st.setPointerCapture(id); } catch (err) {} st.classList.add('on');
       const b = base.getBoundingClientRect(); R = b.width * 0.42; cx = b.left + b.width / 2; cy = b.top + b.height / 2;
       aim(e);
     });
     st.addEventListener('pointermove', e => { if (e.pointerId !== id) return; e.preventDefault(); aim(e); });
-    const end = e => { if (e.pointerId !== id) return; id = null; st.classList.remove('on'); for (const k in held) set(k, false); knob.style.transform = ''; };
-    st.addEventListener('pointerup', end); st.addEventListener('pointercancel', end);
+    // release can get lost on iOS (edge swipes, notifications, finger sliding off-screen): reset on every path, never stay latched
+    function release() { id = null; st.classList.remove('on'); for (const k in held) set(k, false); knob.style.transform = ''; }
+    const end = e => { if (e.pointerId === id) release(); };
+    st.addEventListener('pointerup', end); st.addEventListener('pointercancel', end); st.addEventListener('lostpointercapture', end);
+    // backstop: when the last finger on the stick lifts, let go no matter what pointer events said
+    const touchCheck = e => {
+      if (id === null) return;
+      const r = st.getBoundingClientRect(), pad2 = r.width * 0.6;
+      const onStick = [...e.touches].some(t => t.clientX > r.left - pad2 && t.clientX < r.right + pad2 && t.clientY > r.top - pad2 && t.clientY < r.bottom + pad2);
+      if (!onStick) release();
+    };
+    addEventListener('touchend', touchCheck, { passive: true }); addEventListener('touchcancel', touchCheck, { passive: true });
+    addEventListener('blur', release); document.addEventListener('visibilitychange', () => { if (document.hidden) release(); });
   }
   const pz = document.getElementById('pause-btn'); if (pz) pz.addEventListener('pointerdown', e => { e.preventDefault(); PRESSED.add('Escape'); });
 }

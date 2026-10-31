@@ -331,6 +331,7 @@ function drawFX() {
 }
 
 // ─────────────────────────────── fighter
+const WALK_BOOST = 1.15; // everyone walks a bit quicker
 const NEUTRAL = new Set(['idle', 'walk', 'crouch']);
 // everyone fighting right now (the 2 main fighters + a turntables guest)
 function allF() { return G.ally && !G.ally.gone ? [G.f[0], G.f[1], G.ally] : G.f; }
@@ -462,18 +463,21 @@ class Fighter {
     const o = this.opp; let tx = o.x;
     // face whoever is closest: the opponent or a bad guy that crashed the fight
     if (window.CHAOS) for (const c of CHAOS.list()) if (!c.dead && c.hp > 0 && c.state !== 'leave' && Math.abs(c.x - this.x) < Math.abs(tx - this.x)) tx = c.x;
-    const toOpp = tx >= this.x ? 1 : -1;
-    const fwdHeld = toOpp > 0 ? inp.r : inp.l, backHeld = toOpp > 0 ? inp.l : inp.r;
-    this.block = backHeld && !inp.u;
+    const toOpp = tx >= this.x ? 1 : -1, human = !!ctl;
+    // players turn with the stick (press left = face left); the CPU still auto-faces. Holding away from the nearest foe still blocks.
+    const canTurn = (NEUTRAL.has(this.state) || this.state === 'land') && this.grounded && !inp.d;
+    if (human && canTurn) { if (inp.r && !inp.l) this.facing = 1; else if (inp.l && !inp.r) this.facing = -1; }
+    const fwdHeld = human ? (this.facing > 0 ? inp.r : inp.l) : toOpp > 0 ? inp.r : inp.l, backHeld = human ? false : toOpp > 0 ? inp.l : inp.r;
+    this.block = (toOpp > 0 ? inp.l : inp.r) && !inp.u;
     this.crouchBlockHeld = inp.d;
     if (this.lastHitT > 60) this.stunMeter = Math.max(0, this.stunMeter - 2);
     if (NEUTRAL.has(this.state) || this.state === 'blockstun' || this.state === 'getup') this.combo = 0;
 
     // facing
-    if ((NEUTRAL.has(this.state) || this.state === 'land') && this.grounded) this.facing = toOpp;
+    if (!human && (NEUTRAL.has(this.state) || this.state === 'land') && this.grounded) this.facing = toOpp;
 
-    // edge taps for dash
-    const fEdge = toOpp > 0 ? inp.edge.r : inp.edge.l, bEdge = toOpp > 0 ? inp.edge.l : inp.edge.r;
+    // edge taps for dash (players: double-tap either way dashes that way)
+    const fEdge = human ? (this.facing > 0 ? inp.edge.r : inp.edge.l) : toOpp > 0 ? inp.edge.r : inp.edge.l, bEdge = human ? false : toOpp > 0 ? inp.edge.l : inp.edge.r;
     let dash = 0;
     if (fEdge) { if (this.frames - this.tapF < 14) dash = 1; this.tapF = this.frames; }
     if (bEdge) { if (this.frames - this.tapB < 14) dash = -1; this.tapB = this.frames; }
@@ -489,7 +493,7 @@ class Fighter {
       else if (fwdHeld || backHeld) {
         if (s !== 'walk') this.set('walk');
         this.walkDir = fwdHeld ? 1 : -1;
-        this.vx = fwdHeld ? this.def.walk * this.facing : -this.def.back * this.facing;
+        this.vx = (fwdHeld ? this.def.walk * this.facing : -this.def.back * this.facing) * WALK_BOOST;
       } else { if (s !== 'idle') this.set('idle'); this.vx = 0; }
     } else if (s === 'jsquat') {
       this.vx = 0;
@@ -557,7 +561,7 @@ class Fighter {
     const canBlock = (NEUTRAL.has(this.state) || this.state === 'blockstun' || this.state === 'land') && this.grounded;
     const goodLevel = h.lvl === 'low' ? this.crouchBlockHeld : h.lvl === 'high' ? !this.crouchBlockHeld : true;
     if (canBlock && this.block && goodLevel && !h.unblockable) {
-      this.crouchBlock = this.crouchBlockHeld; this.set('blockstun'); this.hsDur = h.bs || 12;
+      this.crouchBlock = this.crouchBlockHeld; this.set('blockstun'); this.hsDur = h.bs || 12; if (dir) this.facing = -Math.sign(dir);
       this.vx = dir * (h.kb || 6) * 0.7; this.hp = Math.max(1, this.hp - (h.chip || 0));
       this.meter = Math.min(100, this.meter + 3); this.lastHitT = 0;
       return 'block';
@@ -2047,12 +2051,12 @@ function setupTouch() {
     const aim = e => {
       const dx = e.clientX - cx, dy = e.clientY - cy, m = Math.hypot(dx, dy), k = m > R ? R / m : 1;
       knob.style.transform = `translate(${dx * k}px, ${dy * k}px)`;
-      const nx = dx / R, ny = dy / R, dead = m < R * 0.22;
-      set('r', !dead && nx > 0.38); set('l', !dead && nx < -0.38); set('u', !dead && ny < -0.5); set('d', !dead && ny > 0.55 && Math.abs(nx) < 0.8);
+      const nx = dx / R, ny = dy / R, dead = m < R * 0.16;
+      set('r', !dead && nx > 0.32); set('l', !dead && nx < -0.32); set('u', !dead && ny < -0.45); set('d', !dead && ny > 0.5 && Math.abs(nx) < 0.85);
     };
     st.addEventListener('pointerdown', e => {
       e.preventDefault(); AU.init(); if (id !== null && id !== e.pointerId) release(); id = e.pointerId; try { st.setPointerCapture(id); } catch (err) {} st.classList.add('on');
-      const b = base.getBoundingClientRect(); R = b.width * 0.42; cx = b.left + b.width / 2; cy = b.top + b.height / 2;
+      const b = base.getBoundingClientRect(); R = b.width * 0.3; cx = b.left + b.width / 2; cy = b.top + b.height / 2;
       aim(e);
     });
     st.addEventListener('pointermove', e => { if (e.pointerId !== id) return; e.preventDefault(); aim(e); });
